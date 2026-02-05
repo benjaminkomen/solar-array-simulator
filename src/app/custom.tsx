@@ -3,12 +3,10 @@ import { Stack } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 
-const AnimatedImage = Animated.createAnimatedComponent(Image);
-
 export default function Custom() {
   return (
     <>
-      <Stack.Screen.Title style={{ fontSize: 20 }}>Custom</Stack.Screen.Title>
+      <Stack.Screen.BackButton displayMode="minimal" />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
@@ -26,13 +24,19 @@ export default function Custom() {
             borderRadius: 32,
             overflow: "hidden",
             backgroundColor: "#ffffff",
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+            justifyContent: "center",
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.12,
+            shadowRadius: 24,
           }}
         >
-          <AnimatedImage
-            source="https://placehold.co/200x200/4f46e5/white?text=✏️"
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
+          <Image
+            source="sf:square.and.pencil"
+            style={{ width: 80, height: 80 }}
+            contentFit="contain"
+            tintColor="#6366f1"
           />
         </Animated.View>
 
