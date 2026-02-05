@@ -1,71 +1,131 @@
-import { Text, View, StyleSheet, Dimensions } from "react-native";
-import { useRouter } from "expo-router";
-import OptionCard from "@/components/OptionCard";
+import { ScrollView, useWindowDimensions, Pressable } from "react-native";
+import { Link, Stack } from "expo-router";
+import { Image } from "expo-image";
+import Animated, { FadeIn } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-// Calculate card size to be square and fill space efficiently
-// Account for: title area (~100px), gap between cards (32px), margins (40px top/bottom)
-const AVAILABLE_HEIGHT = SCREEN_HEIGHT - 230;
-const AVAILABLE_WIDTH = SCREEN_WIDTH - 48; // 24px margin on each side
-// Make cards as large as possible while fitting two cards with gap
-const MAX_CARD_FROM_HEIGHT = (AVAILABLE_HEIGHT - 32) / 2; // Subtract gap
-const MAX_CARD_FROM_WIDTH = AVAILABLE_WIDTH;
-const CARD_SIZE = Math.min(MAX_CARD_FROM_HEIGHT, MAX_CARD_FROM_WIDTH);
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export default function Index() {
-  const router = useRouter();
+interface OptionProps {
+  title: string;
+  description: string;
+  href: string;
+  cardSize: number;
+}
 
-  const handleUploadPress = () => {
-    router.push("/upload");
-  };
-
-  const handleCustomPress = () => {
-    router.push("/custom");
+function OptionCard({ title, description, href, cardSize }: OptionProps) {
+  const handlePressIn = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Array builder</Text>
-      <View style={styles.cardsContainer}>
-        <OptionCard
-          title="Upload"
-          description="take or select a photo of your array layout"
-          cardSize={CARD_SIZE}
-          sharedTagPrefix="upload"
-          onPress={handleUploadPress}
-        />
-        <OptionCard
-          title="Custom"
-          description="create an array layout manually"
-          cardSize={CARD_SIZE}
-          sharedTagPrefix="custom"
-          onPress={handleCustomPress}
-        />
-      </View>
-    </View>
+    <Link href={href} asChild>
+      <Link.Trigger withAppleZoom>
+        <AnimatedPressable
+          entering={FadeIn.duration(300)}
+          onPressIn={handlePressIn}
+          style={({ pressed }) => [
+            {
+              width: cardSize,
+              height: cardSize,
+              backgroundColor: "#ffffff",
+              borderRadius: 24,
+              padding: 24,
+              justifyContent: "center",
+              alignItems: "center",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+              opacity: pressed ? 0.7 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            },
+          ]}
+        >
+          <Animated.View
+            style={{
+              width: 80,
+              height: 80,
+              marginBottom: 16,
+              borderRadius: 16,
+              overflow: "hidden",
+              backgroundColor: "#f3f4f6",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <AnimatedImage
+              source={
+                title === "Upload"
+                  ? "https://placehold.co/80x80/4f46e5/white?text=📷"
+                  : "https://placehold.co/80x80/4f46e5/white?text=✏️"
+              }
+              style={{ width: "100%", height: "100%" }}
+              contentFit="cover"
+            />
+          </Animated.View>
+          <Animated.Text
+            style={{
+              fontSize: 22,
+              fontWeight: "700",
+              color: "#000000",
+              marginBottom: 8,
+              textAlign: "center",
+            }}
+          >
+            {title}
+          </Animated.Text>
+          <Animated.Text
+            style={{
+              fontSize: 13,
+              color: "#6b7280",
+              textAlign: "center",
+              lineHeight: 18,
+            }}
+          >
+            {description}
+          </Animated.Text>
+        </AnimatedPressable>
+      </Link.Trigger>
+    </Link>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 34,
-    fontWeight: "bold",
-    color: "#1f2937",
-    marginBottom: 32,
-    textAlign: "center",
-  },
-  cardsContainer: {
-    flex: 1,
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 32,
-    paddingBottom: 60,
-  },
-});
+export default function Index() {
+  const { width, height } = useWindowDimensions();
+
+  const availableHeight = height - 300;
+  const availableWidth = width - 48;
+  const maxCardFromHeight = (availableHeight - 24) / 2;
+  const cardSize = Math.min(maxCardFromHeight, availableWidth);
+
+  return (
+    <>
+      <Stack.Screen.Title style={{ fontSize: 20 }}>
+        Array Builder
+      </Stack.Screen.Title>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 24,
+          paddingHorizontal: 24,
+          paddingVertical: 24,
+        }}
+      >
+        <OptionCard
+          title="Upload"
+          description="Take or select a photo"
+          cardSize={cardSize}
+          href="/upload"
+        />
+        <OptionCard
+          title="Custom"
+          description="Create manually"
+          cardSize={cardSize}
+          href="/custom"
+        />
+      </ScrollView>
+    </>
+  );
+}

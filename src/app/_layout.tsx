@@ -4,8 +4,22 @@ export default function RootLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        headerTransparent: true,
       }}
-    />
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen
+        name="upload"
+        options={{
+          title: "",
+        }}
+      />
+      <Stack.Screen
+        name="custom"
+        options={{
+          title: "",
+        }}
+      />
+    </Stack>
   );
 }
