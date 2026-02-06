@@ -51,5 +51,8 @@
     "staticFeatureFlags": {
       "ENABLE_SHARED_ELEMENT_TRANSITIONS": false
     }
-  }
+  },
+  "trustedDependencies": [
+    "@shopify/react-native-skia"
+  ]
 }

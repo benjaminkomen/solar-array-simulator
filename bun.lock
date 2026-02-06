@@ -38,6 +38,9 @@
       },
     },
   },
+  "trustedDependencies": [
+    "@shopify/react-native-skia",
+  ],
   "overrides": {
     "@expo/log-box": "55.0.5",
   },
