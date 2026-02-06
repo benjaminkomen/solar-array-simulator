@@ -16,6 +16,12 @@ export interface PanelData {
   rotation: SharedValue<0 | 90>;
 }
 
+interface InitialPanelPosition {
+  x: number;
+  y: number;
+  rotation: 0 | 90;
+}
+
 interface UsePanelsManagerResult {
   panels: PanelData[];
   selectedId: string | null;
@@ -25,6 +31,7 @@ interface UsePanelsManagerResult {
   rotatePanel: (id: string) => boolean;
   getPanelStates: () => PanelState[];
   bringToFront: (id: string) => void;
+  initializePanels: (positions: InitialPanelPosition[]) => void;
 }
 
 export function usePanelsManager(): UsePanelsManagerResult {
@@ -119,6 +126,21 @@ export function usePanelsManager(): UsePanelsManagerResult {
     [getPanelStates]
   );
 
+  // Initialize panels at specific positions (for loading from analysis results)
+  const initializePanels = useCallback(
+    (positions: InitialPanelPosition[]) => {
+      const newPanels: PanelData[] = positions.map((pos) => ({
+        id: generatePanelId(),
+        x: makeMutable(pos.x),
+        y: makeMutable(pos.y),
+        rotation: makeMutable<0 | 90>(pos.rotation),
+      }));
+      setPanels(newPanels);
+      setSelectedId(null);
+    },
+    []
+  );
+
   // Bring a panel to the front (move to end of array)
   const bringToFront = useCallback((id: string) => {
     setPanels((prev) => {
@@ -139,6 +161,7 @@ export function usePanelsManager(): UsePanelsManagerResult {
     rotatePanel,
     getPanelStates,
     bringToFront,
+    initializePanels,
   };
 }
 
