@@ -25,15 +25,14 @@ interface SolarPanelProps {
 export function SolarPanel({ x, y, rotation, isSelected = false }: SolarPanelProps) {
   const transform = useDerivedValue(() => {
     if (rotation && rotation.value === 90) {
-      // Rotate around center: translate to position, then to center, rotate, translate back
+      // For 90° rotation:
+      // 1. Move origin to (x + PANEL_HEIGHT, y) - the right edge of where the rotated panel will be
+      // 2. Rotate 90° CW (on screen) - this makes the panel appear landscape
+      // Result: panel bounding box is (x, y) to (x + PANEL_HEIGHT, y + PANEL_WIDTH) = (x, y) to (x + 120, y + 60)
       return [
-        { translateX: x.value },
+        { translateX: x.value + PANEL_HEIGHT },
         { translateY: y.value },
-        { translateX: PANEL_WIDTH / 2 },
-        { translateY: PANEL_HEIGHT / 2 },
         { rotate: Math.PI / 2 },
-        { translateX: -PANEL_HEIGHT / 2 },
-        { translateY: -PANEL_WIDTH / 2 },
       ];
     }
     return [{ translateX: x.value }, { translateY: y.value }];
