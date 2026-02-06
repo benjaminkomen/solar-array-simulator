@@ -188,21 +188,32 @@ src/
 ├── app/
 │   ├── _layout.tsx        # Root layout with transparent header
 │   ├── index.tsx          # Home screen with Upload/Custom options
-│   ├── upload.tsx         # Image capture and gallery selection
-│   └── custom.tsx         # Custom canvas editor with toolbar
+│   ├── upload.tsx         # Image capture, analysis, and processing overlay
+│   ├── custom.tsx         # Custom canvas editor with toolbar
+│   └── api/
+│       └── analyze+api.ts # Bedrock API route (Claude vision analysis)
 ├── components/
 │   ├── OptionCard.tsx     # Home screen option cards
 │   ├── ImagePreview.tsx   # Image preview component
 │   ├── PermissionModal.tsx # Camera permission modal
+│   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text overlay
 │   ├── SolarPanel.tsx     # Skia panel rendering with rotation
 │   └── SolarPanelCanvas.tsx # Main canvas with gesture handling
 ├── hooks/
 │   ├── useImagePicker.ts  # Camera and gallery picker hook
 │   └── usePanelsManager.ts # Panel state management (CRUD)
 └── utils/
+    ├── analysisStore.ts   # Module-level store for passing analysis results
     ├── collision.ts       # AABB collision detection
     ├── gridSnap.ts        # Grid snapping utilities
+    ├── imageResize.ts     # Client-side image resize for upload
     └── panelUtils.ts      # Panel dimensions, hit testing, positioning
+terraform/
+├── main.tf                # IAM user + Bedrock policy + S3 backend
+├── variables.tf           # AWS region variable
+├── outputs.tf             # Access key outputs
+├── backend.hcl.example    # S3 backend config template
+└── README.md              # Terraform setup instructions
 ```
 
 ---
@@ -216,11 +227,14 @@ src/
 - [x] Add panel rotation (portrait/landscape)
 - [x] Implement infinite canvas with viewport panning
 - [x] Add snap-to-origin button
-- [ ] Integrate AWS Bedrock for image analysis
+- [x] Add processing overlay with fibonacci shader animation
+- [x] Integrate AWS Bedrock for image analysis (Claude Sonnet 4.5)
+- [x] Set up Expo API route for server-side Bedrock calls
+- [x] Add Terraform config for IAM resources
+- [ ] Deploy API routes to EAS Hosting
 - [ ] Implement compass orientation indicator
 - [ ] Create panel detail bottom sheet
 - [ ] Build energy simulation engine
-- [ ] Set up API routes with EAS hosting
 
 ---
 

@@ -36,6 +36,8 @@ This is an Expo Router v55 preview app for creating solar panel array layouts. U
 - **expo-haptics** - iOS haptic feedback on interactions
 - **expo-image-picker** - Camera capture and gallery selection with permission handling
 - **@shopify/react-native-skia** - High-performance 2D canvas for solar panel layout
+- **@ai-sdk/amazon-bedrock** - Claude on AWS Bedrock for image analysis (no AWS SDK dependency)
+- **expo-image-manipulator** - Client-side image resize before upload
 
 ### Project Structure
 
@@ -44,20 +46,25 @@ src/
 ├── app/                    # Expo Router file-based routes
 │   ├── _layout.tsx         # Root layout with transparent header
 │   ├── index.tsx           # Home screen (Upload/Custom options)
-│   ├── upload.tsx          # Image capture screen
-│   └── custom.tsx          # Canvas editor with toolbar
+│   ├── upload.tsx          # Image capture + Bedrock analysis
+│   ├── custom.tsx          # Canvas editor with toolbar
+│   └── api/
+│       └── analyze+api.ts  # Bedrock API route (Claude vision)
 ├── components/
 │   ├── OptionCard.tsx      # Home screen cards
 │   ├── ImagePreview.tsx    # Image preview
 │   ├── PermissionModal.tsx # Camera permission UI
+│   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text
 │   ├── SolarPanel.tsx      # Skia panel with rotation
 │   └── SolarPanelCanvas.tsx # Main canvas + gestures
 ├── hooks/
 │   ├── useImagePicker.ts   # Camera/gallery hook
 │   └── usePanelsManager.ts # Panel state management
 └── utils/
+    ├── analysisStore.ts    # Module-level store for analysis results
     ├── collision.ts        # AABB collision detection
     ├── gridSnap.ts         # Grid snap utilities
+    ├── imageResize.ts      # Client-side image resize for upload
     └── panelUtils.ts       # Panel helpers
 ```
 
@@ -153,7 +160,46 @@ Toolbar buttons use iOS SF Symbols for icons:
 - `trash` - Delete panel
 - `location` - Snap to first panel
 
+## API Route — Image Analysis
+
+### `src/app/api/analyze+api.ts`
+
+Expo API route that sends an uploaded photo to Claude Sonnet 4.5 on AWS Bedrock for vision analysis.
+
+- **Model**: `us.anthropic.claude-sonnet-4-5-20250929-v1:0` (cross-region inference profile)
+- **SDK**: `@ai-sdk/amazon-bedrock` v4+ (no AWS SDK dependency, works on Cloudflare Workers)
+- **Input**: Base64-encoded JPEG image (resized client-side to max 1568px long edge)
+- **Output**: JSON with `panels[]` array containing `{ x, y, width, height, rotation, label }`
+
+### Environment Variables
+
+Required for the API route (set in `.env` for local dev, EAS Secrets for production):
+
+| Variable | Description |
+|----------|-------------|
+| `AWS_ACCESS_KEY_ID` | IAM user access key |
+| `AWS_SECRET_ACCESS_KEY` | IAM user secret key |
+| `AWS_REGION` | AWS region (e.g. `us-east-1`) |
+
+### Local Development
+
+```bash
+# Start API routes + native app
+npx expo serve
+
+# Test API route directly
+curl -X POST http://localhost:8081/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"image":"<base64>","mimeType":"image/jpeg"}'
+```
+
+### Infrastructure
+
+Terraform config in `terraform/` creates an IAM user with minimal `bedrock:InvokeModel` permissions. See `terraform/README.md` for setup instructions.
+
 ## Planned Integrations
 
-- **AWS Bedrock** - AI image analysis via Expo API Routes
 - **EAS Hosting** - Server-side API route deployment
+- **Compass indicator** - Array orientation display
+- **Panel detail sheet** - Bottom sheet with serial number and metadata
+- **Energy simulation** - Power production estimates per panel

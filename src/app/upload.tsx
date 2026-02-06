@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { Text, ScrollView, Pressable, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Text, ScrollView, Pressable, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -7,12 +7,13 @@ import * as Haptics from "expo-haptics";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { PermissionModal } from "@/components/PermissionModal";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
-
-const MOCK_PROCESSING_DURATION = 4000;
+import { resizeForAnalysis } from "@/utils/imageResize";
+import { setAnalysisResult } from "@/utils/analysisStore";
 
 export default function Upload() {
   const router = useRouter();
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     image,
@@ -26,20 +27,70 @@ export default function Upload() {
   // Derived: processing whenever an image has been picked
   const isProcessing = image != null;
 
-  // Timer to navigate after mock processing completes.
-  // This is a legitimate effect: synchronizing with an external system (timer)
-  // that starts/stops based on whether we have an image.
+  // Call the analysis API when an image is picked.
+  // This is a legitimate effect: synchronizing with an external system (API)
+  // that should be called when the image state changes.
   useEffect(() => {
     if (!isProcessing) return;
 
-    timerRef.current = setTimeout(() => {
-      router.replace("/custom?initialPanels=true");
-    }, MOCK_PROCESSING_DURATION);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    async function analyzeImage() {
+      try {
+        setError(null);
+
+        // Resize and compress the image for upload
+        const resized = await resizeForAnalysis(image!.uri);
+
+        // Call the API route
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image: resized.base64,
+            mimeType: resized.mimeType,
+          }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          throw new Error(
+            body.error ?? `Server error: ${response.status}`,
+          );
+        }
+
+        const result = await response.json();
+
+        // Store the result for the canvas screen to consume
+        setAnalysisResult({
+          panels: result.panels,
+          imageWidth: resized.width,
+          imageHeight: resized.height,
+        });
+
+        router.replace("/custom?initialPanels=true");
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") return;
+        const message =
+          err instanceof Error ? err.message : "Unknown error";
+        console.error("Analysis failed:", message);
+        setError(message);
+        Alert.alert(
+          "Analysis Failed",
+          `Could not analyze the image: ${message}. Please try again.`,
+        );
+      }
+    }
+
+    analyzeImage();
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      controller.abort();
     };
-  }, [isProcessing, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isProcessing]);
 
   return (
     <>
@@ -186,7 +237,7 @@ export default function Upload() {
         />
       )}
 
-      {isProcessing && (
+      {isProcessing && !error && (
         <ProcessingOverlay imageUri={image!.uri} />
       )}
     </>
