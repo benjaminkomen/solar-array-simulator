@@ -50,26 +50,26 @@ export function SolarPanel({ x, y }: SolarPanelProps) {
         p1={{ x: PANEL_WIDTH / 2, y: BORDER_RADIUS }}
         p2={{ x: PANEL_WIDTH / 2, y: PANEL_HEIGHT - BORDER_RADIUS }}
         color={GRID_COLOR}
-        strokeWidth={1}
+        strokeWidth={2}
       />
       {/* Horizontal lines (3 evenly spaced) */}
       <Line
         p1={{ x: BORDER_RADIUS, y: PANEL_HEIGHT * 0.25 }}
         p2={{ x: PANEL_WIDTH - BORDER_RADIUS, y: PANEL_HEIGHT * 0.25 }}
         color={GRID_COLOR}
-        strokeWidth={1}
+        strokeWidth={2}
       />
       <Line
         p1={{ x: BORDER_RADIUS, y: PANEL_HEIGHT * 0.5 }}
         p2={{ x: PANEL_WIDTH - BORDER_RADIUS, y: PANEL_HEIGHT * 0.5 }}
         color={GRID_COLOR}
-        strokeWidth={1}
+        strokeWidth={2}
       />
       <Line
         p1={{ x: BORDER_RADIUS, y: PANEL_HEIGHT * 0.75 }}
         p2={{ x: PANEL_WIDTH - BORDER_RADIUS, y: PANEL_HEIGHT * 0.75 }}
         color={GRID_COLOR}
-        strokeWidth={1}
+        strokeWidth={2}
       />
     </Group>
   );

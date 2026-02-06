@@ -1,25 +1,28 @@
 import { Stack } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function RootLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerTransparent: true,
-      }}
-    >
-      <Stack.Screen name="index" />
-      <Stack.Screen
-        name="upload"
-        options={{
-          title: "",
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{
+          headerTransparent: true,
         }}
-      />
-      <Stack.Screen
-        name="custom"
-        options={{
-          title: "",
-        }}
-      />
-    </Stack>
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen
+          name="upload"
+          options={{
+            title: "",
+          }}
+        />
+        <Stack.Screen
+          name="custom"
+          options={{
+            title: "",
+          }}
+        />
+      </Stack>
+    </GestureHandlerRootView>
   );
 }
