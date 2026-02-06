@@ -8,23 +8,52 @@ const PANEL_WIDTH = 60;
 const PANEL_HEIGHT = 120;
 const BORDER_RADIUS = 8;
 const STROKE_WIDTH = 2;
+const SELECTION_STROKE_WIDTH = 3;
 
 const FILL_COLOR = "#3b82f6"; // blue-500
 const STROKE_COLOR = "#1d4ed8"; // blue-800
 const GRID_COLOR = "#60a5fa"; // blue-400
+const SELECTION_COLOR = "#fbbf24"; // amber-400
 
 interface SolarPanelProps {
   x: SharedValue<number>;
   y: SharedValue<number>;
+  rotation?: SharedValue<0 | 90>;
+  isSelected?: boolean;
 }
 
-export function SolarPanel({ x, y }: SolarPanelProps) {
+export function SolarPanel({ x, y, rotation, isSelected = false }: SolarPanelProps) {
   const transform = useDerivedValue(() => {
+    if (rotation && rotation.value === 90) {
+      // Rotate around center: translate to position, then to center, rotate, translate back
+      return [
+        { translateX: x.value },
+        { translateY: y.value },
+        { translateX: PANEL_WIDTH / 2 },
+        { translateY: PANEL_HEIGHT / 2 },
+        { rotate: Math.PI / 2 },
+        { translateX: -PANEL_HEIGHT / 2 },
+        { translateY: -PANEL_WIDTH / 2 },
+      ];
+    }
     return [{ translateX: x.value }, { translateY: y.value }];
   });
 
   return (
     <Group transform={transform}>
+      {/* Selection highlight (rendered behind panel) */}
+      {isSelected && (
+        <RoundedRect
+          x={-SELECTION_STROKE_WIDTH}
+          y={-SELECTION_STROKE_WIDTH}
+          width={PANEL_WIDTH + SELECTION_STROKE_WIDTH * 2}
+          height={PANEL_HEIGHT + SELECTION_STROKE_WIDTH * 2}
+          r={BORDER_RADIUS + SELECTION_STROKE_WIDTH}
+          color={SELECTION_COLOR}
+          style="stroke"
+          strokeWidth={SELECTION_STROKE_WIDTH}
+        />
+      )}
       {/* Panel fill */}
       <RoundedRect
         x={0}
