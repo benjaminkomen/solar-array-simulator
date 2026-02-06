@@ -3,25 +3,71 @@ import { Stack } from "expo-router";
 import { Canvas } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
-import { SolarPanel } from "@/components/SolarPanel";
-
-const INITIAL_X = 100;
-const INITIAL_Y = 200;
+import { SolarPanel, PANEL_WIDTH, PANEL_HEIGHT } from "@/components/SolarPanel";
 
 export default function Custom() {
-  const translateX = useSharedValue(INITIAL_X);
-  const translateY = useSharedValue(INITIAL_Y);
-  const offsetX = useSharedValue(INITIAL_X);
-  const offsetY = useSharedValue(INITIAL_Y);
+  // Panel 1 state
+  const panel1X = useSharedValue(80);
+  const panel1Y = useSharedValue(200);
+  const offset1X = useSharedValue(80);
+  const offset1Y = useSharedValue(200);
+
+  // Panel 2 state
+  const panel2X = useSharedValue(180);
+  const panel2Y = useSharedValue(200);
+  const offset2X = useSharedValue(180);
+  const offset2Y = useSharedValue(200);
+
+  // Track which panel is being dragged (-1 = none)
+  const activePanel = useSharedValue(-1);
 
   const gesture = Gesture.Pan()
-    .onStart(() => {
-      offsetX.value = translateX.value;
-      offsetY.value = translateY.value;
+    .onStart((e) => {
+      "worklet";
+      const touchX = e.x;
+      const touchY = e.y;
+
+      // Check if touch is within panel 1
+      if (
+        touchX >= panel1X.value &&
+        touchX <= panel1X.value + PANEL_WIDTH &&
+        touchY >= panel1Y.value &&
+        touchY <= panel1Y.value + PANEL_HEIGHT
+      ) {
+        activePanel.value = 0;
+        offset1X.value = panel1X.value;
+        offset1Y.value = panel1Y.value;
+        return;
+      }
+
+      // Check if touch is within panel 2
+      if (
+        touchX >= panel2X.value &&
+        touchX <= panel2X.value + PANEL_WIDTH &&
+        touchY >= panel2Y.value &&
+        touchY <= panel2Y.value + PANEL_HEIGHT
+      ) {
+        activePanel.value = 1;
+        offset2X.value = panel2X.value;
+        offset2Y.value = panel2Y.value;
+        return;
+      }
+
+      activePanel.value = -1;
     })
     .onUpdate((e) => {
-      translateX.value = offsetX.value + e.translationX;
-      translateY.value = offsetY.value + e.translationY;
+      "worklet";
+      if (activePanel.value === 0) {
+        panel1X.value = offset1X.value + e.translationX;
+        panel1Y.value = offset1Y.value + e.translationY;
+      } else if (activePanel.value === 1) {
+        panel2X.value = offset2X.value + e.translationX;
+        panel2Y.value = offset2Y.value + e.translationY;
+      }
+    })
+    .onEnd(() => {
+      "worklet";
+      activePanel.value = -1;
     });
 
   return (
@@ -30,7 +76,8 @@ export default function Custom() {
       <View style={styles.container}>
         <GestureDetector gesture={gesture}>
           <Canvas style={styles.canvas}>
-            <SolarPanel x={translateX} y={translateY} />
+            <SolarPanel x={panel1X} y={panel1Y} />
+            <SolarPanel x={panel2X} y={panel2Y} />
           </Canvas>
         </GestureDetector>
       </View>
