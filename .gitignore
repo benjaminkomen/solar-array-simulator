@@ -31,6 +31,7 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
 
 # typescript
@@ -39,6 +40,13 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+terraform/backend.hcl
 
 # Claude
 settings.local.json
