@@ -1,11 +1,16 @@
 import { useCallback, useRef } from "react";
 import { View, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { Stack } from "expo-router";
+import { useSharedValue, withTiming } from "react-native-reanimated";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { usePanelsManager } from "@/hooks/usePanelsManager";
+import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 
 export default function Custom() {
   const canvasSize = useRef({ width: 0, height: 0 });
+  const viewportX = useSharedValue(0);
+  const viewportY = useSharedValue(0);
+
   const {
     panels,
     selectedId,
@@ -14,6 +19,7 @@ export default function Custom() {
     removePanel,
     rotatePanel,
     bringToFront,
+    getPanelStates,
   } = usePanelsManager();
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
@@ -24,9 +30,10 @@ export default function Custom() {
   const handleAddPanel = useCallback(() => {
     const { width, height } = canvasSize.current;
     if (width > 0 && height > 0) {
-      addPanel(width, height);
+      // Pass viewport offset so new panels are added relative to current view
+      addPanel(width, height, -viewportX.value, -viewportY.value);
     }
-  }, [addPanel]);
+  }, [addPanel, viewportX, viewportY]);
 
   const handleRotatePanel = useCallback(() => {
     if (selectedId) {
@@ -40,15 +47,41 @@ export default function Custom() {
     }
   }, [selectedId, removePanel]);
 
+  const handleSnapToOrigin = useCallback(() => {
+    const states = getPanelStates();
+    const { width, height } = canvasSize.current;
+
+    if (states.length > 0) {
+      // Center viewport on first panel
+      const firstPanel = states[0];
+      const panelCenterX = firstPanel.x + PANEL_WIDTH / 2;
+      const panelCenterY = firstPanel.y + PANEL_HEIGHT / 2;
+      viewportX.value = withTiming(width / 2 - panelCenterX, { duration: 300 });
+      viewportY.value = withTiming(height / 2 - panelCenterY, { duration: 300 });
+    } else {
+      // Reset to origin
+      viewportX.value = withTiming(0, { duration: 300 });
+      viewportY.value = withTiming(0, { duration: 300 });
+    }
+  }, [getPanelStates, viewportX, viewportY]);
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button
+          icon="location"
+          onPress={handleSnapToOrigin}
+        />
+      </Stack.Toolbar>
       <View style={styles.container} onLayout={handleLayout}>
         <SolarPanelCanvas
           panels={panels}
           selectedId={selectedId}
           onSelectPanel={setSelectedId}
           onBringToFront={bringToFront}
+          viewportX={viewportX}
+          viewportY={viewportY}
         />
       </View>
       <Stack.Toolbar placement="bottom">

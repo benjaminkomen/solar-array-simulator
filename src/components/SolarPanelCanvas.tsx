@@ -1,8 +1,13 @@
 import { useCallback } from "react";
 import { StyleSheet } from "react-native";
-import { Canvas } from "@shopify/react-native-skia";
+import { Canvas, Group } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { runOnJS, useSharedValue } from "react-native-reanimated";
+import {
+  runOnJS,
+  useSharedValue,
+  useDerivedValue,
+  type SharedValue,
+} from "react-native-reanimated";
 import { SolarPanel } from "./SolarPanel";
 import type { PanelData } from "@/hooks/usePanelsManager";
 import type { PanelState } from "@/utils/panelUtils";
@@ -15,6 +20,8 @@ interface SolarPanelCanvasProps {
   selectedId: string | null;
   onSelectPanel: (id: string | null) => void;
   onBringToFront: (id: string) => void;
+  viewportX: SharedValue<number>;
+  viewportY: SharedValue<number>;
 }
 
 export function SolarPanelCanvas({
@@ -22,12 +29,23 @@ export function SolarPanelCanvas({
   selectedId,
   onSelectPanel,
   onBringToFront,
+  viewportX,
+  viewportY,
 }: SolarPanelCanvasProps) {
+  // Panel dragging state
   const draggedPanelId = useSharedValue<string | null>(null);
-  const offsetX = useSharedValue(0);
-  const offsetY = useSharedValue(0);
-  const lastValidX = useSharedValue(0);
-  const lastValidY = useSharedValue(0);
+  const panelOffsetX = useSharedValue(0);
+  const panelOffsetY = useSharedValue(0);
+
+  // Viewport panning state
+  const isPanningViewport = useSharedValue(false);
+  const viewportStartX = useSharedValue(0);
+  const viewportStartY = useSharedValue(0);
+
+  // Transform for the entire canvas content (viewport offset)
+  const canvasTransform = useDerivedValue(() => {
+    return [{ translateX: viewportX.value }, { translateY: viewportY.value }];
+  });
 
   const selectPanel = useCallback(
     (id: string | null) => {
@@ -43,14 +61,15 @@ export function SolarPanelCanvas({
     [onBringToFront]
   );
 
-  // Create gesture handlers
-  const gesture = Gesture.Pan()
+  // Main pan gesture - handles both panel dragging and viewport panning
+  const panGesture = Gesture.Pan()
     .onStart((e) => {
       "worklet";
-      const touchX = e.x;
-      const touchY = e.y;
+      // Convert screen coordinates to world coordinates
+      const worldX = e.x - viewportX.value;
+      const worldY = e.y - viewportY.value;
 
-      // Get current panel states for hit testing
+      // Get current panel states for hit testing (in world coordinates)
       const states: PanelState[] = [];
       for (const p of panels) {
         states.push({
@@ -61,36 +80,47 @@ export function SolarPanelCanvas({
         });
       }
 
-      // Hit test to find which panel was touched (reverse order for z-order)
-      const hitId = hitTestPanels(touchX, touchY, states);
+      // Hit test to find which panel was touched
+      const hitId = hitTestPanels(worldX, worldY, states);
 
       if (hitId) {
+        // Dragging a panel
         draggedPanelId.value = hitId;
+        isPanningViewport.value = false;
         const panel = panels.find((p) => p.id === hitId);
         if (panel) {
-          offsetX.value = panel.x.value;
-          offsetY.value = panel.y.value;
-          lastValidX.value = panel.x.value;
-          lastValidY.value = panel.y.value;
+          panelOffsetX.value = panel.x.value;
+          panelOffsetY.value = panel.y.value;
         }
         runOnJS(selectPanel)(hitId);
         runOnJS(bringToFront)(hitId);
       } else {
+        // Panning the viewport
         draggedPanelId.value = null;
+        isPanningViewport.value = true;
+        viewportStartX.value = viewportX.value;
+        viewportStartY.value = viewportY.value;
         runOnJS(selectPanel)(null);
       }
     })
     .onUpdate((e) => {
       "worklet";
+      if (isPanningViewport.value) {
+        // Pan the viewport
+        viewportX.value = viewportStartX.value + e.translationX;
+        viewportY.value = viewportStartY.value + e.translationY;
+        return;
+      }
+
       const panelId = draggedPanelId.value;
       if (!panelId) return;
 
       const panel = panels.find((p) => p.id === panelId);
       if (!panel) return;
 
-      // Calculate new position
-      const newX = offsetX.value + e.translationX;
-      const newY = offsetY.value + e.translationY;
+      // Calculate new position in world coordinates
+      const newX = panelOffsetX.value + e.translationX;
+      const newY = panelOffsetY.value + e.translationY;
 
       // Get panel dimensions based on rotation
       const dims = getPanelDimensions(panel.rotation.value);
@@ -121,13 +151,15 @@ export function SolarPanelCanvas({
         // No collision - update position
         panel.x.value = newX;
         panel.y.value = newY;
-        lastValidX.value = newX;
-        lastValidY.value = newY;
       }
-      // If collision, keep last valid position (panel stays in place)
     })
     .onEnd(() => {
       "worklet";
+      if (isPanningViewport.value) {
+        isPanningViewport.value = false;
+        return;
+      }
+
       const panelId = draggedPanelId.value;
       if (!panelId) return;
 
@@ -175,8 +207,9 @@ export function SolarPanelCanvas({
   const tapGesture = Gesture.Tap()
     .onStart((e) => {
       "worklet";
-      const touchX = e.x;
-      const touchY = e.y;
+      // Convert screen coordinates to world coordinates
+      const worldX = e.x - viewportX.value;
+      const worldY = e.y - viewportY.value;
 
       // Get current panel states for hit testing
       const states: PanelState[] = [];
@@ -189,7 +222,7 @@ export function SolarPanelCanvas({
         });
       }
 
-      const hitId = hitTestPanels(touchX, touchY, states);
+      const hitId = hitTestPanels(worldX, worldY, states);
       runOnJS(selectPanel)(hitId);
       if (hitId) {
         runOnJS(bringToFront)(hitId);
@@ -197,20 +230,22 @@ export function SolarPanelCanvas({
     });
 
   // Combine gestures - pan takes priority
-  const composedGesture = Gesture.Exclusive(gesture, tapGesture);
+  const composedGesture = Gesture.Exclusive(panGesture, tapGesture);
 
   return (
     <GestureDetector gesture={composedGesture}>
       <Canvas style={styles.canvas}>
-        {panels.map((panel) => (
-          <SolarPanel
-            key={panel.id}
-            x={panel.x}
-            y={panel.y}
-            rotation={panel.rotation}
-            isSelected={selectedId === panel.id}
-          />
-        ))}
+        <Group transform={canvasTransform}>
+          {panels.map((panel) => (
+            <SolarPanel
+              key={panel.id}
+              x={panel.x}
+              y={panel.y}
+              rotation={panel.rotation}
+              isSelected={selectedId === panel.id}
+            />
+          ))}
+        </Group>
       </Canvas>
     </GestureDetector>
   );

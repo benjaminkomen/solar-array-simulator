@@ -3,13 +3,11 @@ import { makeMutable, type SharedValue } from "react-native-reanimated";
 import {
   type PanelState,
   findFreePosition,
+  findValidPositionAfterRotation,
   generatePanelId,
-  getPanelDimensions,
-  getPanelRect,
   PANEL_WIDTH,
   PANEL_HEIGHT,
 } from "@/utils/panelUtils";
-import { collidesWithAny } from "@/utils/collision";
 
 export interface PanelData {
   id: string;
@@ -22,7 +20,7 @@ interface UsePanelsManagerResult {
   panels: PanelData[];
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
-  addPanel: (canvasWidth: number, canvasHeight: number) => boolean;
+  addPanel: (canvasWidth: number, canvasHeight: number, viewportOffsetX?: number, viewportOffsetY?: number) => boolean;
   removePanel: (id: string) => void;
   rotatePanel: (id: string) => boolean;
   getPanelStates: () => PanelState[];
@@ -48,10 +46,11 @@ export function usePanelsManager(): UsePanelsManagerResult {
   }, []);
 
   // Add a new panel at a free position
+  // viewportOffsetX/Y allow placing panels relative to the current viewport
   const addPanel = useCallback(
-    (canvasWidth: number, canvasHeight: number): boolean => {
+    (canvasWidth: number, canvasHeight: number, viewportOffsetX: number = 0, viewportOffsetY: number = 0): boolean => {
       const states = getPanelStates();
-      const position = findFreePosition(canvasWidth, canvasHeight, states);
+      const position = findFreePosition(canvasWidth, canvasHeight, states, 0, viewportOffsetX, viewportOffsetY);
 
       if (!position) {
         return false; // No free position available
@@ -83,6 +82,7 @@ export function usePanelsManager(): UsePanelsManagerResult {
   );
 
   // Rotate a panel (toggle 0 <-> 90)
+  // If rotation would cause collision, find a nearby valid position
   const rotatePanel = useCallback(
     (id: string): boolean => {
       const panel = panelsRef.current.find((p) => p.id === id);
@@ -91,41 +91,32 @@ export function usePanelsManager(): UsePanelsManagerResult {
       const currentRotation = panel.rotation.value;
       const newRotation: 0 | 90 = currentRotation === 0 ? 90 : 0;
 
-      // Calculate new dimensions
-      const newDims = getPanelDimensions(newRotation);
+      // Get all panel states for collision detection
+      const allPanelStates = getPanelStates();
 
-      // Create test rect with new rotation
-      const testRect = {
-        x: panel.x.value,
-        y: panel.y.value,
-        width: newDims.width,
-        height: newDims.height,
-      };
+      // Find a valid position for the rotated panel
+      const newPosition = findValidPositionAfterRotation(
+        panel.x.value,
+        panel.y.value,
+        newRotation,
+        id,
+        allPanelStates
+      );
 
-      // Check for collisions with other panels
-      const otherPanelRects = panelsRef.current
-        .filter((p) => p.id !== id)
-        .map((p) => ({
-          ...getPanelRect({
-            id: p.id,
-            x: p.x.value,
-            y: p.y.value,
-            rotation: p.rotation.value,
-          }),
-          id: p.id,
-        }));
-
-      if (collidesWithAny(testRect, otherPanelRects)) {
-        return false; // Rotation would cause collision
+      if (!newPosition) {
+        return false; // No valid position found
       }
 
-      // Apply rotation
+      // Apply rotation and new position
       panel.rotation.value = newRotation;
+      panel.x.value = newPosition.x;
+      panel.y.value = newPosition.y;
+
       // Force re-render by updating state
       setPanels((prev) => [...prev]);
       return true;
     },
-    []
+    [getPanelStates]
   );
 
   // Bring a panel to the front (move to end of array)
