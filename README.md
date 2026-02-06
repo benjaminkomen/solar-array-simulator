@@ -41,12 +41,20 @@ After uploading and AI processing, users see an **interactive representation** o
 
 ### Custom Creation Flow
 
-For manual array design, users have immediate access to:
+For manual array design, users have access to a full-featured canvas editor:
 
-- **Toolbar** with drag-and-drop solar panel / micro inverter elements
-- **Canvas** for placing and arranging components
-- **Snap-to-grid** functionality for precise alignment
-- **Orientation toggle** for portrait or landscape panel placement
+#### Canvas Features
+
+| Feature | Description |
+|---------|-------------|
+| **Add panels** | Tap + button to add new panels at the center of the viewport |
+| **Drag panels** | Touch and drag to reposition panels |
+| **Rotate panels** | Toggle between portrait (60x120) and landscape (120x60) orientation |
+| **Delete panels** | Remove selected panels with trash button |
+| **Collision detection** | Panels cannot overlap (4px minimum gap enforced) |
+| **Grid snapping** | Panels snap to 30px grid on release |
+| **Infinite canvas** | Pan the viewport by dragging empty space |
+| **Snap to origin** | Location button centers view on first panel |
 
 #### Panel Visualization
 
@@ -55,6 +63,16 @@ Solar panels are rendered as:
 - Blue rectangles with **1:2 aspect ratio** (portrait) or 2:1 (landscape)
 - Rounded corners with a border
 - Internal grid pattern: 1 vertical line + 3 horizontal lines
+- Amber highlight border when selected
+
+#### Toolbar Controls
+
+| Button | Placement | Action |
+|--------|-----------|--------|
+| + | Bottom | Add new panel |
+| Rotate | Bottom (when selected) | Rotate panel 90° |
+| Trash | Bottom (when selected) | Delete panel |
+| Location | Right header | Center viewport on first panel |
 
 ### Energy Simulation
 
@@ -86,6 +104,16 @@ Users can tap any solar panel to view a **bottom sheet / form sheet** containing
 | [React Native Skia](https://shopify.github.io/react-native-skia/) | High-performance 2D graphics rendering for the canvas |
 | [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) | Touch gestures for drag, tap, and pan interactions |
 | [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/) | Smooth 60fps animations and gesture-driven motion |
+
+#### Canvas Implementation
+
+The custom canvas is built with:
+
+- **SolarPanelCanvas** - Main canvas component with gesture handling
+- **SolarPanel** - Individual panel rendering with rotation support
+- **usePanelsManager** - State management hook for panel CRUD operations
+- **Collision utilities** - AABB collision detection with gap enforcement
+- **Grid snapping** - 30px grid alignment on gesture end
 
 ### AI / Image Processing
 
@@ -158,17 +186,23 @@ bun web
 ```
 src/
 ├── app/
-│   ├── _layout.tsx
-│   ├── index.tsx
-│   ├── upload.tsx
-│   └── custom.tsx
+│   ├── _layout.tsx        # Root layout with transparent header
+│   ├── index.tsx          # Home screen with Upload/Custom options
+│   ├── upload.tsx         # Image capture and gallery selection
+│   └── custom.tsx         # Custom canvas editor with toolbar
 ├── components/
-│   ├── OptionCard.tsx
-│   ├── ImagePreview.tsx
-│   ├── PermissionModal.tsx
-│   └── SolarPanel.tsx
-└── hooks/
-    └── useImagePicker.ts
+│   ├── OptionCard.tsx     # Home screen option cards
+│   ├── ImagePreview.tsx   # Image preview component
+│   ├── PermissionModal.tsx # Camera permission modal
+│   ├── SolarPanel.tsx     # Skia panel rendering with rotation
+│   └── SolarPanelCanvas.tsx # Main canvas with gesture handling
+├── hooks/
+│   ├── useImagePicker.ts  # Camera and gallery picker hook
+│   └── usePanelsManager.ts # Panel state management (CRUD)
+└── utils/
+    ├── collision.ts       # AABB collision detection
+    ├── gridSnap.ts        # Grid snapping utilities
+    └── panelUtils.ts      # Panel dimensions, hit testing, positioning
 ```
 
 ---
@@ -176,9 +210,13 @@ src/
 ## Roadmap
 
 - [x] Implement camera capture and image picker
+- [x] Build Skia canvas with draggable panels
+- [x] Add collision detection with gap enforcement
+- [x] Implement grid snapping (30px)
+- [x] Add panel rotation (portrait/landscape)
+- [x] Implement infinite canvas with viewport panning
+- [x] Add snap-to-origin button
 - [ ] Integrate AWS Bedrock for image analysis
-- [ ] Build Skia canvas with draggable panels
-- [ ] Add snap-to-grid and orientation controls
 - [ ] Implement compass orientation indicator
 - [ ] Create panel detail bottom sheet
 - [ ] Build energy simulation engine
