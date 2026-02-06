@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
+    "@shopify/react-native-skia": "^2.4.18",
     "expo": "55.0.0-preview.9",
     "expo-constants": "~55.0.3",
     "expo-dev-client": "~55.0.4",

@@ -158,19 +158,24 @@ bun web
 ```
 src/
 ├── app/
-│   ├── _layout.tsx    # Root layout with navigation
-│   ├── index.tsx      # Home screen with Upload/Custom options
-│   ├── upload.tsx     # Upload flow screen
-│   └── custom.tsx     # Custom creation screen
-└── components/
-    └── OptionCard.tsx # Reusable card component
+│   ├── _layout.tsx
+│   ├── index.tsx
+│   ├── upload.tsx
+│   └── custom.tsx
+├── components/
+│   ├── OptionCard.tsx
+│   ├── ImagePreview.tsx
+│   ├── PermissionModal.tsx
+│   └── SolarPanel.tsx
+└── hooks/
+    └── useImagePicker.ts
 ```
 
 ---
 
 ## Roadmap
 
-- [ ] Implement camera capture and image picker
+- [x] Implement camera capture and image picker
 - [ ] Integrate AWS Bedrock for image analysis
 - [ ] Build Skia canvas with draggable panels
 - [ ] Add snap-to-grid and orientation controls

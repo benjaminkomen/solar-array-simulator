@@ -1,90 +1,49 @@
-import { Text, ScrollView } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
-import { Image } from "expo-image";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { Canvas } from "@shopify/react-native-skia";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useSharedValue } from "react-native-reanimated";
+import { SolarPanel } from "@/components/SolarPanel";
+
+const INITIAL_X = 100;
+const INITIAL_Y = 200;
 
 export default function Custom() {
+  const translateX = useSharedValue(INITIAL_X);
+  const translateY = useSharedValue(INITIAL_Y);
+  const offsetX = useSharedValue(INITIAL_X);
+  const offsetY = useSharedValue(INITIAL_Y);
+
+  const gesture = Gesture.Pan()
+    .onStart(() => {
+      offsetX.value = translateX.value;
+      offsetY.value = translateY.value;
+    })
+    .onUpdate((e) => {
+      translateX.value = offsetX.value + e.translationX;
+      translateY.value = offsetY.value + e.translationY;
+    });
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{
-          alignItems: "center",
-          gap: 24,
-          paddingHorizontal: 24,
-          paddingVertical: 32,
-        }}
-      >
-        <Animated.View
-          entering={FadeIn.duration(300)}
-          style={{
-            width: 200,
-            height: 200,
-            borderRadius: 32,
-            overflow: "hidden",
-            backgroundColor: "#ffffff",
-            justifyContent: "center",
-            alignItems: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.12,
-            shadowRadius: 24,
-          }}
-        >
-          <Image
-            source="sf:square.and.pencil"
-            style={{ width: 80, height: 80 }}
-            contentFit="contain"
-            tintColor="#6366f1"
-          />
-        </Animated.View>
-
-        <Animated.Text
-          entering={FadeIn.duration(300).delay(100)}
-          style={{
-            fontSize: 28,
-            fontWeight: "700",
-            color: "#000000",
-            textAlign: "center",
-          }}
-        >
-          Design Your Layout
-        </Animated.Text>
-
-        <Animated.Text
-          entering={FadeIn.duration(300).delay(150)}
-          style={{
-            fontSize: 15,
-            color: "#6b7280",
-            textAlign: "center",
-            lineHeight: 22,
-            paddingHorizontal: 16,
-          }}
-        >
-          Create an array layout by placing panels on a canvas
-        </Animated.Text>
-
-        <Animated.View
-          entering={FadeIn.duration(300).delay(200)}
-          style={{
-            marginTop: 16,
-            paddingHorizontal: 16,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 13,
-              color: "#9ca3af",
-              textAlign: "center",
-              lineHeight: 20,
-            }}
-            selectable
-          >
-            Coming soon: Canvas with draggable solar panels and grid snapping
-          </Text>
-        </Animated.View>
-      </ScrollView>
+      <View style={styles.container}>
+        <GestureDetector gesture={gesture}>
+          <Canvas style={styles.canvas}>
+            <SolarPanel x={translateX} y={translateY} />
+          </Canvas>
+        </GestureDetector>
+      </View>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f9fafb", // gray-50
+  },
+  canvas: {
+    flex: 1,
+  },
+});

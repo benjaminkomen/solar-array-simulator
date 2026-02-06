@@ -31,11 +31,15 @@ This is an Expo Router v55 preview app for creating solar panel array layouts. U
 - **React Native Gesture Handler** - Touch interactions
 - **expo-image** - Optimized image rendering
 - **expo-haptics** - iOS haptic feedback on interactions
+- **expo-image-picker** - Camera capture and gallery selection with permission handling
+- **@shopify/react-native-skia** - High-performance 2D canvas for solar panel layout
 
 ### Project Structure
 
 - `src/app/` - Expo Router file-based routes (Stack navigation)
 - `src/app/_layout.tsx` - Root layout with transparent header
+- `src/components/` - Reusable UI components
+- `src/hooks/` - Custom React hooks
 - Path alias: `@/*` maps to `./src/*`
 
 ### Navigation Pattern & Link Behavior
@@ -55,6 +59,5 @@ bun start  # Start dev server
 
 ### Planned Integrations
 
-- **React Native Skia** - Canvas rendering for draggable solar panels
 - **AWS Bedrock** - AI image analysis via Expo API Routes
 - **EAS Hosting** - Server-side API route deployment
