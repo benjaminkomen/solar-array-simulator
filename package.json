@@ -43,6 +43,9 @@
     "typescript": "~5.9.2"
   },
   "private": true,
+  "overrides": {
+    "@expo/log-box": "55.0.5"
+  },
   "reanimated": {
     "staticFeatureFlags": {
       "ENABLE_SHARED_ELEMENT_TRANSITIONS": false
