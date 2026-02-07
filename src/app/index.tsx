@@ -35,6 +35,7 @@ export default function Index() {
             cardSize={cardSize}
             href="/upload"
             icon="sf:photo.on.rectangle"
+            testID="upload-option"
           />
           <OptionCard
             title="Custom"
@@ -42,6 +43,7 @@ export default function Index() {
             cardSize={cardSize}
             href="/custom"
             icon="sf:square.and.pencil"
+            testID="custom-option"
           />
         </View>
       </ScrollView>

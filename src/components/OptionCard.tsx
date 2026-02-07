@@ -10,9 +10,10 @@ interface OptionCardProps {
   href: Href;
   cardSize: number;
   icon: string;
+  testID?: string;
 }
 
-export function OptionCard({ title, description, href, cardSize, icon }: OptionCardProps) {
+export function OptionCard({ title, description, href, cardSize, icon, testID }: OptionCardProps) {
   const imageHeight = cardSize * 0.55;
   const contentHeight = cardSize - imageHeight;
 
@@ -20,6 +21,10 @@ export function OptionCard({ title, description, href, cardSize, icon }: OptionC
     <Link href={href} asChild>
       <Link.Trigger withAppleZoom>
         <Pressable
+          testID={testID}
+          accessibilityLabel={title}
+          accessibilityHint={description}
+          accessibilityRole="button"
           onPressIn={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
           style={{ width: cardSize, height: cardSize }}
         >
@@ -36,6 +41,7 @@ export function OptionCard({ title, description, href, cardSize, icon }: OptionC
             } as ViewStyle}
           >
             <View
+              testID={`${testID}-inner`}
               style={{
                 height: imageHeight,
                 backgroundColor: "#ffffff",
@@ -44,6 +50,7 @@ export function OptionCard({ title, description, href, cardSize, icon }: OptionC
               }}
             >
               <Image
+                testID={`${testID}-image`}
                 source={icon}
                 style={{ width: imageHeight * 0.3, height: imageHeight * 0.3 }}
                 contentFit="contain"
@@ -52,6 +59,7 @@ export function OptionCard({ title, description, href, cardSize, icon }: OptionC
             </View>
 
             <View
+              testID={`${testID}-text-container`}
               style={{
                 height: contentHeight,
                 backgroundColor: "#f9fafb",
@@ -61,6 +69,7 @@ export function OptionCard({ title, description, href, cardSize, icon }: OptionC
               }}
             >
               <Text
+                testID={`${testID}-title`}
                 numberOfLines={1}
                 style={{
                   fontSize: 16,
@@ -72,6 +81,7 @@ export function OptionCard({ title, description, href, cardSize, icon }: OptionC
                 {title}
               </Text>
               <Text
+                testID={`${testID}-description`}
                 numberOfLines={1}
                 style={{
                   fontSize: 12,

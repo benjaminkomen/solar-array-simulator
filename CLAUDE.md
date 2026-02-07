@@ -12,8 +12,8 @@ bun install
 bun start
 
 # Run on specific platforms
-bun ios      # iOS simulator
-bun android  # Android emulator
+bun ios      # iOS simulator (opens dev build)
+bun android  # Android emulator (opens dev build)
 bun web      # Web browser
 
 # Lint
@@ -21,7 +21,18 @@ bun run lint
 
 # Type check
 ./node_modules/.bin/tsc --noEmit
+
+# Maestro E2E tests
+bun run test:maestro
 ```
+
+**⚠️ IMPORTANT - Development Build Workflow:**
+
+This project uses **development builds** (Expo dev client), NOT bare `npx expo run:ios` builds.
+
+- **Local development**: Start dev server (`bun start`), open development build on simulator
+- **DO NOT run**: `npx expo run:ios`, `npx expo run:android`, or `eas build --local` for local dev
+- **CI/CD only**: The EAS Workflow uses `preview-simulator` profile (standalone builds without dev client)
 
 ## Architecture
 
@@ -196,6 +207,60 @@ curl -X POST http://localhost:8081/api/analyze \
 ### Infrastructure
 
 Terraform config in `terraform/` creates an IAM user with minimal `bedrock:InvokeModel` permissions. See `terraform/README.md` for setup instructions.
+
+## CI/CD
+
+### EAS Workflow
+
+Automated testing runs on every push to `main` via `.eas/workflows/maestro-tests.yml`.
+
+**Workflow Structure:**
+```yaml
+lint → typecheck → fingerprint → get-build → build (conditional) → maestro-test
+```
+
+**Jobs:**
+- `lint`: Runs `bun run lint`
+- `typecheck`: Runs `tsc --noEmit`
+- `fingerprint`: Calculates native code hash (Expo fingerprinting)
+- `get-build`: Searches for existing build with matching fingerprint
+- `build`: Creates iOS simulator build (only if no matching build found)
+- `maestro_test`: Runs `.maestro/` tests on simulator
+
+**Build Caching:**
+- Fingerprinting caches builds by native code hash
+- JS-only changes reuse existing builds (fast: ~2-5 min)
+- Native changes trigger new builds (slower: ~10-15 min)
+- First push always creates a new build
+
+**Viewing Runs:**
+```
+https://expo.dev/accounts/benjaminkomen/projects/react-native-array-layout-2/workflows
+```
+
+### Maestro Tests
+
+E2E tests live in `.maestro/` directory. Current coverage:
+- Smoke test: app launch, home screen, navigation to upload/custom screens
+
+**Run locally:**
+
+**IMPORTANT**: This project uses development builds. DO NOT use `npx expo run:ios` or `eas build --local` for local development.
+
+```bash
+# Install Maestro (one-time setup)
+curl -Ls "https://get.maestro.mobile.dev" | bash
+
+# For local testing:
+# 1. Start dev server
+bun start
+
+# 2. Open development build on simulator (connects to dev server)
+# 3. Run Maestro tests
+bun run test:maestro
+```
+
+**Note**: The CI/CD workflow uses `preview-simulator` profile which creates standalone builds without dev client.
 
 ## Planned Integrations
 

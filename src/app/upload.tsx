@@ -153,6 +153,7 @@ export default function Upload() {
         <View style={{ gap: 12, width: "100%", marginTop: 16 }}>
           <Animated.View entering={FadeIn.duration(300).delay(200)}>
             <Pressable
+              testID="take-photo-button"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 pickFromCamera();
@@ -189,6 +190,7 @@ export default function Upload() {
 
           <Animated.View entering={FadeIn.duration(300).delay(300)}>
             <Pressable
+              testID="choose-gallery-button"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 pickFromGallery();

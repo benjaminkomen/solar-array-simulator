@@ -8,7 +8,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test:maestro": "maestro test .maestro",
+    "test:maestro:local": "maestro test .maestro --format junit"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^4.0.50",

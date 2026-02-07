@@ -182,7 +182,7 @@ export default function Custom() {
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button icon="location" onPress={handleSnapToOrigin} />
       </Stack.Toolbar>
-      <View style={styles.container} onLayout={handleLayout}>
+      <View style={styles.container} onLayout={handleLayout} testID="canvas-container">
         <SolarPanelCanvas
           panels={panels}
           selectedId={selectedId}
