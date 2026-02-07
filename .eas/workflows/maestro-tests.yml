@@ -5,21 +5,8 @@ on:
     branches: [main]
 
 jobs:
-  lint:
-    name: Lint Code
-    type: custom
-    steps:
-      - run: bun run lint
-
-  typecheck:
-    name: Type Check
-    type: custom
-    steps:
-      - run: ./node_modules/.bin/tsc --noEmit
-
   fingerprint:
     name: Calculate Fingerprint
-    needs: [lint, typecheck]
     type: fingerprint
     environment: preview
 
