@@ -32,7 +32,6 @@ This project uses **development builds** (Expo dev client), NOT bare `npx expo r
 
 - **Local development**: Start dev server (`bun start`), open development build on simulator
 - **DO NOT run**: `npx expo run:ios`, `npx expo run:android`, or `eas build --local` for local dev
-- **CI/CD only**: The EAS Workflow uses `preview-simulator` profile (standalone builds without dev client)
 
 ## Architecture
 
@@ -208,37 +207,7 @@ curl -X POST http://localhost:8081/api/analyze \
 
 Terraform config in `terraform/` creates an IAM user with minimal `bedrock:InvokeModel` permissions. See `terraform/README.md` for setup instructions.
 
-## CI/CD
-
-### EAS Workflow
-
-Automated testing runs on every push to `main` via `.eas/workflows/maestro-tests.yml`.
-
-**Workflow Structure:**
-```yaml
-lint → typecheck → fingerprint → get-build → build (conditional) → maestro-test
-```
-
-**Jobs:**
-- `lint`: Runs `bun run lint`
-- `typecheck`: Runs `tsc --noEmit`
-- `fingerprint`: Calculates native code hash (Expo fingerprinting)
-- `get-build`: Searches for existing build with matching fingerprint
-- `build`: Creates iOS simulator build (only if no matching build found)
-- `maestro_test`: Runs `.maestro/` tests on simulator
-
-**Build Caching:**
-- Fingerprinting caches builds by native code hash
-- JS-only changes reuse existing builds (fast: ~2-5 min)
-- Native changes trigger new builds (slower: ~10-15 min)
-- First push always creates a new build
-
-**Viewing Runs:**
-```
-https://expo.dev/accounts/benjaminkomen/projects/react-native-array-layout-2/workflows
-```
-
-### Maestro Tests
+## Maestro Tests
 
 E2E tests live in `.maestro/` directory. Current coverage:
 - Smoke test: app launch, home screen, navigation to upload/custom screens
@@ -259,8 +228,6 @@ bun start
 # 3. Run Maestro tests
 bun run test:maestro
 ```
-
-**Note**: The CI/CD workflow uses `preview-simulator` profile which creates standalone builds without dev client.
 
 ## Planned Integrations
 
