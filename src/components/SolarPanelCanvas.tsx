@@ -243,6 +243,7 @@ export function SolarPanelCanvas({
               y={panel.y}
               rotation={panel.rotation}
               isSelected={selectedId === panel.id}
+              hasInverter={!!panel.inverterId}
             />
           ))}
         </Group>

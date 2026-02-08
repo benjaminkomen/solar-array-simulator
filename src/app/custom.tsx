@@ -1,9 +1,29 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { View, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useSharedValue, withTiming } from "react-native-reanimated";
+import {
+  BottomSheet,
+  Button,
+  Form,
+  Host,
+  HStack,
+  Image,
+  Section,
+  Spacer,
+  Text,
+  VStack,
+} from "@expo/ui/swift-ui";
+import {
+  bold,
+  font,
+  foregroundStyle,
+  presentationDetents,
+  presentationDragIndicator,
+} from "@expo/ui/swift-ui/modifiers";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { usePanelsManager } from "@/hooks/usePanelsManager";
+import { useConfigStore } from "@/hooks/useConfigStore";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { GRID_SIZE } from "@/utils/gridSnap";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
@@ -111,7 +131,26 @@ export default function Custom() {
     bringToFront,
     getPanelStates,
     initializePanels,
+    assignInverter,
+    unassignInverter,
   } = usePanelsManager();
+
+  const { config } = useConfigStore();
+  const [showAssignSheet, setShowAssignSheet] = useState(false);
+
+  const selectedPanel = panels.find((p) => p.id === selectedId);
+  const assignedInverter = selectedPanel?.inverterId
+    ? config.inverters.find((inv) => inv.id === selectedPanel.inverterId)
+    : null;
+
+  const assignedInverterIds = useMemo(
+    () => new Set(panels.filter((p) => p.inverterId).map((p) => p.inverterId!)),
+    [panels],
+  );
+  const availableInverters = useMemo(
+    () => config.inverters.filter((inv) => !assignedInverterIds.has(inv.id)),
+    [config.inverters, assignedInverterIds],
+  );
 
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -160,6 +199,29 @@ export default function Custom() {
     }
   }, [selectedId, removePanel]);
 
+  const handleOpenAssignSheet = useCallback(() => {
+    if (selectedId) {
+      setShowAssignSheet(true);
+    }
+  }, [selectedId]);
+
+  const handleAssignInverter = useCallback(
+    (inverterId: string) => {
+      if (selectedId) {
+        assignInverter(selectedId, inverterId);
+        setShowAssignSheet(false);
+      }
+    },
+    [selectedId, assignInverter],
+  );
+
+  const handleUnassignInverter = useCallback(() => {
+    if (selectedId) {
+      unassignInverter(selectedId);
+      setShowAssignSheet(false);
+    }
+  }, [selectedId, unassignInverter]);
+
   const handleSnapToOrigin = useCallback(() => {
     const states = getPanelStates();
     const { width, height } = canvasSize.current;
@@ -191,11 +253,135 @@ export default function Custom() {
           viewportX={viewportX}
           viewportY={viewportY}
         />
+        <Host style={styles.sheetHost}>
+          <BottomSheet
+            isPresented={showAssignSheet}
+            onIsPresentedChange={setShowAssignSheet}
+            modifiers={[
+              presentationDetents(["medium", "large"]),
+              presentationDragIndicator("visible"),
+            ]}
+          >
+            <Form>
+              <Section>
+                <HStack>
+                  <Button onPress={() => setShowAssignSheet(false)}>
+                    <Image
+                      systemName="xmark.circle.fill"
+                      size={36}
+                      color="#E5E5EA"
+                    />
+                  </Button>
+                  <Spacer />
+                  <Text modifiers={[bold(), font({ size: 17 })]}>
+                    Assign Inverter
+                  </Text>
+                  <Spacer />
+                  <VStack>
+                    <Text> </Text>
+                  </VStack>
+                </HStack>
+              </Section>
+
+              {assignedInverter && (
+                <Section title="Currently Assigned">
+                  <Button onPress={handleUnassignInverter}>
+                    <HStack>
+                      <VStack alignment="leading" spacing={2}>
+                        <Text
+                          modifiers={[
+                            foregroundStyle({
+                              type: "hierarchical",
+                              style: "primary",
+                            }),
+                          ]}
+                        >
+                          {assignedInverter.serialNumber}
+                        </Text>
+                        <Text
+                          modifiers={[
+                            foregroundStyle({
+                              type: "hierarchical",
+                              style: "tertiary",
+                            }),
+                            font({ size: 14 }),
+                          ]}
+                        >
+                          {Math.round(assignedInverter.efficiency)}% efficiency
+                        </Text>
+                      </VStack>
+                      <Spacer />
+                      <Image
+                        systemName="minus.circle.fill"
+                        size={22}
+                        color="#FF3B30"
+                      />
+                    </HStack>
+                  </Button>
+                </Section>
+              )}
+
+              <Section
+                title={`Available (${availableInverters.length})`}
+                footer={
+                  availableInverters.length === 0 ? (
+                    <Text>
+                      All inverters are assigned. Add more in Configuration.
+                    </Text>
+                  ) : undefined
+                }
+              >
+                {availableInverters.map((inverter) => (
+                  <Button
+                    key={inverter.id}
+                    onPress={() => handleAssignInverter(inverter.id)}
+                  >
+                    <HStack>
+                      <VStack alignment="leading" spacing={2}>
+                        <Text
+                          modifiers={[
+                            foregroundStyle({
+                              type: "hierarchical",
+                              style: "primary",
+                            }),
+                          ]}
+                        >
+                          {inverter.serialNumber}
+                        </Text>
+                        <Text
+                          modifiers={[
+                            foregroundStyle({
+                              type: "hierarchical",
+                              style: "tertiary",
+                            }),
+                            font({ size: 14 }),
+                          ]}
+                        >
+                          {Math.round(inverter.efficiency)}% efficiency
+                        </Text>
+                      </VStack>
+                      <Spacer />
+                      <Image
+                        systemName="plus.circle.fill"
+                        size={22}
+                        color="#34C759"
+                      />
+                    </HStack>
+                  </Button>
+                ))}
+              </Section>
+            </Form>
+          </BottomSheet>
+        </Host>
       </View>
       <Stack.Toolbar placement="bottom">
         <Stack.Toolbar.Button icon="plus" onPress={handleAddPanel} />
         {selectedId && (
           <>
+            <Stack.Toolbar.Button
+              icon="bolt.fill"
+              onPress={handleOpenAssignSheet}
+            />
             <Stack.Toolbar.Button
               icon="rotate.right"
               onPress={handleRotatePanel}
@@ -212,5 +398,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f9fafb",
+  },
+  sheetHost: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });

@@ -14,6 +14,7 @@ export interface PanelData {
   x: SharedValue<number>;
   y: SharedValue<number>;
   rotation: SharedValue<0 | 90>;
+  inverterId: string | null;
 }
 
 interface InitialPanelPosition {
@@ -32,6 +33,8 @@ interface UsePanelsManagerResult {
   getPanelStates: () => PanelState[];
   bringToFront: (id: string) => void;
   initializePanels: (positions: InitialPanelPosition[]) => void;
+  assignInverter: (panelId: string, inverterId: string) => void;
+  unassignInverter: (panelId: string) => void;
 }
 
 export function usePanelsManager(): UsePanelsManagerResult {
@@ -69,6 +72,7 @@ export function usePanelsManager(): UsePanelsManagerResult {
         x: makeMutable(position.x),
         y: makeMutable(position.y),
         rotation: makeMutable<0 | 90>(0),
+        inverterId: null,
       };
 
       setPanels((prev) => [...prev, newPanel]);
@@ -134,9 +138,34 @@ export function usePanelsManager(): UsePanelsManagerResult {
         x: makeMutable(pos.x),
         y: makeMutable(pos.y),
         rotation: makeMutable<0 | 90>(pos.rotation),
+        inverterId: null,
       }));
       setPanels(newPanels);
       setSelectedId(null);
+    },
+    []
+  );
+
+  // Assign an inverter to a panel
+  const assignInverter = useCallback(
+    (panelId: string, inverterId: string) => {
+      setPanels((prev) =>
+        prev.map((p) =>
+          p.id === panelId ? { ...p, inverterId } : p
+        )
+      );
+    },
+    []
+  );
+
+  // Unassign an inverter from a panel
+  const unassignInverter = useCallback(
+    (panelId: string) => {
+      setPanels((prev) =>
+        prev.map((p) =>
+          p.id === panelId ? { ...p, inverterId: null } : p
+        )
+      );
     },
     []
   );
@@ -162,6 +191,8 @@ export function usePanelsManager(): UsePanelsManagerResult {
     getPanelStates,
     bringToFront,
     initializePanels,
+    assignInverter,
+    unassignInverter,
   };
 }
 

@@ -1,4 +1,4 @@
-import { Group, RoundedRect, Line } from "@shopify/react-native-skia";
+import { Group, RoundedRect, Line, Circle } from "@shopify/react-native-skia";
 import {
   useDerivedValue,
   type SharedValue,
@@ -14,15 +14,17 @@ const FILL_COLOR = "#3b82f6"; // blue-500
 const STROKE_COLOR = "#1d4ed8"; // blue-800
 const GRID_COLOR = "#60a5fa"; // blue-400
 const SELECTION_COLOR = "#fbbf24"; // amber-400
+const INVERTER_DOT_COLOR = "#22c55e"; // green-500
 
 interface SolarPanelProps {
   x: SharedValue<number>;
   y: SharedValue<number>;
   rotation?: SharedValue<0 | 90>;
   isSelected?: boolean;
+  hasInverter?: boolean;
 }
 
-export function SolarPanel({ x, y, rotation, isSelected = false }: SolarPanelProps) {
+export function SolarPanel({ x, y, rotation, isSelected = false, hasInverter = false }: SolarPanelProps) {
   const transform = useDerivedValue(() => {
     if (rotation && rotation.value === 90) {
       // For 90° rotation:
@@ -99,6 +101,15 @@ export function SolarPanel({ x, y, rotation, isSelected = false }: SolarPanelPro
         color={GRID_COLOR}
         strokeWidth={2}
       />
+      {/* Inverter assigned indicator */}
+      {hasInverter && (
+        <Circle
+          cx={PANEL_WIDTH - 10}
+          cy={10}
+          r={5}
+          color={INVERTER_DOT_COLOR}
+        />
+      )}
     </Group>
   );
 }
