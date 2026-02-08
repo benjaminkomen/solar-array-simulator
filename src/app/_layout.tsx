@@ -29,13 +29,6 @@ export default function RootLayout() {
             title: "",
           }}
         />
-        <Stack.Screen
-          name="inverter/[id]"
-          options={{
-            title: "Micro-inverter",
-            headerBackTitle: "",
-          }}
-        />
       </Stack>
     </GestureHandlerRootView>
   );
