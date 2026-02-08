@@ -11,6 +11,13 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" />
         <Stack.Screen
+          name="config"
+          options={{
+            title: "Configuration",
+            headerBackTitle: "",
+          }}
+        />
+        <Stack.Screen
           name="upload"
           options={{
             title: "",
@@ -20,6 +27,13 @@ export default function RootLayout() {
           name="custom"
           options={{
             title: "",
+          }}
+        />
+        <Stack.Screen
+          name="inverter/[id]"
+          options={{
+            title: "Micro-inverter",
+            headerBackTitle: "",
           }}
         />
       </Stack>

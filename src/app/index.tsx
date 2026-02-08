@@ -5,11 +5,11 @@ import { OptionCard } from "@/components/OptionCard";
 export default function Index() {
   const { width, height } = useWindowDimensions();
 
-  // Calculate card size to fit both cards in viewport with gap
+  // Calculate card size to fit three cards in viewport with gap
   const gap = 16;
   const verticalPadding = 200; // Account for header/safe area/padding/bottom
   const availableHeight = height - verticalPadding;
-  const cardSize = Math.min(width - 40, (availableHeight - gap) / 2);
+  const cardSize = Math.min(width - 40, (availableHeight - gap * 2) / 3);
 
   return (
     <>
@@ -29,6 +29,14 @@ export default function Index() {
             paddingHorizontal: 20,
           }}
         >
+          <OptionCard
+            title="Configuration"
+            description="Configure micro-inverters"
+            cardSize={cardSize}
+            href="/config"
+            icon="sf:slider.horizontal.3"
+            testID="config-option"
+          />
           <OptionCard
             title="Upload"
             description="Take or select a photo"

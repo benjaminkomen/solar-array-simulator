@@ -93,6 +93,20 @@ Users can tap any solar panel to view a **bottom sheet / form sheet** containing
 - Serial number (from micro inverter)
 - Additional metadata and specifications
 
+### Configuration Screen
+
+A dedicated configuration screen allows users to manage system settings:
+
+#### Panel Settings
+- Configure default maximum wattage per micro-inverter/panel
+
+#### Micro-inverter Management
+- View list of all configured micro-inverters with serial numbers and efficiency
+- Add new micro-inverters with custom serial number and efficiency
+- Edit existing micro-inverters (serial number, efficiency slider)
+- Swipe-to-delete functionality for removing inverters
+- Native iOS Form UI with SwiftUI components
+
 ---
 
 ## Technical Architecture
@@ -190,6 +204,7 @@ src/
 │   ├── index.tsx          # Home screen with Upload/Custom options
 │   ├── upload.tsx         # Image capture, analysis, and processing overlay
 │   ├── custom.tsx         # Custom canvas editor with toolbar
+│   ├── config.tsx         # Configuration screen with SwiftUI Form
 │   └── api/
 │       └── analyze+api.ts # Bedrock API route (Claude vision analysis)
 ├── components/
@@ -200,11 +215,13 @@ src/
 │   ├── SolarPanel.tsx     # Skia panel rendering with rotation
 │   └── SolarPanelCanvas.tsx # Main canvas with gesture handling
 ├── hooks/
+│   ├── useConfigStore.ts  # Configuration store hook (inverters, wattage)
 │   ├── useImagePicker.ts  # Camera and gallery picker hook
 │   └── usePanelsManager.ts # Panel state management (CRUD)
 └── utils/
     ├── analysisStore.ts   # Module-level store for passing analysis results
     ├── collision.ts       # AABB collision detection
+    ├── configStore.ts     # Persistent config store (expo-sqlite/kv-store)
     ├── gridSnap.ts        # Grid snapping utilities
     ├── imageResize.ts     # Client-side image resize for upload
     └── panelUtils.ts      # Panel dimensions, hit testing, positioning
@@ -231,6 +248,7 @@ terraform/
 - [x] Integrate AWS Bedrock for image analysis (Claude Sonnet 4.5)
 - [x] Set up Expo API route for server-side Bedrock calls
 - [x] Add Terraform config for IAM resources
+- [x] Add configuration screen with micro-inverter management
 - [ ] Deploy API routes to EAS Hosting
 - [ ] Implement compass orientation indicator
 - [ ] Create panel detail bottom sheet

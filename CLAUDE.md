@@ -48,6 +48,8 @@ This is an Expo Router v55 preview app for creating solar panel array layouts. U
 - **@shopify/react-native-skia** - High-performance 2D canvas for solar panel layout
 - **@ai-sdk/amazon-bedrock** - Claude on AWS Bedrock for image analysis (no AWS SDK dependency)
 - **expo-image-manipulator** - Client-side image resize before upload
+- **@expo/ui/swift-ui** - Native SwiftUI components (Form, Section, List, BottomSheet)
+- **expo-sqlite/kv-store** - Synchronous key-value storage for configuration
 
 ### Project Structure
 
@@ -58,6 +60,7 @@ src/
 │   ├── index.tsx           # Home screen (Upload/Custom options)
 │   ├── upload.tsx          # Image capture + Bedrock analysis
 │   ├── custom.tsx          # Canvas editor with toolbar
+│   ├── config.tsx          # Configuration screen (SwiftUI Form)
 │   └── api/
 │       └── analyze+api.ts  # Bedrock API route (Claude vision)
 ├── components/
@@ -68,11 +71,13 @@ src/
 │   ├── SolarPanel.tsx      # Skia panel with rotation
 │   └── SolarPanelCanvas.tsx # Main canvas + gestures
 ├── hooks/
+│   ├── useConfigStore.ts   # Config store hook (inverters, wattage)
 │   ├── useImagePicker.ts   # Camera/gallery hook
 │   └── usePanelsManager.ts # Panel state management
 └── utils/
     ├── analysisStore.ts    # Module-level store for analysis results
     ├── collision.ts        # AABB collision detection
+    ├── configStore.ts      # Persistent config (expo-sqlite/kv-store)
     ├── gridSnap.ts         # Grid snap utilities
     ├── imageResize.ts      # Client-side image resize for upload
     └── panelUtils.ts       # Panel helpers
@@ -228,6 +233,53 @@ bun start
 # 3. Run Maestro tests
 bun run test:maestro
 ```
+
+## Configuration System
+
+### Config Store (`src/utils/configStore.ts`)
+
+Synchronous key-value store using `expo-sqlite/kv-store` for persistent configuration.
+
+```typescript
+interface InverterConfig {
+  id: string;
+  serialNumber: string;  // 8-digit serial number
+  efficiency: number;    // 0-100 percentage
+}
+
+interface SystemConfig {
+  defaultMaxWattage: number;
+  inverters: InverterConfig[];
+}
+```
+
+**Store functions:**
+- `getConfig()` - Get current configuration
+- `updateDefaultWattage(wattage)` - Update default panel wattage
+- `updateInverterEfficiency(id, efficiency)` - Update inverter efficiency
+- `updateInverterSerialNumber(id, serial)` - Update inverter serial number
+- `addInverterWithDetails(serial, efficiency)` - Add new inverter
+- `removeInverter(id)` - Delete inverter
+- `subscribe(listener)` - Subscribe to config changes
+
+### Config Hook (`src/hooks/useConfigStore.ts`)
+
+React hook that wraps the config store with automatic re-rendering on changes.
+
+```typescript
+const { config, updateDefaultWattage, addInverterWithDetails, removeInverter } = useConfigStore();
+```
+
+### Configuration Screen (`src/app/config.tsx`)
+
+Native iOS form using `@expo/ui/swift-ui` components:
+
+- **Form** - Native iOS grouped form container
+- **Section** - Grouped sections with titles and footers
+- **LabeledContent** - Label-value pairs
+- **List.ForEach** - Swipe-to-delete enabled list
+- **BottomSheet** - Modal sheets for add/edit inverters
+- **Slider** - Efficiency adjustment (0-100%)
 
 ## Planned Integrations
 
