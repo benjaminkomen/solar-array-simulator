@@ -100,7 +100,7 @@ export default function ConfigScreen() {
           <Form>
             {/* Panel Settings Section */}
             <Section
-              title="Panel Settings"
+              header={<Text>Panel Settings</Text>}
               footer={
                 <Text>
                   Configure the default wattage each micro-inverter and solar panel will produce at
@@ -120,7 +120,7 @@ export default function ConfigScreen() {
 
             {/* Micro-inverters Section */}
             <Section
-              title={`Micro-inverters (${config.inverters.length})`}
+              header={<Text>Micro-inverters ({config.inverters.length})</Text>}
               footer={
                 <Text>
                   Tap to edit efficiency. Swipe left to delete.
@@ -176,7 +176,7 @@ export default function ConfigScreen() {
               </Section>
 
               {/* Serial Number */}
-              <Section title="Details">
+              <Section header={<Text>Details</Text>}>
                 <LabeledContent label="Serial Number">
                   <TextField
                     defaultValue={newSerial}
@@ -189,7 +189,7 @@ export default function ConfigScreen() {
 
               {/* Efficiency */}
               <Section
-                title="Efficiency"
+                header={<Text>Efficiency</Text>}
                 footer={<Text>Set the expected efficiency for this micro-inverter.</Text>}
               >
                 <LabeledContent label="Current">
@@ -233,7 +233,7 @@ export default function ConfigScreen() {
                 </Section>
 
                 {/* Serial Number */}
-                <Section title="Details">
+                <Section header={<Text>Details</Text>}>
                   <LabeledContent label="Serial Number">
                     <TextField
                       defaultValue={editSerial}
@@ -246,7 +246,7 @@ export default function ConfigScreen() {
 
                 {/* Efficiency */}
                 <Section
-                  title="Efficiency"
+                  header={<Text>Efficiency</Text>}
                   footer={<Text>Adjust for shading, dirt, or other obstructions.</Text>}
                 >
                   <LabeledContent label="Current">
