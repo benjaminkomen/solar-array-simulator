@@ -77,6 +77,7 @@ export function SolarPanelCanvas({
           x: p.x.value,
           y: p.y.value,
           rotation: p.rotation.value,
+          inverterId: p.inverterId.value,
         });
       }
 
@@ -142,6 +143,7 @@ export function SolarPanelCanvas({
           x: p.x.value,
           y: p.y.value,
           rotation: p.rotation.value,
+          inverterId: p.inverterId.value,
         });
         otherRects.push({ ...rect, id: p.id });
       }
@@ -190,6 +192,7 @@ export function SolarPanelCanvas({
           x: p.x.value,
           y: p.y.value,
           rotation: p.rotation.value,
+          inverterId: p.inverterId.value,
         });
         otherRects.push({ ...rect, id: p.id });
       }
@@ -219,6 +222,7 @@ export function SolarPanelCanvas({
           x: p.x.value,
           y: p.y.value,
           rotation: p.rotation.value,
+          inverterId: p.inverterId.value,
         });
       }
 

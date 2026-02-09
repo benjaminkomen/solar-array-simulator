@@ -1,9 +1,10 @@
 import { useCallback, useRef } from "react";
 import { View, StyleSheet, type LayoutChangeEvent } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, Link } from "expo-router";
 import { useSharedValue, withTiming } from "react-native-reanimated";
+import { useConfigStore } from "@/hooks/useConfigStore";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
-import { usePanelsManager } from "@/hooks/usePanelsManager";
+import { usePanelsContext } from "@/contexts/PanelsContext";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { GRID_SIZE } from "@/utils/gridSnap";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
@@ -100,6 +101,7 @@ export default function Custom() {
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
   const hasInitialized = useRef(false);
+  const { config } = useConfigStore();
 
   const {
     panels,
@@ -111,7 +113,8 @@ export default function Custom() {
     bringToFront,
     getPanelStates,
     initializePanels,
-  } = usePanelsManager();
+    getLinkedCount,
+  } = usePanelsContext();
 
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -132,13 +135,26 @@ export default function Custom() {
             width,
             height,
           );
-          initializePanels(positions);
+
+          // Auto-link panels based on label matching serial numbers
+          const positionsWithInverters = positions.map((pos, idx) => {
+            const label = analysis.panels[idx]?.label || '';
+            const matchingInverter = config.inverters.find(
+              inv => inv.serialNumber === label.trim()
+            );
+            return {
+              ...pos,
+              inverterId: matchingInverter?.id || null,
+            };
+          });
+
+          initializePanels(positionsWithInverters);
         } else {
           initializePanels(buildMockPanelGrid(width, height));
         }
       }
     },
-    [initialPanels, initializePanels],
+    [initialPanels, initializePanels, config.inverters],
   );
 
   const handleAddPanel = useCallback(() => {
@@ -176,10 +192,19 @@ export default function Custom() {
     }
   }, [getPanelStates, viewportX, viewportY]);
 
+  // Compute unlinked count (uses cached state from hook, no SharedValue reads)
+  const unlinkedCount = panels.length - getLinkedCount();
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
       <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button onPress={() => {}}>
+          <Stack.Toolbar.Icon sf="link" />
+          {unlinkedCount > 0 && (
+            <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
+          )}
+        </Stack.Toolbar.Button>
         <Stack.Toolbar.Button icon="location" onPress={handleSnapToOrigin} />
       </Stack.Toolbar>
       <View style={styles.container} onLayout={handleLayout} testID="canvas-container">
@@ -196,6 +221,9 @@ export default function Custom() {
         <Stack.Toolbar.Button icon="plus" onPress={handleAddPanel} />
         {selectedId && (
           <>
+            <Link href={`/link-inverter?panelId=${selectedId}`} asChild>
+              <Stack.Toolbar.Button icon="link" />
+            </Link>
             <Stack.Toolbar.Button
               icon="rotate.right"
               onPress={handleRotatePanel}
