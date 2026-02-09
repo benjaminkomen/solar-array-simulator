@@ -122,11 +122,13 @@ export default function LinkInverterScreen() {
         // Empty state - no available inverters
         <View style={styles.section}>
           <View style={styles.emptyState}>
-            <Ionicons name="warning" size={56} color="#FF9500" />
+            <Ionicons name="warning" size={56} color="#8E8E93" />
             <Text style={styles.emptyTitle}>No Available Inverters</Text>
             <Text style={styles.emptyDescription}>
               All inverters are assigned. Unlink a panel first or add a new inverter.
             </Text>
+          </View>
+          <View style={styles.buttonContainer}>
             <Link href="/config" asChild>
               <Pressable
                 style={({pressed}) => [
@@ -134,8 +136,10 @@ export default function LinkInverterScreen() {
                   pressed && styles.addButtonPressed
                 ]}
               >
-                <Ionicons name="add-circle" size={20} color="#fff" />
-                <Text style={styles.addButtonText}>Add Inverter</Text>
+                <View style={styles.buttonContent}>
+                  <Ionicons name="add-circle" size={22} color="#fff" />
+                  <Text style={styles.addButtonText}>Add Inverter</Text>
+                </View>
               </Pressable>
             </Link>
           </View>
@@ -148,6 +152,7 @@ export default function LinkInverterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
   },
   contentContainer: {
     padding: 16,
@@ -237,39 +242,55 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 48,
+    paddingVertical: 40,
     paddingHorizontal: 32,
     gap: 16,
+    borderRadius: 16,
+    borderCurve: 'continuous',
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#000',
     textAlign: 'center',
   },
   emptyDescription: {
     fontSize: 15,
-    color: '#8E8E93',
+    color: '#3C3C43',
     textAlign: 'center',
     lineHeight: 20,
+    fontWeight: '500',
+  },
+  buttonContainer: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    backgroundColor: 'rgb(0, 122, 255)',
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
+    backgroundColor: 'rgb(0, 122, 255)',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     borderCurve: 'continuous',
-    gap: 8,
-    marginTop: 8,
+    boxShadow: '0 4px 12px rgba(0, 122, 255, 0.6)',
+    overflow: 'hidden',
   },
   addButtonPressed: {
     opacity: 0.8,
   },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
   addButtonText: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#fff',
   },
 });
