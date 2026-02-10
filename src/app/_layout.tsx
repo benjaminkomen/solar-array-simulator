@@ -1,10 +1,12 @@
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { PanelsProvider } from "@/contexts/PanelsContext";
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack
+      <PanelsProvider>
+        <Stack
         screenOptions={{
           headerTransparent: true,
         }}
@@ -29,7 +31,18 @@ export default function RootLayout() {
             title: "",
           }}
         />
+        <Stack.Screen
+          name="link-inverter"
+          options={{
+            presentation: "formSheet",
+            sheetGrabberVisible: true,
+            sheetAllowedDetents: [0.6, 1.0],
+            title: "Link Inverter",
+            contentStyle: { backgroundColor: "transparent" },
+          }}
+        />
       </Stack>
+      </PanelsProvider>
     </GestureHandlerRootView>
   );
 }

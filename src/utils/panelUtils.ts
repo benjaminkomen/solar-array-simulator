@@ -10,6 +10,7 @@ export interface PanelState {
   x: number;
   y: number;
   rotation: 0 | 90;
+  inverterId: string | null;
 }
 
 /**

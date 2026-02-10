@@ -1,28 +1,41 @@
-import { useState, useCallback, useRef } from "react";
-import { makeMutable, type SharedValue } from "react-native-reanimated";
+import {useCallback, useRef, useState, useEffect} from "react";
+import {makeMutable, type SharedValue} from "react-native-reanimated";
 import {
-  type PanelState,
   findFreePosition,
   findValidPositionAfterRotation,
   generatePanelId,
-  PANEL_WIDTH,
   PANEL_HEIGHT,
+  PANEL_WIDTH,
+  type PanelState,
 } from "@/utils/panelUtils";
+import {
+  getPanelStore,
+  savePanels as savePanelsToStore,
+  setSelectedId as setSelectedIdInStore,
+  linkPanelToInverter,
+  bringPanelToFront as bringToFrontInStore,
+  getLinkedCount as getLinkedCountFromStore,
+  updatePanel as updatePanelInStore,
+  subscribe,
+  type StoredPanel,
+} from "@/utils/panelStore";
 
 export interface PanelData {
   id: string;
   x: SharedValue<number>;
   y: SharedValue<number>;
   rotation: SharedValue<0 | 90>;
+  inverterId: SharedValue<string | null>;
 }
 
 interface InitialPanelPosition {
   x: number;
   y: number;
   rotation: 0 | 90;
+  inverterId?: string | null;
 }
 
-interface UsePanelsManagerResult {
+export interface UsePanelsManagerResult {
   panels: PanelData[];
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
@@ -32,15 +45,67 @@ interface UsePanelsManagerResult {
   getPanelStates: () => PanelState[];
   bringToFront: (id: string) => void;
   initializePanels: (positions: InitialPanelPosition[]) => void;
+  linkInverter: (panelId: string, inverterId: string | null) => void;
+  getLinkedCount: () => number;
+  savePanelPosition: (panelId: string, x: number, y: number) => void;
+}
+
+// Convert stored panel to PanelData with SharedValues
+function storedPanelToPanelData(stored: StoredPanel): PanelData {
+  return {
+    id: stored.id,
+    x: makeMutable(stored.x),
+    y: makeMutable(stored.y),
+    rotation: makeMutable(stored.rotation),
+    inverterId: makeMutable(stored.inverterId),
+  };
 }
 
 export function usePanelsManager(): UsePanelsManagerResult {
-  const [panels, setPanels] = useState<PanelData[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Initialize from store
+  const [panels, setPanels] = useState<PanelData[]>(() => {
+    const store = getPanelStore();
+    return store.panels.map(storedPanelToPanelData);
+  });
+
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    return getPanelStore().selectedId;
+  });
+
+  const [linkedCount, setLinkedCount] = useState<number>(() => {
+    return getLinkedCountFromStore();
+  });
+
   const panelsRef = useRef<PanelData[]>([]);
 
   // Keep ref in sync for worklet access
   panelsRef.current = panels;
+
+  // Subscribe to store changes (for cross-component sync)
+  useEffect(() => {
+    const unsubscribe = subscribe((data) => {
+      // Reuse existing SharedValues by ID to avoid breaking gesture handlers
+      setPanels((prevPanels) => {
+        const panelMap = new Map(prevPanels.map((p) => [p.id, p]));
+        return data.panels.map((stored) => {
+          const existing = panelMap.get(stored.id);
+          if (existing) {
+            // Reuse SharedValues, update their values
+            existing.x.value = stored.x;
+            existing.y.value = stored.y;
+            existing.rotation.value = stored.rotation;
+            existing.inverterId.value = stored.inverterId;
+            return existing;
+          }
+          // New panel - create fresh SharedValues
+          return storedPanelToPanelData(stored);
+        });
+      });
+      setSelectedId(data.selectedId);
+      setLinkedCount(getLinkedCountFromStore());
+    });
+    return unsubscribe;
+  }, []);
 
   // Get current panel states (for collision detection)
   const getPanelStates = useCallback((): PanelState[] => {
@@ -49,6 +114,7 @@ export function usePanelsManager(): UsePanelsManagerResult {
       x: p.x.value,
       y: p.y.value,
       rotation: p.rotation.value,
+      inverterId: p.inverterId.value,
     }));
   }, []);
 
@@ -64,14 +130,17 @@ export function usePanelsManager(): UsePanelsManagerResult {
       }
 
       const id = generatePanelId();
-      const newPanel: PanelData = {
+      const newStoredPanel: StoredPanel = {
         id,
-        x: makeMutable(position.x),
-        y: makeMutable(position.y),
-        rotation: makeMutable<0 | 90>(0),
+        x: position.x,
+        y: position.y,
+        rotation: 0,
+        inverterId: null,
       };
 
-      setPanels((prev) => [...prev, newPanel]);
+      // Save to store (will trigger subscription update)
+      const store = getPanelStore();
+      savePanelsToStore([...store.panels, newStoredPanel]);
       return true;
     },
     [getPanelStates]
@@ -80,12 +149,15 @@ export function usePanelsManager(): UsePanelsManagerResult {
   // Remove a panel by id
   const removePanel = useCallback(
     (id: string) => {
-      setPanels((prev) => prev.filter((p) => p.id !== id));
-      if (selectedId === id) {
-        setSelectedId(null);
+      const store = getPanelStore();
+      const panels = store.panels.filter((p) => p.id !== id);
+      savePanelsToStore(panels);
+
+      if (store.selectedId === id) {
+        setSelectedIdInStore(null);
       }
     },
-    [selectedId]
+    []
   );
 
   // Rotate a panel (toggle 0 <-> 90)
@@ -114,13 +186,20 @@ export function usePanelsManager(): UsePanelsManagerResult {
         return false; // No valid position found
       }
 
-      // Apply rotation and new position
+      // Update SharedValues immediately for smooth animation
       panel.rotation.value = newRotation;
       panel.x.value = newPosition.x;
       panel.y.value = newPosition.y;
 
-      // Force re-render by updating state
-      setPanels((prev) => [...prev]);
+      // Save to store
+      const store = getPanelStore();
+      const panels = store.panels.map((p) =>
+        p.id === id
+          ? { ...p, rotation: newRotation, x: newPosition.x, y: newPosition.y }
+          : p
+      );
+      savePanelsToStore(panels);
+
       return true;
     },
     [getPanelStates]
@@ -129,39 +208,65 @@ export function usePanelsManager(): UsePanelsManagerResult {
   // Initialize panels at specific positions (for loading from analysis results)
   const initializePanels = useCallback(
     (positions: InitialPanelPosition[]) => {
-      const newPanels: PanelData[] = positions.map((pos) => ({
+      const newStoredPanels: StoredPanel[] = positions.map((pos) => ({
         id: generatePanelId(),
-        x: makeMutable(pos.x),
-        y: makeMutable(pos.y),
-        rotation: makeMutable<0 | 90>(pos.rotation),
+        x: pos.x,
+        y: pos.y,
+        rotation: pos.rotation,
+        inverterId: pos.inverterId ?? null,
       }));
-      setPanels(newPanels);
-      setSelectedId(null);
+
+      savePanelsToStore(newStoredPanels);
+      setSelectedIdInStore(null);
     },
     []
   );
 
   // Bring a panel to the front (move to end of array)
   const bringToFront = useCallback((id: string) => {
-    setPanels((prev) => {
-      const index = prev.findIndex((p) => p.id === id);
-      if (index === -1 || index === prev.length - 1) return prev;
-      const panel = prev[index];
-      const newPanels = [...prev.slice(0, index), ...prev.slice(index + 1), panel];
-      return newPanels;
-    });
+    bringToFrontInStore(id);
+  }, []);
+
+  // Link a panel to an inverter
+  const linkInverter = useCallback((panelId: string, inverterId: string | null) => {
+    // Update SharedValue immediately for local responsiveness
+    const panel = panelsRef.current.find((p) => p.id === panelId);
+    if (panel) {
+      panel.inverterId.value = inverterId;
+    }
+
+    // Save to store (will trigger subscription update)
+    linkPanelToInverter(panelId, inverterId);
+  }, []);
+
+  // Get count of linked panels (returns cached state value)
+  const getLinkedCount = useCallback((): number => {
+    return linkedCount;
+  }, [linkedCount]);
+
+  // Save panel position to persistent storage (called after drag ends)
+  const savePanelPosition = useCallback((panelId: string, x: number, y: number) => {
+    updatePanelInStore(panelId, { x, y });
+  }, []);
+
+  // Update setSelectedId to use store
+  const setSelectedIdWrapped = useCallback((id: string | null) => {
+    setSelectedIdInStore(id);
   }, []);
 
   return {
     panels,
     selectedId,
-    setSelectedId,
+    setSelectedId: setSelectedIdWrapped,
     addPanel,
     removePanel,
     rotatePanel,
     getPanelStates,
     bringToFront,
     initializePanels,
+    linkInverter,
+    getLinkedCount,
+    savePanelPosition,
   };
 }
 
