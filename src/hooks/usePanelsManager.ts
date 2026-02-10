@@ -15,6 +15,7 @@ import {
   linkPanelToInverter,
   bringPanelToFront as bringToFrontInStore,
   getLinkedCount as getLinkedCountFromStore,
+  updatePanel as updatePanelInStore,
   subscribe,
   type StoredPanel,
 } from "@/utils/panelStore";
@@ -46,6 +47,7 @@ export interface UsePanelsManagerResult {
   initializePanels: (positions: InitialPanelPosition[]) => void;
   linkInverter: (panelId: string, inverterId: string | null) => void;
   getLinkedCount: () => number;
+  savePanelPosition: (panelId: string, x: number, y: number) => void;
 }
 
 // Convert stored panel to PanelData with SharedValues
@@ -56,17 +58,6 @@ function storedPanelToPanelData(stored: StoredPanel): PanelData {
     y: makeMutable(stored.y),
     rotation: makeMutable(stored.rotation),
     inverterId: makeMutable(stored.inverterId),
-  };
-}
-
-// Convert PanelData back to stored format
-function panelDataToStored(panel: PanelData): StoredPanel {
-  return {
-    id: panel.id,
-    x: panel.x.value,
-    y: panel.y.value,
-    rotation: panel.rotation.value,
-    inverterId: panel.inverterId.value,
   };
 }
 
@@ -93,9 +84,23 @@ export function usePanelsManager(): UsePanelsManagerResult {
   // Subscribe to store changes (for cross-component sync)
   useEffect(() => {
     const unsubscribe = subscribe((data) => {
-      // Convert stored panels to PanelData
-      const newPanels = data.panels.map(storedPanelToPanelData);
-      setPanels(newPanels);
+      // Reuse existing SharedValues by ID to avoid breaking gesture handlers
+      setPanels((prevPanels) => {
+        const panelMap = new Map(prevPanels.map((p) => [p.id, p]));
+        return data.panels.map((stored) => {
+          const existing = panelMap.get(stored.id);
+          if (existing) {
+            // Reuse SharedValues, update their values
+            existing.x.value = stored.x;
+            existing.y.value = stored.y;
+            existing.rotation.value = stored.rotation;
+            existing.inverterId.value = stored.inverterId;
+            return existing;
+          }
+          // New panel - create fresh SharedValues
+          return storedPanelToPanelData(stored);
+        });
+      });
       setSelectedId(data.selectedId);
       setLinkedCount(getLinkedCountFromStore());
     });
@@ -239,6 +244,11 @@ export function usePanelsManager(): UsePanelsManagerResult {
     return linkedCount;
   }, [linkedCount]);
 
+  // Save panel position to persistent storage (called after drag ends)
+  const savePanelPosition = useCallback((panelId: string, x: number, y: number) => {
+    updatePanelInStore(panelId, { x, y });
+  }, []);
+
   // Update setSelectedId to use store
   const setSelectedIdWrapped = useCallback((id: string | null) => {
     setSelectedIdInStore(id);
@@ -256,6 +266,7 @@ export function usePanelsManager(): UsePanelsManagerResult {
     initializePanels,
     linkInverter,
     getLinkedCount,
+    savePanelPosition,
   };
 }
 

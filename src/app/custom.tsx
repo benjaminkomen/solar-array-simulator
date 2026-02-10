@@ -114,6 +114,7 @@ export default function Custom() {
     getPanelStates,
     initializePanels,
     getLinkedCount,
+    savePanelPosition,
   } = usePanelsContext();
 
   const handleLayout = useCallback(
@@ -213,6 +214,7 @@ export default function Custom() {
           selectedId={selectedId}
           onSelectPanel={setSelectedId}
           onBringToFront={bringToFront}
+          onSavePanelPosition={savePanelPosition}
           viewportX={viewportX}
           viewportY={viewportY}
         />

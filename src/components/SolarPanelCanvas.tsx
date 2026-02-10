@@ -1,13 +1,12 @@
-import { useCallback } from "react";
 import { StyleSheet } from "react-native";
 import { Canvas, Group } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import {
-  runOnJS,
   useSharedValue,
   useDerivedValue,
   type SharedValue,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { SolarPanel } from "./SolarPanel";
 import type { PanelData } from "@/hooks/usePanelsManager";
 import type { PanelState } from "@/utils/panelUtils";
@@ -20,6 +19,7 @@ interface SolarPanelCanvasProps {
   selectedId: string | null;
   onSelectPanel: (id: string | null) => void;
   onBringToFront: (id: string) => void;
+  onSavePanelPosition: (panelId: string, x: number, y: number) => void;
   viewportX: SharedValue<number>;
   viewportY: SharedValue<number>;
 }
@@ -29,6 +29,7 @@ export function SolarPanelCanvas({
   selectedId,
   onSelectPanel,
   onBringToFront,
+  onSavePanelPosition,
   viewportX,
   viewportY,
 }: SolarPanelCanvasProps) {
@@ -46,20 +47,6 @@ export function SolarPanelCanvas({
   const canvasTransform = useDerivedValue(() => {
     return [{ translateX: viewportX.value }, { translateY: viewportY.value }];
   });
-
-  const selectPanel = useCallback(
-    (id: string | null) => {
-      onSelectPanel(id);
-    },
-    [onSelectPanel]
-  );
-
-  const bringToFront = useCallback(
-    (id: string) => {
-      onBringToFront(id);
-    },
-    [onBringToFront]
-  );
 
   // Main pan gesture - handles both panel dragging and viewport panning
   const panGesture = Gesture.Pan()
@@ -93,15 +80,15 @@ export function SolarPanelCanvas({
           panelOffsetX.value = panel.x.value;
           panelOffsetY.value = panel.y.value;
         }
-        runOnJS(selectPanel)(hitId);
-        runOnJS(bringToFront)(hitId);
+        scheduleOnRN(onSelectPanel, hitId);
+        scheduleOnRN(onBringToFront, hitId);
       } else {
         // Panning the viewport
         draggedPanelId.value = null;
         isPanningViewport.value = true;
         viewportStartX.value = viewportX.value;
         viewportStartY.value = viewportY.value;
-        runOnJS(selectPanel)(null);
+        scheduleOnRN(onSelectPanel, null);
       }
     })
     .onUpdate((e) => {
@@ -203,6 +190,9 @@ export function SolarPanelCanvas({
         panel.y.value = snappedY;
       }
 
+      // Save final position to persistent storage
+      scheduleOnRN(onSavePanelPosition, panelId, panel.x.value, panel.y.value);
+
       draggedPanelId.value = null;
     });
 
@@ -227,9 +217,9 @@ export function SolarPanelCanvas({
       }
 
       const hitId = hitTestPanels(worldX, worldY, states);
-      runOnJS(selectPanel)(hitId);
+      scheduleOnRN(onSelectPanel, hitId);
       if (hitId) {
-        runOnJS(bringToFront)(hitId);
+        scheduleOnRN(onBringToFront, hitId);
       }
     });
 
