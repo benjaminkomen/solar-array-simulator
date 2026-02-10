@@ -10,9 +10,16 @@ const BORDER_RADIUS = 8;
 const STROKE_WIDTH = 2;
 const SELECTION_STROKE_WIDTH = 3;
 
+// Linked panel colors (blue)
 const FILL_COLOR = "#3b82f6"; // blue-500
 const STROKE_COLOR = "#1d4ed8"; // blue-800
 const GRID_COLOR = "#60a5fa"; // blue-400
+
+// Unlinked panel colors (gray)
+const UNLINKED_FILL_COLOR = "#9ca3af"; // gray-400
+const UNLINKED_STROKE_COLOR = "#6b7280"; // gray-500
+const UNLINKED_GRID_COLOR = "#d1d5db"; // gray-300
+
 const SELECTION_COLOR = "#fbbf24"; // amber-400
 
 interface SolarPanelProps {
@@ -20,9 +27,10 @@ interface SolarPanelProps {
   y: SharedValue<number>;
   rotation?: SharedValue<0 | 90>;
   isSelected?: boolean;
+  inverterId?: SharedValue<string | null>;
 }
 
-export function SolarPanel({ x, y, rotation, isSelected = false }: SolarPanelProps) {
+export function SolarPanel({ x, y, rotation, isSelected = false, inverterId }: SolarPanelProps) {
   const transform = useDerivedValue(() => {
     if (rotation && rotation.value === 90) {
       // For 90° rotation:
@@ -37,6 +45,17 @@ export function SolarPanel({ x, y, rotation, isSelected = false }: SolarPanelPro
     }
     return [{ translateX: x.value }, { translateY: y.value }];
   });
+
+  // Derive colors based on link state - gray when unlinked, blue when linked
+  const fillColor = useDerivedValue(() =>
+    inverterId?.value === null ? UNLINKED_FILL_COLOR : FILL_COLOR
+  );
+  const strokeColor = useDerivedValue(() =>
+    inverterId?.value === null ? UNLINKED_STROKE_COLOR : STROKE_COLOR
+  );
+  const gridColor = useDerivedValue(() =>
+    inverterId?.value === null ? UNLINKED_GRID_COLOR : GRID_COLOR
+  );
 
   return (
     <Group transform={transform}>
@@ -60,7 +79,7 @@ export function SolarPanel({ x, y, rotation, isSelected = false }: SolarPanelPro
         width={PANEL_WIDTH}
         height={PANEL_HEIGHT}
         r={BORDER_RADIUS}
-        color={FILL_COLOR}
+        color={fillColor}
       />
       {/* Panel border */}
       <RoundedRect
@@ -69,7 +88,7 @@ export function SolarPanel({ x, y, rotation, isSelected = false }: SolarPanelPro
         width={PANEL_WIDTH}
         height={PANEL_HEIGHT}
         r={BORDER_RADIUS}
-        color={STROKE_COLOR}
+        color={strokeColor}
         style="stroke"
         strokeWidth={STROKE_WIDTH}
       />
@@ -77,26 +96,26 @@ export function SolarPanel({ x, y, rotation, isSelected = false }: SolarPanelPro
       <Line
         p1={{ x: PANEL_WIDTH / 2, y: BORDER_RADIUS }}
         p2={{ x: PANEL_WIDTH / 2, y: PANEL_HEIGHT - BORDER_RADIUS }}
-        color={GRID_COLOR}
+        color={gridColor}
         strokeWidth={2}
       />
       {/* Horizontal lines (3 evenly spaced) */}
       <Line
         p1={{ x: BORDER_RADIUS, y: PANEL_HEIGHT * 0.25 }}
         p2={{ x: PANEL_WIDTH - BORDER_RADIUS, y: PANEL_HEIGHT * 0.25 }}
-        color={GRID_COLOR}
+        color={gridColor}
         strokeWidth={2}
       />
       <Line
         p1={{ x: BORDER_RADIUS, y: PANEL_HEIGHT * 0.5 }}
         p2={{ x: PANEL_WIDTH - BORDER_RADIUS, y: PANEL_HEIGHT * 0.5 }}
-        color={GRID_COLOR}
+        color={gridColor}
         strokeWidth={2}
       />
       <Line
         p1={{ x: BORDER_RADIUS, y: PANEL_HEIGHT * 0.75 }}
         p2={{ x: PANEL_WIDTH - BORDER_RADIUS, y: PANEL_HEIGHT * 0.75 }}
-        color={GRID_COLOR}
+        color={gridColor}
         strokeWidth={2}
       />
     </Group>
