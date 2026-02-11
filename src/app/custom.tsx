@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
-import { View, StyleSheet, Text, Pressable, type LayoutChangeEvent } from "react-native";
+import { View, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { Stack, useLocalSearchParams, Link, useRouter } from "expo-router";
-import { useSharedValue, withTiming } from "react-native-reanimated";
+import { useSharedValue, withTiming, runOnUI } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
@@ -131,8 +131,13 @@ export default function Custom() {
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
       canvasSize.current = { width, height };
-      canvasWidth.value = width;
-      canvasHeight.value = height;
+
+      // Update shared values on UI thread to avoid render warnings
+      runOnUI(() => {
+        'worklet';
+        canvasWidth.value = width;
+        canvasHeight.value = height;
+      })();
 
       // Initialize panels centered in the canvas after layout is known
       if (initialPanels && !hasInitialized.current && width > 0 && height > 0) {
@@ -211,7 +216,7 @@ export default function Custom() {
   const handleFinish = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setWizardCompleted(true);
-    router.dismissTo('/');
+    router.replace('/production');
   }, [setWizardCompleted, router]);
 
   const handleZoomIn = useCallback(() => {
@@ -241,11 +246,6 @@ export default function Custom() {
           )}
         </Stack.Toolbar.Button>
         <Stack.Toolbar.Button icon="location" onPress={handleSnapToOrigin} />
-        {isWizardMode && panels.length > 0 && (
-          <Stack.Toolbar.Button onPress={handleFinish}>
-            <Text style={{ color: '#6366f1', fontSize: 17, fontWeight: '600' }}>Finish</Text>
-          </Stack.Toolbar.Button>
-        )}
       </Stack.Toolbar>
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={styles.container} onLayout={handleLayout} testID="canvas-container">
@@ -280,6 +280,11 @@ export default function Custom() {
             />
             <Stack.Toolbar.Button icon="trash" onPress={handleDeletePanel} />
           </>
+        )}
+        {isWizardMode && panels.length > 0 && (
+          <Stack.Toolbar.Button onPress={handleFinish}>
+            Finish
+          </Stack.Toolbar.Button>
         )}
       </Stack.Toolbar>
     </>

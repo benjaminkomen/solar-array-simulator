@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Pressable, StyleSheet, View} from 'react-native';
+import {Pressable, StyleSheet, View, Text as RNText} from 'react-native';
 import {
   BottomSheet,
   Button,
@@ -26,13 +26,19 @@ import {
 import {Ionicons} from '@expo/vector-icons';
 import {useConfigStore} from '@/hooks/useConfigStore';
 import type {InverterConfig} from '@/utils/configStore';
-import {Stack} from "expo-router";
+import {Stack, useLocalSearchParams, useRouter} from "expo-router";
+import {WizardProgress} from "@/components/WizardProgress";
+import * as Haptics from "expo-haptics";
 
 function generateSerialNumber(): string {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 }
 
 export default function ConfigScreen() {
+  const router = useRouter();
+  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
+  const isWizardMode = wizard === 'true';
+
   const {
     config,
     updateDefaultWattage,
@@ -92,9 +98,15 @@ export default function ConfigScreen() {
     setEditingInverter(null);
   };
 
+  const handleContinue = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push('/upload?wizard=true');
+  };
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal"/>
+      {isWizardMode && <WizardProgress currentStep={1} />}
       <View style={styles.container}>
         <Host style={styles.form}>
           <Form>
@@ -270,6 +282,19 @@ export default function ConfigScreen() {
             <Ionicons name="add" size={28} color="#fff"/>
           </Pressable>
         </View>
+
+        {/* Continue button for wizard mode */}
+        {isWizardMode && (
+          <View style={styles.continueButtonContainer}>
+            <Pressable
+              testID="continue-button"
+              style={styles.continueButton}
+              onPress={handleContinue}
+            >
+              <RNText style={styles.continueButtonText}>Continue</RNText>
+            </Pressable>
+          </View>
+        )}
       </View>
     </>
   );
@@ -291,7 +316,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#6366f1',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -299,5 +324,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+  continueButtonContainer: {
+    position: 'absolute',
+    bottom: 32,
+    left: 20,
+    right: 90,
+  },
+  continueButton: {
+    backgroundColor: '#6366f1',
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  continueButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });

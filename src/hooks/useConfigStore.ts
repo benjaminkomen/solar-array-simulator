@@ -7,6 +7,8 @@ import {
   addInverter as addNewInverter,
   addInverterWithDetails,
   removeInverter as deleteInverter,
+  getWizardCompleted,
+  setWizardCompleted,
   subscribe,
   SystemConfig,
 } from '@/utils/configStore';
@@ -34,5 +36,7 @@ export function useConfigStore() {
     addInverterWithDetails: (serialNumber: string, efficiency: number) =>
       addInverterWithDetails(serialNumber, efficiency),
     removeInverter: (inverterId: string) => deleteInverter(inverterId),
+    getWizardCompleted: () => getWizardCompleted(),
+    setWizardCompleted: (completed: boolean) => setWizardCompleted(completed),
   };
 }

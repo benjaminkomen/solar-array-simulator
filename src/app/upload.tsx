@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert, Text, ScrollView, Pressable, View } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -9,9 +9,12 @@ import { PermissionModal } from "@/components/PermissionModal";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { resizeForAnalysis } from "@/utils/imageResize";
 import { setAnalysisResult } from "@/utils/analysisStore";
+import { WizardProgress } from "@/components/WizardProgress";
 
 export default function Upload() {
   const router = useRouter();
+  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
+  const isWizardMode = wizard === 'true';
   const abortRef = useRef<AbortController | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +29,12 @@ export default function Upload() {
 
   // Derived: processing whenever an image has been picked
   const isProcessing = image != null;
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const wizardParam = isWizardMode ? '?wizard=true' : '';
+    router.push(`/custom${wizardParam}`);
+  };
 
   // Call the analysis API when an image is picked.
   // This is a legitimate effect: synchronizing with an external system (API)
@@ -70,7 +79,8 @@ export default function Upload() {
           imageHeight: resized.height,
         });
 
-        router.replace("/custom?initialPanels=true");
+        const wizardParam = isWizardMode ? '&wizard=true' : '';
+        router.replace(`/custom?initialPanels=true${wizardParam}`);
       } catch (err: unknown) {
         if (err instanceof Error && err.name === "AbortError") return;
         const message =
@@ -95,6 +105,7 @@ export default function Upload() {
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
+      {isWizardMode && <WizardProgress currentStep={2} />}
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
@@ -226,6 +237,30 @@ export default function Upload() {
               </Text>
             </Pressable>
           </Animated.View>
+
+          {/* Skip link - only in wizard mode */}
+          {isWizardMode && (
+            <Animated.View entering={FadeIn.duration(300).delay(400)}>
+              <Pressable
+                testID="skip-button"
+                onPress={handleSkip}
+                style={{
+                  paddingVertical: 16,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: "500",
+                    color: "#9ca3af",
+                  }}
+                >
+                  Skip, create layout manually
+                </Text>
+              </Pressable>
+            </Animated.View>
+          )}
         </View>
       </ScrollView>
 

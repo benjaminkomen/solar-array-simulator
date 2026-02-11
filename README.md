@@ -4,24 +4,34 @@ A React Native (Expo) mobile application for creating and managing solar panel a
 
 ## User Flow
 
-The app guides you through a wizard to create and monitor your solar panel array:
+The app guides you through a 3-step wizard to create and monitor your solar panel array:
 
 ```mermaid
 flowchart TD
-    START([Launch App]) --> CONFIG[1. Configuration]
-    CONFIG --> |Configure inverters| CHOICE{Upload photo?}
-    CHOICE --> |Yes| UPLOAD[2. Upload & Analyze]
-    CHOICE --> |No - Manual| CUSTOM[3. Canvas Editor]
-    UPLOAD --> |AI generates layout| CUSTOM
-    CUSTOM --> |Finalize| PRODUCTION[4. Production Monitor]
+    START([Launch App]) --> WELCOME[Welcome Screen]
+    WELCOME --> |Get Started| CONFIG[1. Configure]
+    CONFIG --> |Continue| UPLOAD[2. Photo]
+    UPLOAD --> |Take photo| CUSTOM[3. Layout]
+    UPLOAD --> |Skip| CUSTOM
+    CUSTOM --> |Finish| PRODUCTION[Production Monitor]
 
+    style WELCOME fill:#f0f0ff,stroke:#6366f1
     style CONFIG fill:#4ade80,stroke:#22c55e
     style UPLOAD fill:#60a5fa,stroke:#3b82f6
     style CUSTOM fill:#f59e0b,stroke:#d97706
     style PRODUCTION fill:#a855f7,stroke:#9333ea
 ```
 
-### Step 1: Configuration (Required)
+### Welcome Screen
+
+New users see a welcome screen with:
+- Hero icon and app title
+- "Get Started" button to begin the wizard
+- "I already have a layout" link to access all screens directly
+
+Returning users (after completing the wizard once) see option cards for direct access to any screen.
+
+### Step 1: Configuration
 
 Start by configuring your micro-inverters:
 - Add micro-inverters with their 8-digit serial numbers
@@ -45,13 +55,18 @@ Create or confirm your panel layout:
 - Drag to reposition, rotate panels, use grid snapping
 - Zoom in/out (3 levels) to view large arrays on smaller screens
 
-### Step 4: Production Monitor
+### Production Monitor
 
-View real-time power production (read-only):
-- Same canvas view as editor, but no editing allowed
-- Each panel displays current wattage output
-- Production updates every second
-- Based on inverter efficiency × panel wattage
+After completing the wizard, view real-time power production:
+- **Total array output** displayed prominently at top
+- Same canvas view as editor, but read-only (no editing)
+- Each panel displays current wattage with color coding:
+  - Green: High output (>80% efficiency)
+  - Yellow: Medium output (40-80%)
+  - Red: Low output (<40%)
+  - Gray: Unlinked panels (0W)
+- Production updates every second with realistic fluctuation
+- Formula: `efficiency × maxWattage × (0.95 + random × 0.1)`
 
 ---
 
@@ -147,11 +162,11 @@ bun web
 src/
 ├── app/
 │   ├── _layout.tsx        # Root layout with PanelsProvider
-│   ├── index.tsx          # Home screen with option cards
+│   ├── index.tsx          # Welcome screen / Home with option cards
 │   ├── config.tsx         # Step 1: Configuration (SwiftUI Form)
 │   ├── upload.tsx         # Step 2: Upload & AI analysis
 │   ├── custom.tsx         # Step 3: Canvas editor with toolbar
-│   ├── production.tsx     # Step 4: Production monitor (TODO)
+│   ├── production.tsx     # Production monitor (real-time wattage)
 │   ├── link-inverter.tsx  # Modal: Link panel to inverter
 │   └── api/
 │       └── analyze+api.ts # Bedrock API route (Claude vision analysis)
@@ -160,8 +175,11 @@ src/
 │   ├── ImagePreview.tsx   # Image preview component
 │   ├── PermissionModal.tsx # Camera permission modal
 │   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text overlay
+│   ├── ProductionCanvas.tsx # Read-only canvas for production view
+│   ├── ProductionPanel.tsx # Panel with wattage display
 │   ├── SolarPanel.tsx     # Skia panel rendering with rotation
 │   ├── SolarPanelCanvas.tsx # Main canvas with gesture handling
+│   ├── WizardProgress.tsx # 3-step progress indicator
 │   └── ZoomControls.tsx   # Floating zoom +/- controls
 ├── hooks/
 │   ├── useConfigStore.ts  # Configuration store hook (inverters, wattage)
@@ -200,10 +218,16 @@ terraform/
 - [x] Set up Expo API route for server-side Bedrock calls
 - [x] Add Terraform config for IAM resources
 - [x] Add configuration screen with micro-inverter management
-- [ ] Implement production monitor screen
+- [x] Implement production monitor screen
   - View-only canvas showing panel layout
-  - Real-time wattage display per panel
+  - Real-time wattage display per panel with color coding
+  - Total array output display
   - Mock data: efficiency × wattage with fluctuation
+- [x] Add wizard flow with progress indicator
+  - Welcome screen for new users
+  - 3-step progress indicator (Configure → Photo → Layout)
+  - Navigation buttons (Continue, Skip, Finish)
+  - wizardCompleted flag for returning users
 - [ ] Deploy API routes to EAS Hosting
 - [ ] Implement compass orientation indicator
 - [ ] Create panel detail bottom sheet

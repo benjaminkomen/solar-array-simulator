@@ -1,6 +1,6 @@
 import type { Rect } from "./collision";
 import { collidesWithAny } from "./collision";
-import { snapToGrid, GRID_SIZE } from "./gridSnap";
+import { snapToGrid, GRID_SIZE, PANEL_SPACING } from "./gridSnap";
 
 export const PANEL_WIDTH = 60;
 export const PANEL_HEIGHT = 120;
@@ -76,7 +76,8 @@ export function hitTestPanels(
 
 /**
  * Find a free position for a new panel on the canvas.
- * Tries center of the visible area first, then spirals outward.
+ * If panels exist, tries adjacent to the last panel first (right, below, left, above).
+ * Falls back to center, then spirals outward.
  * Works with infinite canvas - no bounds checking.
  *
  * @param canvasWidth - Visible canvas width
@@ -96,6 +97,47 @@ export function findFreePosition(
 ): { x: number; y: number } | null {
   const dims = getPanelDimensions(rotation);
   const panelRects = panels.map((p) => ({ ...getPanelRect(p), id: p.id }));
+
+  // If there are existing panels, try adjacent to the last one first
+  if (panels.length > 0) {
+    const lastPanel = panels[panels.length - 1];
+    const lastRect = getPanelRect(lastPanel);
+
+    // Try adjacent positions in priority order: right, below, left, above
+    const adjacentPositions = [
+      { x: lastRect.x + lastRect.width + PANEL_SPACING, y: lastRect.y },  // right
+      { x: lastRect.x, y: lastRect.y + lastRect.height + PANEL_SPACING }, // below
+      { x: lastRect.x - dims.width - PANEL_SPACING, y: lastRect.y },      // left
+      { x: lastRect.x, y: lastRect.y - dims.height - PANEL_SPACING },     // above
+    ];
+
+    for (const pos of adjacentPositions) {
+      const testRect: Rect = { x: pos.x, y: pos.y, ...dims };
+      if (!collidesWithAny(testRect, panelRects)) {
+        return pos;
+      }
+    }
+
+    // If all adjacent to last panel fail, try adjacent to other panels (reverse order)
+    for (let i = panels.length - 2; i >= 0; i--) {
+      const panel = panels[i];
+      const rect = getPanelRect(panel);
+
+      const positions = [
+        { x: rect.x + rect.width + PANEL_SPACING, y: rect.y },  // right
+        { x: rect.x, y: rect.y + rect.height + PANEL_SPACING }, // below
+        { x: rect.x - dims.width - PANEL_SPACING, y: rect.y },  // left
+        { x: rect.x, y: rect.y - dims.height - PANEL_SPACING }, // above
+      ];
+
+      for (const pos of positions) {
+        const testRect: Rect = { x: pos.x, y: pos.y, ...dims };
+        if (!collidesWithAny(testRect, panelRects)) {
+          return pos;
+        }
+      }
+    }
+  }
 
   // Calculate center in world coordinates (accounting for viewport)
   const centerX = snapToGrid(viewportOffsetX + (canvasWidth - dims.width) / 2);
