@@ -51,16 +51,60 @@ This is an Expo Router v55 preview app for creating solar panel array layouts. U
 - **@expo/ui/swift-ui** - Native SwiftUI components (Form, Section, List, BottomSheet)
 - **expo-sqlite/kv-store** - Synchronous key-value storage for configuration
 
+## Wizard Flow
+
+The app guides users through a 4-step wizard:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Config: Launch
+    Config --> Upload: Optional
+    Config --> Custom: Skip AI
+    Upload --> Custom: AI layout
+    Custom --> Production: Finalize
+    Production --> [*]: Complete
+```
+
+### Steps
+
+| Step | Screen | Purpose |
+|------|--------|---------|
+| 1 | Config | Configure micro-inverters (serial numbers, efficiency) |
+| 2 | Upload | Optional: AI analyzes photo to generate layout |
+| 3 | Custom | Edit layout, link panels to inverters |
+| 4 | Production | View-only: real-time wattage per panel |
+
+### Data Flow
+
+```mermaid
+flowchart LR
+    subgraph Storage
+        CS[(configStore)]
+        PS[(panelStore)]
+    end
+
+    subgraph Screens
+        CFG[Config] --> CS
+        UPL[Upload] --> AS[analysisStore]
+        AS --> CUS[Custom]
+        CUS --> PS
+        CS --> PROD[Production]
+        PS --> PROD
+    end
+```
+
 ### Project Structure
 
 ```
 src/
 ├── app/                    # Expo Router file-based routes
-│   ├── _layout.tsx         # Root layout with transparent header
-│   ├── index.tsx           # Home screen (Upload/Custom options)
-│   ├── upload.tsx          # Image capture + Bedrock analysis
-│   ├── custom.tsx          # Canvas editor with toolbar
-│   ├── config.tsx          # Configuration screen (SwiftUI Form)
+│   ├── _layout.tsx         # Root layout with PanelsProvider
+│   ├── index.tsx           # Home screen with option cards
+│   ├── config.tsx          # Step 1: Configuration (SwiftUI Form)
+│   ├── upload.tsx          # Step 2: Upload & AI analysis
+│   ├── custom.tsx          # Step 3: Canvas editor with toolbar
+│   ├── production.tsx      # Step 4: Production monitor (TODO)
+│   ├── link-inverter.tsx   # Modal: Link panel to inverter
 │   └── api/
 │       └── analyze+api.ts  # Bedrock API route (Claude vision)
 ├── components/
@@ -283,7 +327,8 @@ Native iOS form using `@expo/ui/swift-ui` components:
 
 ## Planned Integrations
 
+- **Production screen** - View-only canvas with real-time wattage per panel
+  - Mock formula: `efficiency × maxWattage × (0.95 + Math.random() * 0.1)`
 - **EAS Hosting** - Server-side API route deployment
 - **Compass indicator** - Array orientation display
 - **Panel detail sheet** - Bottom sheet with serial number and metadata
-- **Energy simulation** - Power production estimates per panel

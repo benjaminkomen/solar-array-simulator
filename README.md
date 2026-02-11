@@ -2,110 +2,55 @@
 
 A React Native (Expo) mobile application for creating and managing solar panel array layouts with micro inverter tracking.
 
-## Project Vision
+## User Flow
 
-### Overview
+The app guides you through a wizard to create and monitor your solar panel array:
 
-This app provides two ways to create a solar panel array layout:
+```mermaid
+flowchart TD
+    START([Launch App]) --> CONFIG[1. Configuration]
+    CONFIG --> |Configure inverters| CHOICE{Upload photo?}
+    CHOICE --> |Yes| UPLOAD[2. Upload & Analyze]
+    CHOICE --> |No - Manual| CUSTOM[3. Canvas Editor]
+    UPLOAD --> |AI generates layout| CUSTOM
+    CUSTOM --> |Finalize| PRODUCTION[4. Production Monitor]
 
-1. **Upload** - Photograph an existing installation
-2. **Custom** - Design a layout from scratch
+    style CONFIG fill:#4ade80,stroke:#22c55e
+    style UPLOAD fill:#60a5fa,stroke:#3b82f6
+    style CUSTOM fill:#f59e0b,stroke:#d97706
+    style PRODUCTION fill:#a855f7,stroke:#9333ea
+```
 
-### Upload Flow
+### Step 1: Configuration (Required)
 
-Users can capture or select a photo of their solar panel array installation:
+Start by configuring your micro-inverters:
+- Add micro-inverters with their 8-digit serial numbers
+- Set efficiency ratings (0-100%) for each inverter
+- Configure default panel wattage
 
-- **Camera capture**: Take a photo directly using the phone's camera
-- **Image selection**: Choose an existing image from the phone's gallery
+### Step 2: Upload (Optional)
 
-#### Identification Requirements
+Photograph your existing array for AI-powered layout generation:
+- Take a photo or select from gallery
+- AI analyzes the image to detect panel positions
+- Automatically matches panel labels to inverter serial numbers
+- Skip this step to create a layout manually
 
-The photographed array should include stickers with **barcodes or QR codes** that identify each micro inverter. This enables automatic recognition and serial number extraction.
+### Step 3: Canvas Editor (Required)
 
-#### Micro Inverter Configurations
+Create or confirm your panel layout:
+- **From Upload**: Review AI-generated layout, make adjustments
+- **Manual**: Add panels, arrange them on the canvas
+- Link each panel to its micro-inverter
+- Drag to reposition, rotate panels, use grid snapping
 
-The system supports two configurations:
+### Step 4: Production Monitor
 
-| Configuration | Description |
-|---------------|-------------|
-| 1:1 | One micro inverter per solar panel |
-| 1:2 | One micro inverter serving two solar panels |
-
-#### Post-Processing View
-
-After uploading and AI processing, users see an **interactive representation** of their array layout:
-
-- Draggable visualizations of solar panels and micro inverters
-- When a micro inverter serves two panels (1:2), the unit moves as a single block
-- **Compass indicator** showing orientation (N, E, S, W) to clarify the array's facing direction
-
-### Custom Creation Flow
-
-For manual array design, users have access to a full-featured canvas editor:
-
-#### Canvas Features
-
-| Feature | Description |
-|---------|-------------|
-| **Add panels** | Tap + button to add new panels at the center of the viewport |
-| **Drag panels** | Touch and drag to reposition panels |
-| **Rotate panels** | Toggle between portrait (60x120) and landscape (120x60) orientation |
-| **Delete panels** | Remove selected panels with trash button |
-| **Collision detection** | Panels cannot overlap (4px minimum gap enforced) |
-| **Grid snapping** | Panels snap to 30px grid on release |
-| **Infinite canvas** | Pan the viewport by dragging empty space |
-| **Snap to origin** | Location button centers view on first panel |
-
-#### Panel Visualization
-
-Solar panels are rendered as:
-
-- Blue rectangles with **1:2 aspect ratio** (portrait) or 2:1 (landscape)
-- Rounded corners with a border
-- Internal grid pattern: 1 vertical line + 3 horizontal lines
-- Amber highlight border when selected
-
-#### Toolbar Controls
-
-| Button | Placement | Action |
-|--------|-----------|--------|
-| + | Bottom | Add new panel |
-| Rotate | Bottom (when selected) | Rotate panel 90° |
-| Trash | Bottom (when selected) | Delete panel |
-| Location | Right header | Center viewport on first panel |
-
-### Energy Simulation
-
-After creating an array layout (via either method), users can run a **power production simulation**. Required inputs:
-
-| Parameter | Description |
-|-----------|-------------|
-| Location | City + Country |
-| Season | Summer, Spring, Fall, or Winter |
-| Orientation | Direction the array is facing |
-
-The simulation calculates and displays the estimated **Watt output per panel**.
-
-### Panel Details
-
-Users can tap any solar panel to view a **bottom sheet / form sheet** containing:
-
-- Serial number (from micro inverter)
-- Additional metadata and specifications
-
-### Configuration Screen
-
-A dedicated configuration screen allows users to manage system settings:
-
-#### Panel Settings
-- Configure default maximum wattage per micro-inverter/panel
-
-#### Micro-inverter Management
-- View list of all configured micro-inverters with serial numbers and efficiency
-- Add new micro-inverters with custom serial number and efficiency
-- Edit existing micro-inverters (serial number, efficiency slider)
-- Swipe-to-delete functionality for removing inverters
-- Native iOS Form UI with SwiftUI components
+View real-time power production (read-only):
+- Same canvas view as editor, but no editing allowed
+- Each panel displays current wattage output
+- Production updates every second
+- Based on inverter efficiency × panel wattage
 
 ---
 
@@ -200,11 +145,13 @@ bun web
 ```
 src/
 ├── app/
-│   ├── _layout.tsx        # Root layout with transparent header
-│   ├── index.tsx          # Home screen with Upload/Custom options
-│   ├── upload.tsx         # Image capture, analysis, and processing overlay
-│   ├── custom.tsx         # Custom canvas editor with toolbar
-│   ├── config.tsx         # Configuration screen with SwiftUI Form
+│   ├── _layout.tsx        # Root layout with PanelsProvider
+│   ├── index.tsx          # Home screen with option cards
+│   ├── config.tsx         # Step 1: Configuration (SwiftUI Form)
+│   ├── upload.tsx         # Step 2: Upload & AI analysis
+│   ├── custom.tsx         # Step 3: Canvas editor with toolbar
+│   ├── production.tsx     # Step 4: Production monitor (TODO)
+│   ├── link-inverter.tsx  # Modal: Link panel to inverter
 │   └── api/
 │       └── analyze+api.ts # Bedrock API route (Claude vision analysis)
 ├── components/
@@ -249,10 +196,13 @@ terraform/
 - [x] Set up Expo API route for server-side Bedrock calls
 - [x] Add Terraform config for IAM resources
 - [x] Add configuration screen with micro-inverter management
+- [ ] Implement production monitor screen
+  - View-only canvas showing panel layout
+  - Real-time wattage display per panel
+  - Mock data: efficiency × wattage with fluctuation
 - [ ] Deploy API routes to EAS Hosting
 - [ ] Implement compass orientation indicator
 - [ ] Create panel detail bottom sheet
-- [ ] Build energy simulation engine
 
 ---
 
