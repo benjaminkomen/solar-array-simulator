@@ -14,6 +14,9 @@ interface ProductionCanvasProps {
   wattages: Map<string, number>;
   viewportX: SharedValue<number>;
   viewportY: SharedValue<number>;
+  scale: SharedValue<number>;
+  canvasWidth: SharedValue<number>;
+  canvasHeight: SharedValue<number>;
 }
 
 export function ProductionCanvas({
@@ -21,15 +24,26 @@ export function ProductionCanvas({
   wattages,
   viewportX,
   viewportY,
+  scale,
+  canvasWidth,
+  canvasHeight,
 }: ProductionCanvasProps) {
   // Viewport panning state
   const isPanningViewport = useSharedValue(false);
   const viewportStartX = useSharedValue(0);
   const viewportStartY = useSharedValue(0);
 
-  // Transform for the entire canvas content (viewport offset)
+  // Transform for the entire canvas content (viewport offset + scale centered on canvas)
   const canvasTransform = useDerivedValue(() => {
-    return [{ translateX: viewportX.value }, { translateY: viewportY.value }];
+    const cx = canvasWidth.value / 2;
+    const cy = canvasHeight.value / 2;
+    return [
+      { translateX: cx },
+      { translateY: cy },
+      { scale: scale.value },
+      { translateX: -cx + viewportX.value },
+      { translateY: -cy + viewportY.value },
+    ];
   });
 
   // Pan gesture for viewport panning only
@@ -42,8 +56,9 @@ export function ProductionCanvas({
     })
     .onUpdate((e) => {
       "worklet";
-      viewportX.value = viewportStartX.value + e.translationX;
-      viewportY.value = viewportStartY.value + e.translationY;
+      // Divide by scale for consistent pan feel
+      viewportX.value = viewportStartX.value + e.translationX / scale.value;
+      viewportY.value = viewportStartY.value + e.translationY / scale.value;
     })
     .onEnd(() => {
       "worklet";

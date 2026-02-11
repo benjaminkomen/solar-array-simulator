@@ -113,7 +113,8 @@ src/
 │   ├── PermissionModal.tsx # Camera permission UI
 │   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text
 │   ├── SolarPanel.tsx      # Skia panel with rotation
-│   └── SolarPanelCanvas.tsx # Main canvas + gestures
+│   ├── SolarPanelCanvas.tsx # Main canvas + gestures
+│   └── ZoomControls.tsx    # Floating zoom +/- controls
 ├── hooks/
 │   ├── useConfigStore.ts   # Config store hook (inverters, wattage)
 │   ├── useImagePicker.ts   # Camera/gallery hook
@@ -124,7 +125,8 @@ src/
     ├── configStore.ts      # Persistent config (expo-sqlite/kv-store)
     ├── gridSnap.ts         # Grid snap utilities
     ├── imageResize.ts      # Client-side image resize for upload
-    └── panelUtils.ts       # Panel helpers
+    ├── panelUtils.ts       # Panel helpers
+    └── zoomConstants.ts    # Zoom level definitions
 ```
 
 Path alias: `@/*` maps to `./src/*`
@@ -163,6 +165,9 @@ GRID_SIZE = 30      // Snap grid in pixels
 
 // Collision (src/utils/collision.ts)
 PANEL_GAP = 4       // Minimum gap between panels
+
+// Zoom levels (src/utils/zoomConstants.ts)
+ZOOM_LEVELS = [1.0, 0.66, 0.4]  // Scale factors (most zoomed in → most zoomed out)
 ```
 
 ### Gesture Behavior
@@ -171,6 +176,20 @@ PANEL_GAP = 4       // Minimum gap between panels
 2. **Tap on empty space** → Deselect panel
 3. **Drag panel** → Move with collision prevention, snap on release
 4. **Drag empty space** → Pan the infinite canvas viewport
+
+### Zoom Controls
+
+Both Custom and Production screens include a floating zoom control in the bottom-right corner:
+
+- **3 zoom levels**: 1.0× (default), 0.66×, 0.4×
+- **UI**: Plus/minus buttons with horizontal line indicators showing active level
+- **Transform**: Scale centered on canvas center for intuitive zoom behavior
+- **Coordinate conversion**: Screen→world coordinates account for scale factor
+- **Consistent feel**: Pan and drag gestures divided by scale for uniform speed at all zoom levels
+
+**ZoomControls** (`src/components/ZoomControls.tsx`)
+- Floating pill-shaped control with haptic feedback
+- Active zoom level shown as dark line, inactive as light gray
 
 ### Collision Detection
 

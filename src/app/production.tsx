@@ -1,11 +1,13 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState, useCallback } from "react";
 import { Stack } from "expo-router";
-import { useSharedValue } from "react-native-reanimated";
+import { useSharedValue, withTiming } from "react-native-reanimated";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { ProductionCanvas } from "@/components/ProductionCanvas";
+import { ZoomControls } from "@/components/ZoomControls";
+import { ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from "@/utils/zoomConstants";
 
 interface WattageMap {
   [panelId: string]: number;
@@ -21,6 +23,19 @@ export default function ProductionScreen() {
   // Viewport shared values
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
+  const scale = useSharedValue(ZOOM_LEVELS[DEFAULT_ZOOM_INDEX]);
+  const canvasWidth = useSharedValue(0);
+  const canvasHeight = useSharedValue(0);
+  const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
+
+  const handleLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const { width, height } = event.nativeEvent.layout;
+      canvasWidth.value = width;
+      canvasHeight.value = height;
+    },
+    [canvasWidth, canvasHeight]
+  );
 
   // Calculate wattage for a single panel
   const calculateWattage = useCallback(
@@ -78,6 +93,22 @@ export default function ProductionScreen() {
     return `${watts}W`;
   };
 
+  const handleZoomIn = useCallback(() => {
+    if (zoomIndex > 0) {
+      const newIndex = zoomIndex - 1;
+      setZoomIndex(newIndex);
+      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
+    }
+  }, [zoomIndex, scale]);
+
+  const handleZoomOut = useCallback(() => {
+    if (zoomIndex < ZOOM_LEVELS.length - 1) {
+      const newIndex = zoomIndex + 1;
+      setZoomIndex(newIndex);
+      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
+    }
+  }, [zoomIndex, scale]);
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
@@ -120,12 +151,22 @@ export default function ProductionScreen() {
             {formatWattage(totalWattage)}
           </Text>
         </View>
-        <ProductionCanvas
-          panels={panels}
-          wattages={new Map(Object.entries(wattages))}
-          viewportX={viewportX}
-          viewportY={viewportY}
-        />
+        <View style={styles.canvasContainer} onLayout={handleLayout}>
+          <ProductionCanvas
+            panels={panels}
+            wattages={new Map(Object.entries(wattages))}
+            viewportX={viewportX}
+            viewportY={viewportY}
+            scale={scale}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+          />
+          <ZoomControls
+            currentIndex={zoomIndex}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+          />
+        </View>
       </View>
     </>
   );
@@ -135,5 +176,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "transparent",
+  },
+  canvasContainer: {
+    flex: 1,
   },
 });

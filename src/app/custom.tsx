@@ -1,13 +1,17 @@
-import { useCallback, useRef } from "react";
-import { View, StyleSheet, type LayoutChangeEvent } from "react-native";
-import { Stack, useLocalSearchParams, Link } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import { View, StyleSheet, Text, Pressable, type LayoutChangeEvent } from "react-native";
+import { Stack, useLocalSearchParams, Link, useRouter } from "expo-router";
 import { useSharedValue, withTiming } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
+import { ZoomControls } from "@/components/ZoomControls";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { GRID_SIZE } from "@/utils/gridSnap";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
+import { WizardProgress } from "@/components/WizardProgress";
+import { ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from "@/utils/zoomConstants";
 
 // Fallback: 2 rows x 5 columns mock grid
 const COLS = 5;
@@ -96,12 +100,18 @@ function mapAnalysisToCanvasPositions(
 }
 
 export default function Custom() {
-  const { initialPanels } = useLocalSearchParams<{ initialPanels?: string }>();
+  const router = useRouter();
+  const { initialPanels, wizard } = useLocalSearchParams<{ initialPanels?: string; wizard?: string }>();
+  const isWizardMode = wizard === 'true';
   const canvasSize = useRef({ width: 0, height: 0 });
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
+  const scale = useSharedValue(ZOOM_LEVELS[DEFAULT_ZOOM_INDEX]);
+  const canvasWidth = useSharedValue(0);
+  const canvasHeight = useSharedValue(0);
   const hasInitialized = useRef(false);
-  const { config } = useConfigStore();
+  const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
+  const { config, setWizardCompleted } = useConfigStore();
 
   const {
     panels,
@@ -121,6 +131,8 @@ export default function Custom() {
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
       canvasSize.current = { width, height };
+      canvasWidth.value = width;
+      canvasHeight.value = height;
 
       // Initialize panels centered in the canvas after layout is known
       if (initialPanels && !hasInitialized.current && width > 0 && height > 0) {
@@ -155,7 +167,7 @@ export default function Custom() {
         }
       }
     },
-    [initialPanels, initializePanels, config.inverters],
+    [initialPanels, initializePanels, config.inverters, canvasWidth, canvasHeight],
   );
 
   const handleAddPanel = useCallback(() => {
@@ -196,6 +208,28 @@ export default function Custom() {
   // Compute unlinked count (uses cached state from hook, no SharedValue reads)
   const unlinkedCount = panels.length - getLinkedCount();
 
+  const handleFinish = useCallback(() => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setWizardCompleted(true);
+    router.dismissTo('/');
+  }, [setWizardCompleted, router]);
+
+  const handleZoomIn = useCallback(() => {
+    if (zoomIndex > 0) {
+      const newIndex = zoomIndex - 1;
+      setZoomIndex(newIndex);
+      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
+    }
+  }, [zoomIndex, scale]);
+
+  const handleZoomOut = useCallback(() => {
+    if (zoomIndex < ZOOM_LEVELS.length - 1) {
+      const newIndex = zoomIndex + 1;
+      setZoomIndex(newIndex);
+      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
+    }
+  }, [zoomIndex, scale]);
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
@@ -207,7 +241,13 @@ export default function Custom() {
           )}
         </Stack.Toolbar.Button>
         <Stack.Toolbar.Button icon="location" onPress={handleSnapToOrigin} />
+        {isWizardMode && panels.length > 0 && (
+          <Stack.Toolbar.Button onPress={handleFinish}>
+            <Text style={{ color: '#6366f1', fontSize: 17, fontWeight: '600' }}>Finish</Text>
+          </Stack.Toolbar.Button>
+        )}
       </Stack.Toolbar>
+      {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={styles.container} onLayout={handleLayout} testID="canvas-container">
         <SolarPanelCanvas
           panels={panels}
@@ -217,6 +257,14 @@ export default function Custom() {
           onSavePanelPosition={savePanelPosition}
           viewportX={viewportX}
           viewportY={viewportY}
+          scale={scale}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
+        />
+        <ZoomControls
+          currentIndex={zoomIndex}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
         />
       </View>
       <Stack.Toolbar placement="bottom">

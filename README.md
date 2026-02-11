@@ -43,6 +43,7 @@ Create or confirm your panel layout:
 - **Manual**: Add panels, arrange them on the canvas
 - Link each panel to its micro-inverter
 - Drag to reposition, rotate panels, use grid snapping
+- Zoom in/out (3 levels) to view large arrays on smaller screens
 
 ### Step 4: Production Monitor
 
@@ -160,7 +161,8 @@ src/
 │   ├── PermissionModal.tsx # Camera permission modal
 │   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text overlay
 │   ├── SolarPanel.tsx     # Skia panel rendering with rotation
-│   └── SolarPanelCanvas.tsx # Main canvas with gesture handling
+│   ├── SolarPanelCanvas.tsx # Main canvas with gesture handling
+│   └── ZoomControls.tsx   # Floating zoom +/- controls
 ├── hooks/
 │   ├── useConfigStore.ts  # Configuration store hook (inverters, wattage)
 │   ├── useImagePicker.ts  # Camera and gallery picker hook
@@ -171,7 +173,8 @@ src/
     ├── configStore.ts     # Persistent config store (expo-sqlite/kv-store)
     ├── gridSnap.ts        # Grid snapping utilities
     ├── imageResize.ts     # Client-side image resize for upload
-    └── panelUtils.ts      # Panel dimensions, hit testing, positioning
+    ├── panelUtils.ts      # Panel dimensions, hit testing, positioning
+    └── zoomConstants.ts   # Zoom level scale factors
 terraform/
 ├── main.tf                # IAM user + Bedrock policy + S3 backend
 ├── variables.tf           # AWS region variable
@@ -191,6 +194,7 @@ terraform/
 - [x] Add panel rotation (portrait/landscape)
 - [x] Implement infinite canvas with viewport panning
 - [x] Add snap-to-origin button
+- [x] Add 3-level zoom controls for Custom and Production screens
 - [x] Add processing overlay with fibonacci shader animation
 - [x] Integrate AWS Bedrock for image analysis (Claude Sonnet 4.5)
 - [x] Set up Expo API route for server-side Bedrock calls

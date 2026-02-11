@@ -12,7 +12,7 @@ import type { PanelData } from "@/hooks/usePanelsManager";
 import type { PanelState } from "@/utils/panelUtils";
 import { hitTestPanels, getPanelDimensions, getPanelRect } from "@/utils/panelUtils";
 import { collidesWithAny } from "@/utils/collision";
-import { snapToGrid } from "@/utils/gridSnap";
+import { snapToNeighbors } from "@/utils/neighborSnap";
 
 interface SolarPanelCanvasProps {
   panels: PanelData[];
@@ -22,6 +22,9 @@ interface SolarPanelCanvasProps {
   onSavePanelPosition: (panelId: string, x: number, y: number) => void;
   viewportX: SharedValue<number>;
   viewportY: SharedValue<number>;
+  scale: SharedValue<number>;
+  canvasWidth: SharedValue<number>;
+  canvasHeight: SharedValue<number>;
 }
 
 export function SolarPanelCanvas({
@@ -32,6 +35,9 @@ export function SolarPanelCanvas({
   onSavePanelPosition,
   viewportX,
   viewportY,
+  scale,
+  canvasWidth,
+  canvasHeight,
 }: SolarPanelCanvasProps) {
   // Panel dragging state
   const draggedPanelId = useSharedValue<string | null>(null);
@@ -43,18 +49,28 @@ export function SolarPanelCanvas({
   const viewportStartX = useSharedValue(0);
   const viewportStartY = useSharedValue(0);
 
-  // Transform for the entire canvas content (viewport offset)
+  // Transform for the entire canvas content (viewport offset + scale centered on canvas)
   const canvasTransform = useDerivedValue(() => {
-    return [{ translateX: viewportX.value }, { translateY: viewportY.value }];
+    const cx = canvasWidth.value / 2;
+    const cy = canvasHeight.value / 2;
+    return [
+      { translateX: cx },
+      { translateY: cy },
+      { scale: scale.value },
+      { translateX: -cx + viewportX.value },
+      { translateY: -cy + viewportY.value },
+    ];
   });
 
   // Main pan gesture - handles both panel dragging and viewport panning
   const panGesture = Gesture.Pan()
     .onStart((e) => {
       "worklet";
-      // Convert screen coordinates to world coordinates
-      const worldX = e.x - viewportX.value;
-      const worldY = e.y - viewportY.value;
+      // Convert screen coordinates to world coordinates (accounting for scale)
+      const cx = canvasWidth.value / 2;
+      const cy = canvasHeight.value / 2;
+      const worldX = (e.x - cx) / scale.value + cx - viewportX.value;
+      const worldY = (e.y - cy) / scale.value + cy - viewportY.value;
 
       // Get current panel states for hit testing (in world coordinates)
       const states: PanelState[] = [];
@@ -94,9 +110,9 @@ export function SolarPanelCanvas({
     .onUpdate((e) => {
       "worklet";
       if (isPanningViewport.value) {
-        // Pan the viewport
-        viewportX.value = viewportStartX.value + e.translationX;
-        viewportY.value = viewportStartY.value + e.translationY;
+        // Pan the viewport (divide by scale for consistent pan feel)
+        viewportX.value = viewportStartX.value + e.translationX / scale.value;
+        viewportY.value = viewportStartY.value + e.translationY / scale.value;
         return;
       }
 
@@ -106,9 +122,9 @@ export function SolarPanelCanvas({
       const panel = panels.find((p) => p.id === panelId);
       if (!panel) return;
 
-      // Calculate new position in world coordinates
-      const newX = panelOffsetX.value + e.translationX;
-      const newY = panelOffsetY.value + e.translationY;
+      // Calculate new position in world coordinates (divide by scale for consistent drag)
+      const newX = panelOffsetX.value + e.translationX / scale.value;
+      const newY = panelOffsetY.value + e.translationY / scale.value;
 
       // Get panel dimensions based on rotation
       const dims = getPanelDimensions(panel.rotation.value);
@@ -155,22 +171,10 @@ export function SolarPanelCanvas({
       const panel = panels.find((p) => p.id === panelId);
       if (!panel) return;
 
-      // Snap to grid on release
-      const snappedX = snapToGrid(panel.x.value);
-      const snappedY = snapToGrid(panel.y.value);
-
       // Get panel dimensions based on rotation
       const dims = getPanelDimensions(panel.rotation.value);
 
-      // Create test rectangle for snapped position
-      const testRect = {
-        x: snappedX,
-        y: snappedY,
-        width: dims.width,
-        height: dims.height,
-      };
-
-      // Get other panel rects for collision detection
+      // Get other panel rects for neighbor snapping
       const otherRects: { id: string; x: number; y: number; width: number; height: number }[] = [];
       for (const p of panels) {
         if (p.id === panelId) continue;
@@ -184,11 +188,19 @@ export function SolarPanelCanvas({
         otherRects.push({ ...rect, id: p.id });
       }
 
-      // Only apply snapped position if it doesn't cause collision
-      if (!collidesWithAny(testRect, otherRects)) {
-        panel.x.value = snappedX;
-        panel.y.value = snappedY;
-      }
+      // Snap to neighbors (with grid fallback)
+      const snapped = snapToNeighbors(
+        panel.x.value,
+        panel.y.value,
+        dims.width,
+        dims.height,
+        panelId,
+        otherRects
+      );
+
+      // Apply snapped position
+      panel.x.value = snapped.x;
+      panel.y.value = snapped.y;
 
       // Save final position to persistent storage
       scheduleOnRN(onSavePanelPosition, panelId, panel.x.value, panel.y.value);
@@ -200,9 +212,11 @@ export function SolarPanelCanvas({
   const tapGesture = Gesture.Tap()
     .onStart((e) => {
       "worklet";
-      // Convert screen coordinates to world coordinates
-      const worldX = e.x - viewportX.value;
-      const worldY = e.y - viewportY.value;
+      // Convert screen coordinates to world coordinates (accounting for scale)
+      const cx = canvasWidth.value / 2;
+      const cy = canvasHeight.value / 2;
+      const worldX = (e.x - cx) / scale.value + cx - viewportX.value;
+      const worldY = (e.y - cy) / scale.value + cy - viewportY.value;
 
       // Get current panel states for hit testing
       const states: PanelState[] = [];
