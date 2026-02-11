@@ -1,5 +1,6 @@
 import {useCallback, useRef, useState, useEffect} from "react";
 import {makeMutable, type SharedValue} from "react-native-reanimated";
+import {scheduleOnUI} from "react-native-worklets";
 import {
   findFreePosition,
   findValidPositionAfterRotation,
@@ -87,19 +88,46 @@ export function usePanelsManager(): UsePanelsManagerResult {
       // Reuse existing SharedValues by ID to avoid breaking gesture handlers
       setPanels((prevPanels) => {
         const panelMap = new Map(prevPanels.map((p) => [p.id, p]));
-        return data.panels.map((stored) => {
+        const updates: {
+          panel: PanelData;
+          x: number;
+          y: number;
+          rotation: 0 | 90;
+          inverterId: string | null;
+        }[] = [];
+
+        const newPanels = data.panels.map((stored) => {
           const existing = panelMap.get(stored.id);
           if (existing) {
-            // Reuse SharedValues, update their values
-            existing.x.value = stored.x;
-            existing.y.value = stored.y;
-            existing.rotation.value = stored.rotation;
-            existing.inverterId.value = stored.inverterId;
+            // Collect updates, don't write during render
+            updates.push({
+              panel: existing,
+              x: stored.x,
+              y: stored.y,
+              rotation: stored.rotation,
+              inverterId: stored.inverterId,
+            });
             return existing;
           }
           // New panel - create fresh SharedValues
           return storedPanelToPanelData(stored);
         });
+
+        // Apply SharedValue updates on UI thread after render
+        if (updates.length > 0) {
+          const applyUpdates = (items: typeof updates) => {
+            'worklet';
+            for (const u of items) {
+              u.panel.x.value = u.x;
+              u.panel.y.value = u.y;
+              u.panel.rotation.value = u.rotation;
+              u.panel.inverterId.value = u.inverterId;
+            }
+          };
+          scheduleOnUI(applyUpdates, updates);
+        }
+
+        return newPanels;
       });
       setSelectedId(data.selectedId);
       setLinkedCount(getLinkedCountFromStore());
