@@ -30,9 +30,6 @@ export default function Index() {
   if (!wizardCompleted && !showCards) {
     return (
       <>
-        <Stack.Screen.Title style={{ fontSize: 20 }}>
-          Array Builder
-        </Stack.Screen.Title>
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={{

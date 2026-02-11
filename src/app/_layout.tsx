@@ -11,7 +11,9 @@ export default function RootLayout() {
           headerTransparent: true,
         }}
       >
-        <Stack.Screen name="index" />
+        <Stack.Screen name="index" options={{
+          title: "",
+        }} />
         <Stack.Screen
           name="config"
           options={{
