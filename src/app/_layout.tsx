@@ -41,6 +41,14 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: "transparent" },
           }}
         />
+        <Stack.Screen
+          name="production"
+          options={{
+            title: "",
+            headerBackTitle: "",
+            headerTransparent: true,
+          }}
+        />
       </Stack>
       </PanelsProvider>
     </GestureHandlerRootView>

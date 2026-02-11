@@ -53,6 +53,14 @@ export default function Index() {
             icon="sf:square.and.pencil"
             testID="custom-option"
           />
+          <OptionCard
+            title="Production"
+            description="Monitor array output"
+            cardSize={cardSize}
+            href="/production"
+            icon="sf:bolt.fill"
+            testID="production-option"
+          />
         </View>
       </ScrollView>
     </>
