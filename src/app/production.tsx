@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState, useCallback } from "react";
 import { Stack } from "expo-router";
-import { useSharedValue, withTiming } from "react-native-reanimated";
+import { useSharedValue, withTiming, runOnUI } from "react-native-reanimated";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { ProductionCanvas } from "@/components/ProductionCanvas";
@@ -31,8 +31,13 @@ export default function ProductionScreen() {
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
-      canvasWidth.value = width;
-      canvasHeight.value = height;
+
+      // Update shared values on UI thread to avoid render warnings
+      runOnUI(() => {
+        'worklet';
+        canvasWidth.value = width;
+        canvasHeight.value = height;
+      })();
     },
     [canvasWidth, canvasHeight]
   );

@@ -53,17 +53,29 @@ This is an Expo Router v55 preview app for creating solar panel array layouts. U
 
 ## Wizard Flow
 
-The app guides users through a 4-step wizard:
+The app guides users through a 3-step wizard with a progress indicator:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Config: Launch
-    Config --> Upload: Optional
-    Config --> Custom: Skip AI
-    Upload --> Custom: AI layout
-    Custom --> Production: Finalize
+    [*] --> Welcome: Launch (new user)
+    [*] --> Home: Launch (returning user)
+    Welcome --> Config: Get Started
+    Home --> Config: Start New Setup
+    Config --> Upload: Continue
+    Upload --> Custom: Photo analyzed
+    Upload --> Custom: Skip
+    Custom --> Production: Finish
     Production --> [*]: Complete
 ```
+
+### Wizard Navigation Pattern
+
+| Screen | Primary Action | Secondary Action |
+|--------|---------------|------------------|
+| Welcome | "Get Started" button | "I already have a layout" link |
+| Config | "Continue" button (bottom) | Back button |
+| Upload | Take Photo / Gallery | "Skip, create manually" link |
+| Custom | "Finish" in toolbar | Back button |
 
 ### Steps
 
@@ -72,7 +84,16 @@ stateDiagram-v2
 | 1 | Config | Configure micro-inverters (serial numbers, efficiency) |
 | 2 | Upload | Optional: AI analyzes photo to generate layout |
 | 3 | Custom | Edit layout, link panels to inverters |
-| 4 | Production | View-only: real-time wattage per panel |
+| — | Production | View-only: real-time wattage per panel (post-wizard) |
+
+### WizardProgress Component
+
+`src/components/WizardProgress.tsx` displays a 3-step indicator:
+- **Configure** → **Photo** → **Layout**
+- Current step: filled purple circle
+- Completed steps: purple circle with checkmark
+- Future steps: gray outline
+- Connected by lines (purple for completed, gray for pending)
 
 ### Data Flow
 
@@ -99,11 +120,11 @@ flowchart LR
 src/
 ├── app/                    # Expo Router file-based routes
 │   ├── _layout.tsx         # Root layout with PanelsProvider
-│   ├── index.tsx           # Home screen with option cards
+│   ├── index.tsx           # Welcome screen / Home with option cards
 │   ├── config.tsx          # Step 1: Configuration (SwiftUI Form)
 │   ├── upload.tsx          # Step 2: Upload & AI analysis
 │   ├── custom.tsx          # Step 3: Canvas editor with toolbar
-│   ├── production.tsx      # Step 4: Production monitor (TODO)
+│   ├── production.tsx      # Production monitor (real-time wattage)
 │   ├── link-inverter.tsx   # Modal: Link panel to inverter
 │   └── api/
 │       └── analyze+api.ts  # Bedrock API route (Claude vision)
@@ -112,11 +133,14 @@ src/
 │   ├── ImagePreview.tsx    # Image preview
 │   ├── PermissionModal.tsx # Camera permission UI
 │   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text
+│   ├── ProductionCanvas.tsx # Read-only canvas for production
+│   ├── ProductionPanel.tsx # Panel with wattage display
 │   ├── SolarPanel.tsx      # Skia panel with rotation
 │   ├── SolarPanelCanvas.tsx # Main canvas + gestures
+│   ├── WizardProgress.tsx  # 3-step progress indicator
 │   └── ZoomControls.tsx    # Floating zoom +/- controls
 ├── hooks/
-│   ├── useConfigStore.ts   # Config store hook (inverters, wattage)
+│   ├── useConfigStore.ts   # Config store hook (inverters, wattage, wizard)
 │   ├── useImagePicker.ts   # Camera/gallery hook
 │   └── usePanelsManager.ts # Panel state management
 └── utils/
@@ -313,6 +337,7 @@ interface InverterConfig {
 interface SystemConfig {
   defaultMaxWattage: number;
   inverters: InverterConfig[];
+  wizardCompleted: boolean;  // Tracks if user has completed wizard
 }
 ```
 
@@ -323,6 +348,8 @@ interface SystemConfig {
 - `updateInverterSerialNumber(id, serial)` - Update inverter serial number
 - `addInverterWithDetails(serial, efficiency)` - Add new inverter
 - `removeInverter(id)` - Delete inverter
+- `getWizardCompleted()` - Check if wizard was completed
+- `setWizardCompleted(completed)` - Mark wizard as complete
 - `subscribe(listener)` - Subscribe to config changes
 
 ### Config Hook (`src/hooks/useConfigStore.ts`)
@@ -344,10 +371,33 @@ Native iOS form using `@expo/ui/swift-ui` components:
 - **BottomSheet** - Modal sheets for add/edit inverters
 - **Slider** - Efficiency adjustment (0-100%)
 
+## Production Screen
+
+The production monitor (`src/app/production.tsx`) displays real-time array output:
+
+- **Total output card** - Shows combined wattage of all panels at top
+- **Read-only canvas** - Same layout as editor, no editing allowed
+- **Panel wattage display** - Each panel shows current output with color coding:
+  - Green: >80% efficiency
+  - Yellow: 40-80% efficiency
+  - Red: <40% efficiency
+  - Gray: Unlinked (0W)
+- **1-second updates** - Wattage recalculates every second with ±5% fluctuation
+- **Formula**: `efficiency × maxWattage × (0.95 + Math.random() × 0.1)`
+
+### ProductionCanvas vs SolarPanelCanvas
+
+| Feature | SolarPanelCanvas | ProductionCanvas |
+|---------|------------------|------------------|
+| Panel dragging | Yes | No |
+| Panel selection | Yes | No |
+| Wattage display | No | Yes |
+| Color coding | Link status only | Output level |
+| Viewport panning | Yes | Yes |
+| Zoom controls | Yes | Yes |
+
 ## Planned Integrations
 
-- **Production screen** - View-only canvas with real-time wattage per panel
-  - Mock formula: `efficiency × maxWattage × (0.95 + Math.random() * 0.1)`
 - **EAS Hosting** - Server-side API route deployment
 - **Compass indicator** - Array orientation display
 - **Panel detail sheet** - Bottom sheet with serial number and metadata
