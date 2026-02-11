@@ -62,9 +62,9 @@ export function ProductionPanel({ x, y, rotation, wattage, inverterId }: Product
     return y.value + PANEL_HEIGHT / 2;
   });
 
-  // Measure text width for proper centering
+  // Measure text width for proper centering (with null safety)
   const text = `${wattage}W`;
-  const textWidth = font.measureText(text).width;
+  const textWidth = font ? font.measureText(text).width : 25; // Fallback width if font unavailable
 
   // Derive colors based on link state
   const fillColor = useDerivedValue(() =>
@@ -76,6 +76,12 @@ export function ProductionPanel({ x, y, rotation, wattage, inverterId }: Product
   const gridColor = useDerivedValue(() =>
     inverterId?.value === null ? UNLINKED_GRID_COLOR : GRID_COLOR
   );
+
+  // Derived values for text positioning (computed unconditionally to satisfy hooks rules)
+  const textBackgroundX = useDerivedValue(() => textCenterX.value - (textWidth / 2 + 4));
+  const textBackgroundY = useDerivedValue(() => textCenterY.value - 10);
+  const textX = useDerivedValue(() => textCenterX.value - textWidth / 2);
+  const textY = useDerivedValue(() => textCenterY.value + 3);
 
   return (
     <>
@@ -129,25 +135,27 @@ export function ProductionPanel({ x, y, rotation, wattage, inverterId }: Product
         />
       </Group>
 
-      {/* Wattage text overlay (not rotated) */}
-      <Group>
-        {/* Text background for contrast */}
-        <RoundedRect
-          x={useDerivedValue(() => textCenterX.value - (textWidth / 2 + 4))}
-          y={useDerivedValue(() => textCenterY.value - 10)}
-          width={textWidth + 8}
-          height={18}
-          r={4}
-          color="rgba(0, 0, 0, 0.6)"
-        />
-        <SkiaText
-          x={useDerivedValue(() => textCenterX.value - textWidth / 2)}
-          y={useDerivedValue(() => textCenterY.value + 3)}
-          text={text}
-          font={font}
-          color="white"
-        />
-      </Group>
+      {/* Wattage text overlay (not rotated) - only render if font is available */}
+      {font && (
+        <Group>
+          {/* Text background for contrast */}
+          <RoundedRect
+            x={textBackgroundX}
+            y={textBackgroundY}
+            width={textWidth + 8}
+            height={18}
+            r={4}
+            color="rgba(0, 0, 0, 0.6)"
+          />
+          <SkiaText
+            x={textX}
+            y={textY}
+            text={text}
+            font={font}
+            color="white"
+          />
+        </Group>
+      )}
     </>
   );
 }
