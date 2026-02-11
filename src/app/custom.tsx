@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { View, StyleSheet, Text, Pressable, type LayoutChangeEvent } from "react-native";
+import { View, StyleSheet, Text, type LayoutChangeEvent } from "react-native";
 import { Stack, useLocalSearchParams, Link, useRouter } from "expo-router";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -241,11 +241,6 @@ export default function Custom() {
           )}
         </Stack.Toolbar.Button>
         <Stack.Toolbar.Button icon="location" onPress={handleSnapToOrigin} />
-        {isWizardMode && panels.length > 0 && (
-          <Stack.Toolbar.Button onPress={handleFinish}>
-            <Text style={{ color: '#6366f1', fontSize: 17, fontWeight: '600' }}>Finish</Text>
-          </Stack.Toolbar.Button>
-        )}
       </Stack.Toolbar>
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={styles.container} onLayout={handleLayout} testID="canvas-container">
@@ -280,6 +275,11 @@ export default function Custom() {
             />
             <Stack.Toolbar.Button icon="trash" onPress={handleDeletePanel} />
           </>
+        )}
+        {isWizardMode && panels.length > 0 && (
+          <Stack.Toolbar.Button onPress={handleFinish}>
+            <Text style={{ color: '#6366f1', fontSize: 17, fontWeight: '600' }}>Finish</Text>
+          </Stack.Toolbar.Button>
         )}
       </Stack.Toolbar>
     </>

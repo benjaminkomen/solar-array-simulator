@@ -16,11 +16,13 @@ function generateSerialNumber(): string {
 export interface SystemConfig {
   defaultMaxWattage: number;
   inverters: InverterConfig[];
+  wizardCompleted: boolean;
 }
 
 // Default configuration: 14 inverters with realistic efficiency distribution
 const DEFAULT_CONFIG: SystemConfig = {
   defaultMaxWattage: 430,
+  wizardCompleted: false,
   inverters: [
     // 7 inverters at 95% (optimal)
     { id: '1', serialNumber: generateSerialNumber(), efficiency: 95 },
@@ -64,6 +66,11 @@ function loadConfig(): void {
           inverter.serialNumber = generateSerialNumber();
           needsSave = true;
         }
+      }
+      // Migrate: ensure wizardCompleted field exists
+      if (currentConfig.wizardCompleted === undefined) {
+        currentConfig.wizardCompleted = false;
+        needsSave = true;
       }
       if (needsSave) {
         saveConfig();
@@ -173,6 +180,22 @@ export function addInverterWithDetails(serialNumber: string, efficiency: number)
 export function removeInverter(inverterId: string): void {
   const newConfig = getConfig();
   newConfig.inverters = newConfig.inverters.filter((inv) => inv.id !== inverterId);
+  updateConfig(newConfig);
+}
+
+/**
+ * Get wizard completed status
+ */
+export function getWizardCompleted(): boolean {
+  return currentConfig.wizardCompleted;
+}
+
+/**
+ * Set wizard completed status
+ */
+export function setWizardCompleted(completed: boolean): void {
+  const newConfig = getConfig();
+  newConfig.wizardCompleted = completed;
   updateConfig(newConfig);
 }
 
