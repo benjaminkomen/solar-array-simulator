@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { View, StyleSheet, Text, type LayoutChangeEvent } from "react-native";
+import { View, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { Stack, useLocalSearchParams, Link, useRouter } from "expo-router";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -278,7 +278,7 @@ export default function Custom() {
         )}
         {isWizardMode && panels.length > 0 && (
           <Stack.Toolbar.Button onPress={handleFinish}>
-            <Text style={{ color: '#6366f1', fontSize: 17, fontWeight: '600' }}>Finish</Text>
+            Finish
           </Stack.Toolbar.Button>
         )}
       </Stack.Toolbar>

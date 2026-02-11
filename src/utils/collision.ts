@@ -6,7 +6,7 @@ export interface Rect {
 }
 
 /** Minimum gap between panels in pixels */
-export const PANEL_GAP = 4;
+export const PANEL_GAP = 8;
 
 /**
  * Check if two rectangles overlap using AABB collision detection.

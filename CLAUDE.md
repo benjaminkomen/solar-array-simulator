@@ -164,7 +164,7 @@ PANEL_HEIGHT = 120  // Portrait height
 GRID_SIZE = 30      // Snap grid in pixels
 
 // Collision (src/utils/collision.ts)
-PANEL_GAP = 4       // Minimum gap between panels
+PANEL_GAP = 8       // Minimum gap between panels
 
 // Zoom levels (src/utils/zoomConstants.ts)
 ZOOM_LEVELS = [1.0, 0.66, 0.4]  // Scale factors (most zoomed in → most zoomed out)
