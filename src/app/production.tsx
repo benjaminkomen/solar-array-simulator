@@ -11,6 +11,8 @@ import { ProductionCanvas } from "@/components/ProductionCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
 import { ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from "@/utils/zoomConstants";
 import { useColors } from "@/utils/theme";
+import { resetAllData } from "@/utils/configStore";
+import { clearPanels } from "@/utils/panelStore";
 
 interface WattageMap {
   [panelId: string]: number;
@@ -134,9 +136,30 @@ export default function ProductionScreen() {
     [panels, router]
   );
 
+  const handleEditConfiguration = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/config?wizard=true");
+  }, [router]);
+
+  const handleDeleteConfiguration = useCallback(() => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    resetAllData();
+    clearPanels();
+    router.replace("/");
+  }, [router]);
+
   return (
     <>
-      <Stack.Screen.BackButton displayMode="minimal" />
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Menu icon="ellipsis.circle">
+          <Stack.Toolbar.MenuAction icon="pencil" onPress={handleEditConfiguration}>
+            Edit Configuration
+          </Stack.Toolbar.MenuAction>
+          <Stack.Toolbar.MenuAction icon="trash" destructive onPress={handleDeleteConfiguration}>
+            Delete Configuration
+          </Stack.Toolbar.MenuAction>
+        </Stack.Toolbar.Menu>
+      </Stack.Toolbar>
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]}>
         <View
           style={{

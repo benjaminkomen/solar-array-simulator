@@ -1,7 +1,5 @@
-import {useState} from 'react';
 import {Keyboard, StyleSheet, TouchableWithoutFeedback, View} from 'react-native';
 import {
-  BottomSheet,
   Button,
   Form,
   Host,
@@ -10,20 +8,16 @@ import {
   LabeledContent,
   List,
   Section,
-  Slider,
   Spacer,
   Text,
   TextField,
   VStack,
 } from '@expo/ui/swift-ui';
 import {
-  bold,
   buttonStyle,
   font,
   foregroundStyle,
   opacity,
-  presentationDetents,
-  presentationDragIndicator,
   scrollDismissesKeyboard,
 } from '@expo/ui/swift-ui/modifiers';
 import {useConfigStore} from '@/hooks/useConfigStore';
@@ -32,34 +26,12 @@ import {Stack, useLocalSearchParams, useRouter} from "expo-router";
 import {WizardProgress} from "@/components/WizardProgress";
 import * as Haptics from "expo-haptics";
 
-function generateSerialNumber(): string {
-  return Math.floor(10000000 + Math.random() * 90000000).toString();
-}
-
 export default function ConfigScreen() {
   const router = useRouter();
   const {wizard} = useLocalSearchParams<{ wizard?: string }>();
   const isWizardMode = wizard === 'true';
 
-  const {
-    config,
-    updateDefaultWattage,
-    updateInverterEfficiency,
-    updateInverterSerialNumber,
-    addInverterWithDetails,
-    removeInverter
-  } =
-    useConfigStore();
-
-  // Add sheet state
-  const [showAddSheet, setShowAddSheet] = useState(false);
-  const [newSerial, setNewSerial] = useState('');
-  const [newEfficiency, setNewEfficiency] = useState(95);
-
-  // Edit sheet state
-  const [editingInverter, setEditingInverter] = useState<InverterConfig | null>(null);
-  const [editSerial, setEditSerial] = useState('');
-  const [editEfficiency, setEditEfficiency] = useState(0);
+  const {config, updateDefaultWattage, removeInverter} = useConfigStore();
 
   const handleWattageChange = (text: string) => {
     const wattage = parseInt(text, 10);
@@ -76,28 +48,11 @@ export default function ConfigScreen() {
   };
 
   const handleOpenAddSheet = () => {
-    setNewSerial(generateSerialNumber());
-    setNewEfficiency(95);
-    setShowAddSheet(true);
-  };
-
-  const handleAddInverter = () => {
-    addInverterWithDetails(newSerial, newEfficiency);
-    setShowAddSheet(false);
+    router.push('/inverter-details?mode=add');
   };
 
   const handleOpenEditSheet = (inverter: InverterConfig) => {
-    setEditingInverter(inverter);
-    setEditSerial(inverter.serialNumber);
-    setEditEfficiency(inverter.efficiency);
-  };
-
-  const handleSaveEdit = () => {
-    if (editingInverter) {
-      updateInverterSerialNumber(editingInverter.id, editSerial);
-      updateInverterEfficiency(editingInverter.id, editEfficiency);
-    }
-    setEditingInverter(null);
+    router.push(`/inverter-details?mode=edit&inverterId=${inverter.id}`);
   };
 
   const handleContinue = () => {
@@ -172,116 +127,6 @@ export default function ConfigScreen() {
                 </List.ForEach>
               </Section>
             </Form>
-
-            {/* Add Inverter Sheet */}
-            <BottomSheet
-              isPresented={showAddSheet}
-              onIsPresentedChange={setShowAddSheet}
-              modifiers={[presentationDetents(['large']), presentationDragIndicator('visible')]}
-            >
-              <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
-                {/* Header */}
-                <Section>
-                  <HStack>
-                    <Button onPress={() => setShowAddSheet(false)}>
-                      <Image systemName="xmark.circle.fill" size={36} color="#E5E5EA"/>
-                    </Button>
-                    <Spacer/>
-                    <Text modifiers={[bold(), font({size: 17})]}>New Micro-inverter</Text>
-                    <Spacer/>
-                    <Button onPress={handleAddInverter}>
-                      <Image systemName="checkmark.circle.fill" size={36} color="#C7C7CC"/>
-                    </Button>
-                  </HStack>
-                </Section>
-
-                {/* Serial Number */}
-                <Section header={<Text>Details</Text>}>
-                  <LabeledContent label="Serial Number">
-                    <TextField
-                      defaultValue={newSerial}
-                      onChangeText={setNewSerial}
-                      placeholder="Enter serial number"
-                      keyboardType="numeric"
-                    />
-                  </LabeledContent>
-                </Section>
-
-                {/* Efficiency */}
-                <Section
-                  header={<Text>Efficiency</Text>}
-                  footer={<Text>Set the expected efficiency for this micro-inverter.</Text>}
-                >
-                  <LabeledContent label="Current">
-                    <Text modifiers={[bold()]}>{Math.round(newEfficiency)}%</Text>
-                  </LabeledContent>
-                  <Slider
-                    value={newEfficiency / 100}
-                    onValueChange={(val) => setNewEfficiency(val * 100)}
-                    min={0}
-                    max={1}
-                  />
-                </Section>
-              </Form>
-            </BottomSheet>
-
-            {/* Edit Inverter Sheet */}
-            <BottomSheet
-              isPresented={editingInverter !== null}
-              onIsPresentedChange={(presented) => {
-                if (!presented) {
-                  handleSaveEdit();
-                }
-              }}
-              modifiers={[presentationDetents(['large']), presentationDragIndicator('visible')]}
-            >
-              {editingInverter && (
-                <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
-                  {/* Header */}
-                  <Section>
-                    <HStack>
-                      <Button onPress={() => setEditingInverter(null)}>
-                        <Image systemName="xmark.circle.fill" size={36} color="#E5E5EA"/>
-                      </Button>
-                      <Spacer/>
-                      <Text modifiers={[bold(), font({size: 17})]}>Edit Micro-inverter</Text>
-                      <Spacer/>
-                      <Button onPress={handleSaveEdit}>
-                        <Image systemName="checkmark.circle.fill" size={36} color="#C7C7CC"/>
-                      </Button>
-                    </HStack>
-                  </Section>
-
-                  {/* Serial Number */}
-                  <Section header={<Text>Details</Text>}>
-                    <LabeledContent label="Serial Number">
-                      <TextField
-                        defaultValue={editSerial}
-                        onChangeText={setEditSerial}
-                        placeholder="Enter serial number"
-                        keyboardType="numeric"
-                      />
-                    </LabeledContent>
-                  </Section>
-
-                  {/* Efficiency */}
-                  <Section
-                    header={<Text>Efficiency</Text>}
-                    footer={<Text>Adjust for shading, dirt, or other obstructions.</Text>}
-                  >
-                    <LabeledContent label="Current">
-                      <Text modifiers={[bold()]}>{Math.round(editEfficiency)}%</Text>
-                    </LabeledContent>
-                    <Slider
-                      value={editEfficiency / 100}
-                      onValueChange={(val) => setEditEfficiency(val * 100)}
-                      min={0}
-                      max={1}
-                    />
-                  </Section>
-                </Form>
-              )}
-            </BottomSheet>
           </Host>
         </View>
       </TouchableWithoutFeedback>

@@ -1,39 +1,40 @@
-import { useState } from "react";
-import { ScrollView, useWindowDimensions, View, Text, Pressable, useColorScheme } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { useEffect } from "react";
+import { ScrollView, Text, useColorScheme } from "react-native";
+import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { OptionCard } from "@/components/OptionCard";
 import { Button } from "@/components/Button";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { useColors } from "@/utils/theme";
 
 export default function Index() {
   const router = useRouter();
-  const { width, height } = useWindowDimensions();
   const { getWizardCompleted } = useConfigStore();
-  const [showCards, setShowCards] = useState(false);
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const wizardCompleted = getWizardCompleted();
 
-  // Calculate card size to fit three cards in viewport with gap
-  const gap = 16;
-  const verticalPadding = 200;
-  const availableHeight = height - verticalPadding;
-  const cardSize = Math.min(width - 40, (availableHeight - gap * 2) / 3);
+  // Redirect returning users directly to production
+  useEffect(() => {
+    if (wizardCompleted) {
+      router.replace("/production");
+    }
+  }, [wizardCompleted, router]);
+
+  // Show nothing while redirecting
+  if (wizardCompleted) {
+    return null;
+  }
 
   const handleGetStarted = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push("/config?wizard=true");
   };
 
-  // Show welcome screen for new users, or if they haven't chosen to see cards
-  if (!wizardCompleted && !showCards) {
-    return (
+  return (
       <>
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
@@ -109,99 +110,7 @@ export default function Index() {
             />
           </Animated.View>
 
-          {/* Already have layout link */}
-          <Animated.View entering={FadeIn.duration(400).delay(300)}>
-            <Pressable
-              testID="already-have-layout-button"
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setShowCards(true);
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 15,
-                  color: colors.primary,
-                  fontWeight: "500",
-                }}
-              >
-                I already have a layout
-              </Text>
-            </Pressable>
-          </Animated.View>
         </ScrollView>
       </>
     );
-  }
-
-  // Returning user view with option cards
-  return (
-    <>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="wrench" onPress={() => router.push("/debug")} />
-      </Stack.Toolbar>
-      <Stack.Screen.Title style={{ fontSize: 20, color: colors.text.primary }}>
-        Array Builder
-      </Stack.Screen.Title>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={{ backgroundColor: colors.background.primary }}
-        contentContainerStyle={{
-          alignItems: "center",
-          paddingTop: 16,
-          paddingBottom: 100,
-        }}
-      >
-        <View
-          style={{
-            gap,
-            paddingHorizontal: 20,
-          }}
-        >
-          <OptionCard
-            title="Configuration"
-            description="Configure micro-inverters"
-            cardSize={cardSize}
-            href="/config"
-            icon="sf:slider.horizontal.3"
-            testID="config-option"
-          />
-          <OptionCard
-            title="Upload"
-            description="Take or select a photo"
-            cardSize={cardSize}
-            href="/upload"
-            icon="sf:photo.on.rectangle"
-            testID="upload-option"
-          />
-          <OptionCard
-            title="Custom"
-            description="Create manually"
-            cardSize={cardSize}
-            href="/custom"
-            icon="sf:square.and.pencil"
-            testID="custom-option"
-          />
-          <OptionCard
-            title="Production"
-            description="Monitor array output"
-            cardSize={cardSize}
-            href="/production"
-            icon="sf:bolt.fill"
-            testID="production-option"
-          />
-        </View>
-
-        {/* Start new wizard button for returning users */}
-        <View style={{ paddingHorizontal: 40, paddingTop: 24, width: "100%" }}>
-          <Button
-            title="Start New Setup"
-            onPress={handleGetStarted}
-            variant="outlined"
-            style={{ paddingVertical: 14 }}
-          />
-        </View>
-      </ScrollView>
-    </>
-  );
 }
