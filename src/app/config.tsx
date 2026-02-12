@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Pressable, StyleSheet, View, Text as RNText} from 'react-native';
+import {Keyboard, StyleSheet, TouchableWithoutFeedback, View} from 'react-native';
 import {
   BottomSheet,
   Button,
@@ -18,12 +18,14 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   bold,
+  buttonStyle,
   font,
   foregroundStyle,
+  opacity,
   presentationDetents,
   presentationDragIndicator,
+  scrollDismissesKeyboard,
 } from '@expo/ui/swift-ui/modifiers';
-import {Ionicons} from '@expo/vector-icons';
 import {useConfigStore} from '@/hooks/useConfigStore';
 import type {InverterConfig} from '@/utils/configStore';
 import {Stack, useLocalSearchParams, useRouter} from "expo-router";
@@ -36,7 +38,7 @@ function generateSerialNumber(): string {
 
 export default function ConfigScreen() {
   const router = useRouter();
-  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
+  const {wizard} = useLocalSearchParams<{ wizard?: string }>();
   const isWizardMode = wizard === 'true';
 
   const {
@@ -106,139 +108,88 @@ export default function ConfigScreen() {
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal"/>
-      {isWizardMode && <WizardProgress currentStep={1} />}
-      <View style={styles.container}>
-        <Host style={styles.form}>
-          <Form>
-            {/* Panel Settings Section */}
-            <Section
-              header={<Text>Panel Settings</Text>}
-              footer={
-                <Text>
-                  Configure the default wattage each micro-inverter and solar panel will produce at
-                  maximum production.
-                </Text>
-              }
-            >
-              <LabeledContent label="Default Wattage">
-                <TextField
-                  keyboardType="numeric"
-                  defaultValue={config.defaultMaxWattage.toString()}
-                  onChangeText={handleWattageChange}
-                  placeholder="430"
-                />
-              </LabeledContent>
-            </Section>
-
-            {/* Micro-inverters Section */}
-            <Section
-              header={<Text>Micro-inverters ({config.inverters.length})</Text>}
-              footer={
-                <Text>
-                  Tap to edit efficiency. Swipe left to delete.
-                </Text>
-              }
-            >
-              <List.ForEach onDelete={handleDelete}>
-                {config.inverters.map((inverter) => (
-                  <Button key={inverter.id} onPress={() => handleOpenEditSheet(inverter)}>
-                    <HStack>
-                      <VStack alignment="leading" spacing={2}>
-                        <Text modifiers={[foregroundStyle({type: 'hierarchical', style: 'primary'})]}>
-                          {inverter.serialNumber}
-                        </Text>
-                        <Text
-                          modifiers={[
-                            foregroundStyle({type: 'hierarchical', style: 'tertiary'}),
-                            font({size: 14}),
-                          ]}
-                        >
-                          {Math.round(inverter.efficiency)}% efficiency
-                        </Text>
-                      </VStack>
-                      <Spacer/>
-                      <Image systemName="chevron.right" size={14} color="#C7C7CC"/>
-                    </HStack>
-                  </Button>
-                ))}
-              </List.ForEach>
-            </Section>
-          </Form>
-
-          {/* Add Inverter Sheet */}
-          <BottomSheet
-            isPresented={showAddSheet}
-            onIsPresentedChange={setShowAddSheet}
-            modifiers={[presentationDetents(['large']), presentationDragIndicator('visible')]}
-          >
-            <Form>
-              {/* Header */}
-              <Section>
-                <HStack>
-                  <Button onPress={() => setShowAddSheet(false)}>
-                    <Image systemName="xmark.circle.fill" size={36} color="#E5E5EA"/>
-                  </Button>
-                  <Spacer/>
-                  <Text modifiers={[bold(), font({size: 17})]}>New Micro-inverter</Text>
-                  <Spacer/>
-                  <Button onPress={handleAddInverter}>
-                    <Image systemName="checkmark.circle.fill" size={36} color="#C7C7CC"/>
-                  </Button>
-                </HStack>
-              </Section>
-
-              {/* Serial Number */}
-              <Section header={<Text>Details</Text>}>
-                <LabeledContent label="Serial Number">
-                  <TextField
-                    defaultValue={newSerial}
-                    onChangeText={setNewSerial}
-                    placeholder="Enter serial number"
-                    keyboardType="numeric"
-                  />
-                </LabeledContent>
-              </Section>
-
-              {/* Efficiency */}
+      {isWizardMode && <WizardProgress currentStep={1}/>}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.container}>
+          <Host style={styles.form}>
+            <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
+              {/* Panel Settings Section */}
               <Section
-                header={<Text>Efficiency</Text>}
-                footer={<Text>Set the expected efficiency for this micro-inverter.</Text>}
+                header={<Text>Panel Settings</Text>}
+                footer={
+                  <Text>
+                    Configure the default wattage each micro-inverter and solar panel will produce at
+                    maximum production.
+                  </Text>
+                }
               >
-                <LabeledContent label="Current">
-                  <Text modifiers={[bold()]}>{Math.round(newEfficiency)}%</Text>
+                <LabeledContent label="Default Wattage">
+                  <HStack>
+                    <TextField
+                      keyboardType="numeric"
+                      defaultValue={config.defaultMaxWattage.toString()}
+                      onChangeText={handleWattageChange}
+                      placeholder="430"
+                    />
+                    <Spacer/>
+                    <Text testID='text-input-unit'>W</Text>
+                  </HStack>
                 </LabeledContent>
-                <Slider
-                  value={newEfficiency / 100}
-                  onValueChange={(val) => setNewEfficiency(val * 100)}
-                  min={0}
-                  max={1}
-                />
+              </Section>
+
+              {/* Micro-inverters Section */}
+              <Section
+                header={<Text>Micro-inverters ({config.inverters.length})</Text>}
+                footer={
+                  <Text>
+                    Tap to edit efficiency. Swipe left to delete.
+                  </Text>
+                }
+              >
+                <List.ForEach onDelete={handleDelete}>
+                  {config.inverters.map((inverter) => (
+                    <Button key={inverter.id} onPress={() => handleOpenEditSheet(inverter)}
+                            modifiers={[buttonStyle('plain')]}>
+                      <HStack>
+                        <VStack alignment="leading" spacing={2}>
+                          <Text modifiers={[foregroundStyle({type: 'hierarchical', style: 'primary'})]}>
+                            {inverter.serialNumber}
+                          </Text>
+                          <Text
+                            modifiers={[
+                              opacity(0.6),
+                              font({size: 14}),
+                            ]}
+                          >
+                            {Math.round(inverter.efficiency)}% efficiency
+                          </Text>
+                        </VStack>
+                        <Spacer/>
+                        <Image systemName="chevron.right" size={14} color="#C7C7CC"/>
+                      </HStack>
+                    </Button>
+                  ))}
+                </List.ForEach>
               </Section>
             </Form>
-          </BottomSheet>
 
-          {/* Edit Inverter Sheet */}
-          <BottomSheet
-            isPresented={editingInverter !== null}
-            onIsPresentedChange={(presented) => {
-              if (!presented) {
-                handleSaveEdit();
-              }
-            }}
-            modifiers={[presentationDetents(['large']), presentationDragIndicator('visible')]}
-          >
-            {editingInverter && (
-              <Form>
+            {/* Add Inverter Sheet */}
+            <BottomSheet
+              isPresented={showAddSheet}
+              onIsPresentedChange={setShowAddSheet}
+              modifiers={[presentationDetents(['large']), presentationDragIndicator('visible')]}
+            >
+              <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
                 {/* Header */}
                 <Section>
                   <HStack>
-                    <Button onPress={() => setEditingInverter(null)}>
+                    <Button onPress={() => setShowAddSheet(false)}>
                       <Image systemName="xmark.circle.fill" size={36} color="#E5E5EA"/>
                     </Button>
                     <Spacer/>
-                    <Text modifiers={[bold(), font({size: 17})]}>Edit Micro-inverter</Text>
+                    <Text modifiers={[bold(), font({size: 17})]}>New Micro-inverter</Text>
                     <Spacer/>
-                    <Button onPress={handleSaveEdit}>
+                    <Button onPress={handleAddInverter}>
                       <Image systemName="checkmark.circle.fill" size={36} color="#C7C7CC"/>
                     </Button>
                   </HStack>
@@ -248,8 +199,8 @@ export default function ConfigScreen() {
                 <Section header={<Text>Details</Text>}>
                   <LabeledContent label="Serial Number">
                     <TextField
-                      defaultValue={editSerial}
-                      onChangeText={setEditSerial}
+                      defaultValue={newSerial}
+                      onChangeText={setNewSerial}
                       placeholder="Enter serial number"
                       keyboardType="numeric"
                     />
@@ -259,43 +210,89 @@ export default function ConfigScreen() {
                 {/* Efficiency */}
                 <Section
                   header={<Text>Efficiency</Text>}
-                  footer={<Text>Adjust for shading, dirt, or other obstructions.</Text>}
+                  footer={<Text>Set the expected efficiency for this micro-inverter.</Text>}
                 >
                   <LabeledContent label="Current">
-                    <Text modifiers={[bold()]}>{Math.round(editEfficiency)}%</Text>
+                    <Text modifiers={[bold()]}>{Math.round(newEfficiency)}%</Text>
                   </LabeledContent>
                   <Slider
-                    value={editEfficiency / 100}
-                    onValueChange={(val) => setEditEfficiency(val * 100)}
+                    value={newEfficiency / 100}
+                    onValueChange={(val) => setNewEfficiency(val * 100)}
                     min={0}
                     max={1}
                   />
                 </Section>
               </Form>
-            )}
-          </BottomSheet>
-        </Host>
+            </BottomSheet>
 
-        {/* Floating add button */}
-        <View style={styles.floatingButtonContainer}>
-          <Pressable style={styles.floatingButton} onPress={handleOpenAddSheet}>
-            <Ionicons name="add" size={28} color="#fff"/>
-          </Pressable>
-        </View>
-
-        {/* Continue button for wizard mode */}
-        {isWizardMode && (
-          <View style={styles.continueButtonContainer}>
-            <Pressable
-              testID="continue-button"
-              style={styles.continueButton}
-              onPress={handleContinue}
+            {/* Edit Inverter Sheet */}
+            <BottomSheet
+              isPresented={editingInverter !== null}
+              onIsPresentedChange={(presented) => {
+                if (!presented) {
+                  handleSaveEdit();
+                }
+              }}
+              modifiers={[presentationDetents(['large']), presentationDragIndicator('visible')]}
             >
-              <RNText style={styles.continueButtonText}>Continue</RNText>
-            </Pressable>
-          </View>
+              {editingInverter && (
+                <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
+                  {/* Header */}
+                  <Section>
+                    <HStack>
+                      <Button onPress={() => setEditingInverter(null)}>
+                        <Image systemName="xmark.circle.fill" size={36} color="#E5E5EA"/>
+                      </Button>
+                      <Spacer/>
+                      <Text modifiers={[bold(), font({size: 17})]}>Edit Micro-inverter</Text>
+                      <Spacer/>
+                      <Button onPress={handleSaveEdit}>
+                        <Image systemName="checkmark.circle.fill" size={36} color="#C7C7CC"/>
+                      </Button>
+                    </HStack>
+                  </Section>
+
+                  {/* Serial Number */}
+                  <Section header={<Text>Details</Text>}>
+                    <LabeledContent label="Serial Number">
+                      <TextField
+                        defaultValue={editSerial}
+                        onChangeText={setEditSerial}
+                        placeholder="Enter serial number"
+                        keyboardType="numeric"
+                      />
+                    </LabeledContent>
+                  </Section>
+
+                  {/* Efficiency */}
+                  <Section
+                    header={<Text>Efficiency</Text>}
+                    footer={<Text>Adjust for shading, dirt, or other obstructions.</Text>}
+                  >
+                    <LabeledContent label="Current">
+                      <Text modifiers={[bold()]}>{Math.round(editEfficiency)}%</Text>
+                    </LabeledContent>
+                    <Slider
+                      value={editEfficiency / 100}
+                      onValueChange={(val) => setEditEfficiency(val * 100)}
+                      min={0}
+                      max={1}
+                    />
+                  </Section>
+                </Form>
+              )}
+            </BottomSheet>
+          </Host>
+        </View>
+      </TouchableWithoutFeedback>
+      <Stack.Toolbar placement="bottom">
+        {isWizardMode && (
+          <Stack.Toolbar.Button onPress={handleContinue}>
+            Continue
+          </Stack.Toolbar.Button>
         )}
-      </View>
+        <Stack.Toolbar.Button icon="plus" onPress={handleOpenAddSheet}/>
+      </Stack.Toolbar>
     </>
   );
 }
@@ -306,40 +303,5 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
-  },
-  floatingButtonContainer: {
-    position: 'absolute',
-    bottom: 32,
-    right: 20,
-  },
-  floatingButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#6366f1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  continueButtonContainer: {
-    position: 'absolute',
-    bottom: 32,
-    left: 20,
-    right: 90,
-  },
-  continueButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  continueButtonText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#ffffff',
   },
 });

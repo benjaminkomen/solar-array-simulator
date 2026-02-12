@@ -1,17 +1,22 @@
 import { useState } from "react";
-import { ScrollView, useWindowDimensions, View, Text, Pressable } from "react-native";
+import { ScrollView, useWindowDimensions, View, Text, Pressable, useColorScheme } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { OptionCard } from "@/components/OptionCard";
+import { Button } from "@/components/Button";
 import { useConfigStore } from "@/hooks/useConfigStore";
+import { useColors } from "@/utils/theme";
 
 export default function Index() {
   const router = useRouter();
   const { width, height } = useWindowDimensions();
   const { getWizardCompleted } = useConfigStore();
   const [showCards, setShowCards] = useState(false);
+  const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const wizardCompleted = getWizardCompleted();
 
@@ -32,6 +37,7 @@ export default function Index() {
       <>
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
+          style={{ backgroundColor: colors.background.primary }}
           contentContainerStyle={{
             flex: 1,
             alignItems: "center",
@@ -47,17 +53,19 @@ export default function Index() {
               width: 140,
               height: 140,
               borderRadius: 32,
-              backgroundColor: "#f0f0ff",
+              backgroundColor: colors.primaryLight,
               justifyContent: "center",
               alignItems: "center",
-              boxShadow: "0 8px 24px rgba(99, 102, 241, 0.15)",
+              boxShadow: isDark
+                ? "0 8px 24px rgba(96, 165, 250, 0.4)"
+                : "0 8px 24px rgba(59, 130, 246, 0.15)",
             }}
           >
             <Image
               source="sf:sun.max.fill"
               style={{ width: 70, height: 70 }}
               contentFit="contain"
-              tintColor="#6366f1"
+              tintColor={colors.primary}
             />
           </Animated.View>
 
@@ -70,7 +78,7 @@ export default function Index() {
               style={{
                 fontSize: 32,
                 fontWeight: "700",
-                color: "#111827",
+                color: colors.text.primary,
                 textAlign: "center",
               }}
             >
@@ -79,7 +87,7 @@ export default function Index() {
             <Text
               style={{
                 fontSize: 17,
-                color: "#6b7280",
+                color: colors.text.secondary,
                 textAlign: "center",
                 lineHeight: 24,
                 paddingHorizontal: 16,
@@ -94,27 +102,11 @@ export default function Index() {
             entering={FadeIn.duration(400).delay(200)}
             style={{ width: "100%", paddingHorizontal: 16 }}
           >
-            <Pressable
-              testID="get-started-button"
+            <Button
+              title="Get Started"
               onPress={handleGetStarted}
-              style={{
-                backgroundColor: "#6366f1",
-                paddingVertical: 18,
-                borderRadius: 14,
-                borderCurve: "continuous",
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "600",
-                  color: "#ffffff",
-                }}
-              >
-                Get Started
-              </Text>
-            </Pressable>
+              style={{ paddingVertical: 18, borderRadius: 14 }}
+            />
           </Animated.View>
 
           {/* Already have layout link */}
@@ -129,7 +121,7 @@ export default function Index() {
               <Text
                 style={{
                   fontSize: 15,
-                  color: "#6366f1",
+                  color: colors.primary,
                   fontWeight: "500",
                 }}
               >
@@ -145,11 +137,15 @@ export default function Index() {
   // Returning user view with option cards
   return (
     <>
-      <Stack.Screen.Title style={{ fontSize: 20 }}>
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button icon="wrench" onPress={() => router.push("/debug")} />
+      </Stack.Toolbar>
+      <Stack.Screen.Title style={{ fontSize: 20, color: colors.text.primary }}>
         Array Builder
       </Stack.Screen.Title>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
+        style={{ backgroundColor: colors.background.primary }}
         contentContainerStyle={{
           alignItems: "center",
           paddingTop: 16,
@@ -198,29 +194,12 @@ export default function Index() {
 
         {/* Start new wizard button for returning users */}
         <View style={{ paddingHorizontal: 40, paddingTop: 24, width: "100%" }}>
-          <Pressable
-            testID="start-new-wizard-button"
+          <Button
+            title="Start New Setup"
             onPress={handleGetStarted}
-            style={{
-              backgroundColor: "#f3f4f6",
-              paddingVertical: 14,
-              borderRadius: 12,
-              borderCurve: "continuous",
-              alignItems: "center",
-              borderWidth: 1,
-              borderColor: "#e5e7eb",
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: "500",
-                color: "#6366f1",
-              }}
-            >
-              Start New Setup
-            </Text>
-          </Pressable>
+            variant="outlined"
+            style={{ paddingVertical: 14 }}
+          />
         </View>
       </ScrollView>
     </>

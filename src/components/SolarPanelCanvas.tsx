@@ -7,12 +7,13 @@ import {
   type SharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { SolarPanel } from "./SolarPanel";
+import { SolarPanel, type PanelColors } from "./SolarPanel";
 import type { PanelData } from "@/hooks/usePanelsManager";
 import type { PanelState } from "@/utils/panelUtils";
 import { hitTestPanels, getPanelDimensions, getPanelRect } from "@/utils/panelUtils";
 import { collidesWithAny } from "@/utils/collision";
 import { snapToNeighbors } from "@/utils/neighborSnap";
+import { useColors } from "@/utils/theme";
 
 interface SolarPanelCanvasProps {
   panels: PanelData[];
@@ -39,6 +40,13 @@ export function SolarPanelCanvas({
   canvasWidth,
   canvasHeight,
 }: SolarPanelCanvasProps) {
+  const colors = useColors();
+  const panelColors: PanelColors = {
+    linked: colors.panel.linked,
+    unlinked: colors.panel.unlinked,
+    selection: colors.panel.selection,
+  };
+
   // Panel dragging state
   const draggedPanelId = useSharedValue<string | null>(null);
   const panelOffsetX = useSharedValue(0);
@@ -252,6 +260,7 @@ export function SolarPanelCanvas({
               rotation={panel.rotation}
               isSelected={selectedId === panel.id}
               inverterId={panel.inverterId}
+              colors={panelColors}
             />
           ))}
         </Group>

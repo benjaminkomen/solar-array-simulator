@@ -1,17 +1,21 @@
 import {useCallback, useState, useEffect} from 'react';
-import {ScrollView, View, Text, Pressable, StyleSheet} from 'react-native';
+import {ScrollView, View, Text, Pressable, StyleSheet, useColorScheme} from 'react-native';
 import {Link, useLocalSearchParams, useRouter} from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {useConfigStore} from '@/hooks/useConfigStore';
 import {usePanelsContext} from '@/contexts/PanelsContext';
 import {getPanelStore, subscribe} from '@/utils/panelStore';
 import {Ionicons} from '@expo/vector-icons';
+import {useColors} from '@/utils/theme';
 
 export default function LinkInverterScreen() {
   const { panelId } = useLocalSearchParams<{ panelId: string }>();
   const { config } = useConfigStore();
   const { linkInverter } = usePanelsContext();
   const router = useRouter();
+  const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   // Read from store instead of SharedValues
   const [storeData, setStoreData] = useState(() => getPanelStore());
@@ -62,83 +66,84 @@ export default function LinkInverterScreen() {
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background.secondary }]}
       contentContainerStyle={styles.contentContainer}
     >
       {currentInverter ? (
         // Show currently linked inverter
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>LINKED INVERTER</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>LINKED INVERTER</Text>
+          <View style={[styles.card, { backgroundColor: colors.background.primary, boxShadow: isDark ? '0 1px 3px rgba(255, 255, 255, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)' }]}>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Serial Number</Text>
-              <Text style={styles.value}>{currentInverter.serialNumber}</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>Serial Number</Text>
+              <Text style={[styles.value, { color: colors.text.secondary }]}>{currentInverter.serialNumber}</Text>
             </View>
-            <View style={styles.separator} />
+            <View style={[styles.separator, { backgroundColor: colors.border.medium }]} />
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Efficiency</Text>
-              <Text style={styles.value}>{Math.round(currentInverter.efficiency)}%</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>Efficiency</Text>
+              <Text style={[styles.value, { color: colors.text.secondary }]}>{Math.round(currentInverter.efficiency)}%</Text>
             </View>
-            <View style={styles.separator} />
+            <View style={[styles.separator, { backgroundColor: colors.border.medium }]} />
             <Pressable
               style={({pressed}) => [
                 styles.unlinkButton,
-                pressed && styles.unlinkButtonPressed
+                pressed && { backgroundColor: colors.background.tertiary }
               ]}
               onPress={handleUnlink}
             >
-              <Ionicons name="unlink" size={20} color="#FF3B30" />
-              <Text style={styles.unlinkButtonText}>Unlink Inverter</Text>
+              <Ionicons name="unlink" size={20} color={colors.system.red} />
+              <Text style={[styles.unlinkButtonText, { color: colors.system.red }]}>Unlink Inverter</Text>
             </Pressable>
           </View>
         </View>
       ) : availableInverters.length > 0 ? (
         // Show list of available inverters
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>AVAILABLE INVERTERS</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>AVAILABLE INVERTERS</Text>
+          <View style={[styles.card, { backgroundColor: colors.background.primary, boxShadow: isDark ? '0 1px 3px rgba(255, 255, 255, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)' }]}>
             {availableInverters.map((inv, index) => (
               <View key={inv.id}>
-                {index > 0 && <View style={styles.separator} />}
+                {index > 0 && <View style={[styles.separator, { backgroundColor: colors.border.medium }]} />}
                 <Pressable
                   style={({pressed}) => [
                     styles.inverterItem,
-                    pressed && styles.inverterItemPressed
+                    pressed && { backgroundColor: colors.background.tertiary }
                   ]}
                   onPress={() => handleLink(inv.id)}
                 >
                   <View style={styles.inverterInfo}>
-                    <Text style={styles.serialNumber}>{inv.serialNumber}</Text>
-                    <Text style={styles.efficiency}>{Math.round(inv.efficiency)}% efficiency</Text>
+                    <Text style={[styles.serialNumber, { color: colors.text.primary }]}>{inv.serialNumber}</Text>
+                    <Text style={[styles.efficiency, { color: colors.text.secondary }]}>{Math.round(inv.efficiency)}% efficiency</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                  <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
                 </Pressable>
               </View>
             ))}
           </View>
-          <Text style={styles.sectionFooter}>Select a micro-inverter to link to this panel.</Text>
+          <Text style={[styles.sectionFooter, { color: colors.text.secondary }]}>Select a micro-inverter to link to this panel.</Text>
         </View>
       ) : (
         // Empty state - no available inverters
         <View style={styles.section}>
           <View style={styles.emptyState}>
-            <Ionicons name="warning" size={56} color="#8E8E93" />
-            <Text style={styles.emptyTitle}>No Available Inverters</Text>
-            <Text style={styles.emptyDescription}>
+            <Ionicons name="warning" size={56} color={colors.text.secondary} />
+            <Text style={[styles.emptyTitle, { color: colors.text.primary }]}>No Available Inverters</Text>
+            <Text style={[styles.emptyDescription, { color: colors.text.secondary }]}>
               All inverters are assigned. Unlink a panel first or add a new inverter.
             </Text>
           </View>
-          <View style={styles.buttonContainer}>
+          <View style={[styles.buttonContainer, { backgroundColor: colors.primary }]}>
             <Link href="/config" asChild>
               <Pressable
                 style={({pressed}) => [
                   styles.addButton,
+                  { backgroundColor: colors.primary, boxShadow: isDark ? '0 4px 12px rgba(96, 165, 250, 0.6)' : '0 4px 12px rgba(59, 130, 246, 0.6)' },
                   pressed && styles.addButtonPressed
                 ]}
               >
                 <View style={styles.buttonContent}>
-                  <Ionicons name="add-circle" size={22} color="#fff" />
-                  <Text style={styles.addButtonText}>Add Inverter</Text>
+                  <Ionicons name="add-circle" size={22} color={colors.text.inverse} />
+                  <Text style={[styles.addButtonText, { color: colors.text.inverse }]}>Add Inverter</Text>
                 </View>
               </Pressable>
             </Link>
@@ -152,7 +157,6 @@ export default function LinkInverterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
   },
   contentContainer: {
     padding: 16,
@@ -164,20 +168,17 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#8E8E93',
     marginBottom: 8,
     marginLeft: 16,
     letterSpacing: -0.08,
   },
   sectionFooter: {
     fontSize: 13,
-    color: '#8E8E93',
     marginTop: 8,
     marginLeft: 16,
     lineHeight: 18,
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
     borderRadius: 10,
     borderCurve: 'continuous',
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
@@ -191,16 +192,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 17,
-    color: '#000',
   },
   value: {
     fontSize: 17,
-    color: '#8E8E93',
     fontWeight: '600',
   },
   separator: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#C6C6C8',
     marginLeft: 16,
   },
   unlinkButton: {
@@ -210,12 +208,8 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
   },
-  unlinkButtonPressed: {
-    backgroundColor: '#F2F2F7',
-  },
   unlinkButtonText: {
     fontSize: 17,
-    color: '#FF3B30',
     fontWeight: '600',
   },
   inverterItem: {
@@ -224,21 +218,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
   },
-  inverterItemPressed: {
-    backgroundColor: '#F2F2F7',
-  },
   inverterInfo: {
     flex: 1,
     gap: 2,
   },
   serialNumber: {
     fontSize: 17,
-    color: '#000',
     fontWeight: '400',
   },
   efficiency: {
     fontSize: 15,
-    color: '#8E8E93',
   },
   emptyState: {
     alignItems: 'center',
@@ -253,12 +242,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
     textAlign: 'center',
   },
   emptyDescription: {
     fontSize: 15,
-    color: '#3C3C43',
     textAlign: 'center',
     lineHeight: 20,
     fontWeight: '500',
@@ -268,15 +255,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 16,
     marginHorizontal: 16,
-    backgroundColor: 'rgb(0, 122, 255)',
   },
   addButton: {
-    backgroundColor: 'rgb(0, 122, 255)',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
     borderCurve: 'continuous',
-    boxShadow: '0 4px 12px rgba(0, 122, 255, 0.6)',
+    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.6)',
     overflow: 'hidden',
   },
   addButtonPressed: {
@@ -291,6 +276,5 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#fff',
   },
 });

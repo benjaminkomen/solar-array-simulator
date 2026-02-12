@@ -8,6 +8,8 @@ import {
 } from "react-native-reanimated";
 import { ProductionPanel } from "./ProductionPanel";
 import type { PanelData } from "@/hooks/usePanelsManager";
+import type { PanelColors } from "./SolarPanel";
+import { useColors } from "@/utils/theme";
 
 interface ProductionCanvasProps {
   panels: PanelData[];
@@ -28,6 +30,13 @@ export function ProductionCanvas({
   canvasWidth,
   canvasHeight,
 }: ProductionCanvasProps) {
+  const colors = useColors();
+  const panelColors: PanelColors = {
+    linked: colors.panel.linked,
+    unlinked: colors.panel.unlinked,
+    selection: colors.panel.selection,
+  };
+
   // Viewport panning state
   const isPanningViewport = useSharedValue(false);
   const viewportStartX = useSharedValue(0);
@@ -77,6 +86,7 @@ export function ProductionCanvas({
               rotation={panel.rotation}
               wattage={wattages.get(panel.id) ?? 0}
               inverterId={panel.inverterId}
+              colors={panelColors}
             />
           ))}
         </Group>

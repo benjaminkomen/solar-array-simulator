@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, type LayoutChangeEvent } from "react-native";
+import { View, Text, StyleSheet, type LayoutChangeEvent, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState, useCallback } from "react";
 import { Stack } from "expo-router";
@@ -8,6 +8,7 @@ import { useConfigStore } from "@/hooks/useConfigStore";
 import { ProductionCanvas } from "@/components/ProductionCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
 import { ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from "@/utils/zoomConstants";
+import { useColors } from "@/utils/theme";
 
 interface WattageMap {
   [panelId: string]: number;
@@ -19,6 +20,9 @@ export default function ProductionScreen() {
   const [wattages, setWattages] = useState<WattageMap>({});
   const [totalWattage, setTotalWattage] = useState(0);
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   // Viewport shared values
   const viewportX = useSharedValue(0);
@@ -117,26 +121,28 @@ export default function ProductionScreen() {
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background.secondary }]}>
         <View
           style={{
-            backgroundColor: "#f9fafb3c",
+            backgroundColor: colors.background.primary,
             borderRadius: 16,
             borderCurve: "continuous",
             padding: 20,
             marginHorizontal: 16,
             marginTop: insets.top + 30,
             marginBottom: 0,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+            boxShadow: isDark
+              ? "0 2px 8px rgba(255, 255, 255, 0.2)"
+              : "0 2px 8px rgba(0, 0, 0, 0.08)",
             borderWidth: 1,
-            borderColor: "rgba(0, 0, 0, 0.06)",
+            borderColor: colors.border.light,
           }}
         >
           <Text
             style={{
               fontSize: 13,
               fontWeight: "600",
-              color: "#6b7280",
+              color: colors.text.secondary,
               marginBottom: 8,
               letterSpacing: 0.3,
               textTransform: "uppercase",
@@ -149,7 +155,7 @@ export default function ProductionScreen() {
             style={{
               fontSize: 48,
               fontWeight: "700",
-              color: "#1f2937",
+              color: colors.text.primary,
               fontVariant: ["tabular-nums"],
             }}
           >

@@ -1,14 +1,18 @@
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
+import { useColors } from "@/utils/theme";
 
 export default function RootLayout() {
+  const colors = useColors();
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PanelsProvider>
         <Stack
         screenOptions={{
           headerTransparent: true,
+          headerTintColor: colors.text.primary,
         }}
       >
         <Stack.Screen name="index" options={{
@@ -49,6 +53,12 @@ export default function RootLayout() {
             title: "",
             headerBackTitle: "",
             headerTransparent: true,
+          }}
+        />
+        <Stack.Screen
+          name="debug"
+          options={{
+            title: "Debug Tools",
           }}
         />
       </Stack>
