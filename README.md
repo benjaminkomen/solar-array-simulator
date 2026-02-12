@@ -8,12 +8,16 @@ The app guides you through a 3-step wizard to create and monitor your solar pane
 
 ```mermaid
 flowchart TD
-    START([Launch App]) --> WELCOME[Welcome Screen]
+    START([Launch App]) --> CHECK{Wizard Completed?}
+    CHECK --> |No| WELCOME[Welcome Screen]
+    CHECK --> |Yes| PRODUCTION[Production Monitor]
     WELCOME --> |Get Started| CONFIG[1. Configure]
     CONFIG --> |Continue| UPLOAD[2. Photo]
     UPLOAD --> |Take photo| CUSTOM[3. Layout]
     UPLOAD --> |Skip| CUSTOM
-    CUSTOM --> |Finish| PRODUCTION[Production Monitor]
+    CUSTOM --> |Finish| PRODUCTION
+    PRODUCTION --> |Edit| CONFIG
+    PRODUCTION --> |Delete| WELCOME
 
     style WELCOME fill:#f0f0ff,stroke:#6366f1
     style CONFIG fill:#4ade80,stroke:#22c55e
@@ -27,9 +31,8 @@ flowchart TD
 New users see a welcome screen with:
 - Hero icon and app title
 - "Get Started" button to begin the wizard
-- "I already have a layout" link to access all screens directly
 
-Returning users (after completing the wizard once) see option cards for direct access to any screen.
+Returning users are taken directly to the Production Monitor.
 
 ### Step 1: Configuration
 
@@ -68,6 +71,9 @@ After completing the wizard, view real-time power production:
 - **Tap any panel** to view its linked inverter details (serial number, efficiency)
 - Production updates every second with realistic fluctuation
 - Formula: `efficiency × maxWattage × (0.95 + random × 0.1)`
+- **Menu options** (three-dots button in top-right):
+  - **Edit Configuration**: Re-enter the wizard flow to modify your setup
+  - **Delete Configuration**: Clear all data and start fresh
 
 ---
 
@@ -163,7 +169,7 @@ bun web
 src/
 ├── app/
 │   ├── _layout.tsx        # Root layout with PanelsProvider
-│   ├── index.tsx          # Welcome screen / Home with option cards
+│   ├── index.tsx          # Welcome screen (redirects returning users)
 │   ├── config.tsx         # Step 1: Configuration (SwiftUI Form)
 │   ├── upload.tsx         # Step 2: Upload & AI analysis
 │   ├── custom.tsx         # Step 3: Canvas editor with toolbar
@@ -172,7 +178,6 @@ src/
 │   └── api/
 │       └── analyze+api.ts # Bedrock API route (Claude vision analysis)
 ├── components/
-│   ├── OptionCard.tsx     # Home screen option cards
 │   ├── ImagePreview.tsx   # Image preview component
 │   ├── PermissionModal.tsx # Camera permission modal
 │   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text overlay

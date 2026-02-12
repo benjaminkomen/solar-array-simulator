@@ -48,7 +48,7 @@ This is an Expo Router v55 preview app for creating solar panel array layouts. U
 - **@shopify/react-native-skia** - High-performance 2D canvas for solar panel layout
 - **@ai-sdk/amazon-bedrock** - Claude on AWS Bedrock for image analysis (no AWS SDK dependency)
 - **expo-image-manipulator** - Client-side image resize before upload
-- **@expo/ui/swift-ui** - Native SwiftUI components (Form, Section, List, BottomSheet)
+- **@expo/ui/swift-ui** - Native SwiftUI components (Form, Section, List, Slider)
 - **expo-sqlite/kv-store** - Synchronous key-value storage for configuration
 
 ## Wizard Flow
@@ -58,24 +58,25 @@ The app guides users through a 3-step wizard with a progress indicator:
 ```mermaid
 stateDiagram-v2
     [*] --> Welcome: Launch (new user)
-    [*] --> Home: Launch (returning user)
+    [*] --> Production: Launch (returning user)
     Welcome --> Config: Get Started
-    Home --> Config: Start New Setup
     Config --> Upload: Continue
     Upload --> Custom: Photo analyzed
     Upload --> Custom: Skip
     Custom --> Production: Finish
-    Production --> [*]: Complete
+    Production --> Config: Edit Configuration
+    Production --> Welcome: Delete Configuration
 ```
 
 ### Wizard Navigation Pattern
 
 | Screen | Primary Action | Secondary Action |
 |--------|---------------|------------------|
-| Welcome | "Get Started" button | "I already have a layout" link |
-| Config | "Continue" button (bottom) | Back button |
-| Upload | Take Photo / Gallery | "Skip, create manually" link |
+| Welcome | "Get Started" button | — |
+| Config | "Continue" button (toolbar) | Back button |
+| Upload | Take Photo / Gallery | "Skip" button (toolbar) |
 | Custom | "Finish" in toolbar | Back button |
+| Production | View array output | Menu: Edit / Delete Configuration |
 
 ### Steps
 
@@ -120,16 +121,17 @@ flowchart LR
 src/
 ├── app/                    # Expo Router file-based routes
 │   ├── _layout.tsx         # Root layout with PanelsProvider
-│   ├── index.tsx           # Welcome screen / Home with option cards
+│   ├── index.tsx           # Welcome screen (redirects returning users to Production)
 │   ├── config.tsx          # Step 1: Configuration (SwiftUI Form)
 │   ├── upload.tsx          # Step 2: Upload & AI analysis
 │   ├── custom.tsx          # Step 3: Canvas editor with toolbar
-│   ├── production.tsx      # Production monitor (real-time wattage)
+│   ├── production.tsx      # Production monitor (real-time wattage, menu)
 │   ├── panel-details.tsx   # Form sheet: View/link panel to inverter
+│   ├── inverter-details.tsx # Form sheet: Add/edit micro-inverters
 │   └── api/
 │       └── analyze+api.ts  # Bedrock API route (Claude vision)
 ├── components/
-│   ├── OptionCard.tsx      # Home screen cards
+│   ├── Button.tsx          # Reusable button component
 │   ├── ImagePreview.tsx    # Image preview
 │   ├── PermissionModal.tsx # Camera permission UI
 │   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text
@@ -350,6 +352,7 @@ interface SystemConfig {
 - `removeInverter(id)` - Delete inverter
 - `getWizardCompleted()` - Check if wizard was completed
 - `setWizardCompleted(completed)` - Mark wizard as complete
+- `resetAllData()` - Reset all config to defaults (used by Delete Configuration)
 - `subscribe(listener)` - Subscribe to config changes
 
 ### Config Hook (`src/hooks/useConfigStore.ts`)
@@ -368,8 +371,8 @@ Native iOS form using `@expo/ui/swift-ui` components:
 - **Section** - Grouped sections with titles and footers
 - **LabeledContent** - Label-value pairs
 - **List.ForEach** - Swipe-to-delete enabled list
-- **BottomSheet** - Modal sheets for add/edit inverters
-- **Slider** - Efficiency adjustment (0-100%)
+
+Adding/editing inverters navigates to `inverter-details.tsx` form sheet.
 
 ## Production Screen
 
@@ -384,6 +387,9 @@ The production monitor (`src/app/production.tsx`) displays real-time array outpu
   - Gray: Unlinked (0W)
 - **1-second updates** - Wattage recalculates every second with ±5% fluctuation
 - **Formula**: `efficiency × maxWattage × (0.95 + Math.random() × 0.1)`
+- **Header menu** (three-dots button) with:
+  - **Edit Configuration** - Re-enter wizard flow from Config screen
+  - **Delete Configuration** - Reset all data and return to Welcome screen
 
 ### ProductionCanvas vs SolarPanelCanvas
 
@@ -407,6 +413,17 @@ The `panel-details.tsx` screen is a unified form sheet for viewing and editing p
 - Accessed from:
   - **Custom screen**: Tap link button in toolbar to edit panel-inverter link
   - **Production screen**: Tap any linked panel to view its inverter details
+
+## Inverter Details Form Sheet
+
+The `inverter-details.tsx` screen is a form sheet for adding and editing micro-inverters:
+
+- **Add mode** (`mode=add`): Creates new inverter with auto-generated serial number
+- **Edit mode** (`mode=edit&inverterId=...`): Edits existing inverter
+- Opens at 60% height, expandable to 100%
+- Header toolbar: X button (cancel) on left, checkmark (save) on right
+- Form fields: Serial number (numeric), efficiency slider (0-100%)
+- Accessed from **Config screen**: Tap "+" to add, tap existing inverter to edit
 
 ## Planned Integrations
 
