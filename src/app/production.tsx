@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, type LayoutChangeEvent, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Stack, useRouter } from "expo-router";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
@@ -10,6 +10,7 @@ import { useConfigStore } from "@/hooks/useConfigStore";
 import { ProductionCanvas } from "@/components/ProductionCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
 import { ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from "@/utils/zoomConstants";
+import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { useColors } from "@/utils/theme";
 import { resetAllData } from "@/utils/configStore";
 import { clearPanels } from "@/utils/panelStore";
@@ -36,6 +37,7 @@ export default function ProductionScreen() {
   const canvasWidth = useSharedValue(0);
   const canvasHeight = useSharedValue(0);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
+  const hasInitializedViewport = useRef(false);
 
   const updateCanvasSize = (width: number, height: number) => {
     'worklet';
@@ -49,8 +51,34 @@ export default function ProductionScreen() {
 
       // Update shared values on UI thread to avoid render warnings
       scheduleOnUI(updateCanvasSize, width, height);
+
+      // Center viewport on panels bounding box (once, on first layout)
+      if (!hasInitializedViewport.current && panels.length > 0 && width > 0 && height > 0) {
+        hasInitializedViewport.current = true;
+
+        // Calculate bounding box of all panels
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        for (const panel of panels) {
+          const panelWidth = panel.rotation.value === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
+          const panelHeight = panel.rotation.value === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
+          minX = Math.min(minX, panel.x.value);
+          minY = Math.min(minY, panel.y.value);
+          maxX = Math.max(maxX, panel.x.value + panelWidth);
+          maxY = Math.max(maxY, panel.y.value + panelHeight);
+        }
+
+        // Center viewport on the bounding box center
+        const boundingCenterX = (minX + maxX) / 2;
+        const boundingCenterY = (minY + maxY) / 2;
+        viewportX.value = width / 2 - boundingCenterX;
+        viewportY.value = height / 2 - boundingCenterY;
+      }
     },
-    [canvasWidth, canvasHeight]
+    [canvasWidth, canvasHeight, panels, viewportX, viewportY]
   );
 
   // Calculate wattage for a single panel
