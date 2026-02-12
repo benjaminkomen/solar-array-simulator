@@ -107,8 +107,8 @@ export function ProductionCanvas({
       isPanningViewport.value = false;
     });
 
-  // Combine tap and pan gestures - tap takes priority
-  const combinedGestures = Gesture.Race(tapGesture, panGesture);
+  // Combine gestures - pan takes priority but tap works when no drag occurs
+  const combinedGestures = Gesture.Exclusive(panGesture, tapGesture);
 
   return (
     <GestureDetector gesture={combinedGestures}>
