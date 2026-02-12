@@ -1,6 +1,6 @@
 import {useCallback, useState, useEffect} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {Link, useLocalSearchParams, useRouter} from 'expo-router';
+import {Link, Stack, useLocalSearchParams, useRouter} from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {useConfigStore} from '@/hooks/useConfigStore';
 import {usePanelsContext} from '@/contexts/PanelsContext';
@@ -26,8 +26,13 @@ import {
   opacity,
 } from '@expo/ui/swift-ui/modifiers';
 
-export default function LinkInverterScreen() {
-  const { panelId } = useLocalSearchParams<{ panelId: string }>();
+export default function PanelDetailsScreen() {
+  const { panelId, mode } = useLocalSearchParams<{
+    panelId: string;
+    mode?: 'edit' | 'view';
+  }>();
+  const isViewMode = mode === 'view';
+
   const { config } = useConfigStore();
   const { linkInverter } = usePanelsContext();
   const router = useRouter();
@@ -50,7 +55,7 @@ export default function LinkInverterScreen() {
     inv => inv.id === currentInverterId
   );
 
-  // Get list of available (unassigned) inverters
+  // Get list of available (unassigned) inverters (only needed in edit mode)
   const assignedInverterIds = new Set(
     storeData.panels.map(p => p.inverterId).filter(Boolean)
   );
@@ -79,9 +84,15 @@ export default function LinkInverterScreen() {
   }, [panelId, linkInverter, router]);
 
   return (
-    <View style={styles.container}>
-      <Host style={styles.host}>
-        <Form>
+    <>
+      <Stack.Screen
+        options={{
+          sheetAllowedDetents: isViewMode ? [0.3] : [0.6, 1.0],
+        }}
+      />
+      <View style={styles.container}>
+        <Host style={styles.host}>
+          <Form>
           {currentInverter ? (
             // Show currently linked inverter
             <Section
@@ -93,17 +104,19 @@ export default function LinkInverterScreen() {
               <LabeledContent label="Efficiency">
                 <Text>{Math.round(currentInverter.efficiency)}%</Text>
               </LabeledContent>
-              <Button onPress={handleUnlink} modifiers={[buttonStyle('plain')]}>
-                <HStack spacing={8}>
-                  <Image systemName="link.badge.plus" size={20} color="#FF3B30" />
-                  <Text modifiers={[foregroundStyle({type: 'color', color: '#FF3B30'}), bold()]}>
-                    Unlink Inverter
-                  </Text>
-                </HStack>
-              </Button>
+              {!isViewMode && (
+                <Button onPress={handleUnlink} modifiers={[buttonStyle('plain')]}>
+                  <HStack spacing={8}>
+                    <Image systemName="link.badge.plus" size={20} color="#FF3B30" />
+                    <Text modifiers={[foregroundStyle({type: 'color', color: '#FF3B30'}), bold()]}>
+                      Unlink Inverter
+                    </Text>
+                  </HStack>
+                </Button>
+              )}
             </Section>
-          ) : availableInverters.length > 0 ? (
-            // Show list of available inverters
+          ) : !isViewMode && availableInverters.length > 0 ? (
+            // Show list of available inverters (edit mode only)
             <Section
               header={<Text>Available Inverters</Text>}
               footer={<Text>Select a micro-inverter to link to this panel.</Text>}
@@ -127,8 +140,8 @@ export default function LinkInverterScreen() {
                 ))}
               </List.ForEach>
             </Section>
-          ) : (
-            // Empty state - no available inverters
+          ) : !isViewMode ? (
+            // Empty state - no available inverters (edit mode only)
             <Section>
               <VStack spacing={16}>
                 <Image systemName="exclamationmark.triangle" size={56} color="#8E8E93" />
@@ -148,10 +161,11 @@ export default function LinkInverterScreen() {
                 </Link>
               </VStack>
             </Section>
-          )}
-        </Form>
-      </Host>
-    </View>
+          ) : null}
+          </Form>
+        </Host>
+      </View>
+    </>
   );
 }
 

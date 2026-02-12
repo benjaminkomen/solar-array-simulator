@@ -1,8 +1,10 @@
 import { View, Text, StyleSheet, type LayoutChangeEvent, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState, useCallback } from "react";
-import { Stack } from "expo-router";
-import { useSharedValue, withTiming, runOnUI } from "react-native-reanimated";
+import { Stack, useRouter } from "expo-router";
+import { useSharedValue, withTiming } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
+import * as Haptics from "expo-haptics";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { ProductionCanvas } from "@/components/ProductionCanvas";
@@ -17,6 +19,7 @@ interface WattageMap {
 export default function ProductionScreen() {
   const { panels } = usePanelsContext();
   const { config } = useConfigStore();
+  const router = useRouter();
   const [wattages, setWattages] = useState<WattageMap>({});
   const [totalWattage, setTotalWattage] = useState(0);
   const insets = useSafeAreaInsets();
@@ -32,16 +35,18 @@ export default function ProductionScreen() {
   const canvasHeight = useSharedValue(0);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
 
+  const updateCanvasSize = (width: number, height: number) => {
+    'worklet';
+    canvasWidth.value = width;
+    canvasHeight.value = height;
+  };
+
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
 
       // Update shared values on UI thread to avoid render warnings
-      runOnUI(() => {
-        'worklet';
-        canvasWidth.value = width;
-        canvasHeight.value = height;
-      })();
+      scheduleOnUI(updateCanvasSize, width, height);
     },
     [canvasWidth, canvasHeight]
   );
@@ -118,6 +123,17 @@ export default function ProductionScreen() {
     }
   }, [zoomIndex, scale]);
 
+  const handlePanelTap = useCallback(
+    (panelId: string) => {
+      const panel = panels.find((p) => p.id === panelId);
+      if (panel?.inverterId.value) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        router.push(`/panel-details?panelId=${panelId}&mode=view`);
+      }
+    },
+    [panels, router]
+  );
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
@@ -171,6 +187,7 @@ export default function ProductionScreen() {
             scale={scale}
             canvasWidth={canvasWidth}
             canvasHeight={canvasHeight}
+            onPanelTap={handlePanelTap}
           />
           <ZoomControls
             currentIndex={zoomIndex}

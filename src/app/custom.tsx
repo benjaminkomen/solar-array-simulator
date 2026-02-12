@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import { View, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { Stack, useLocalSearchParams, Link, useRouter } from "expo-router";
-import { useSharedValue, withTiming, runOnUI } from "react-native-reanimated";
+import { useSharedValue, withTiming } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
@@ -129,17 +130,19 @@ export default function Custom() {
     savePanelPosition,
   } = usePanelsContext();
 
+  const updateCanvasSize = (width: number, height: number) => {
+    'worklet';
+    canvasWidth.value = width;
+    canvasHeight.value = height;
+  };
+
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
       canvasSize.current = { width, height };
 
       // Update shared values on UI thread to avoid render warnings
-      runOnUI(() => {
-        'worklet';
-        canvasWidth.value = width;
-        canvasHeight.value = height;
-      })();
+      scheduleOnUI(updateCanvasSize, width, height);
 
       // Initialize panels centered in the canvas after layout is known
       if (initialPanels && !hasInitialized.current && width > 0 && height > 0) {
@@ -273,7 +276,7 @@ export default function Custom() {
         <Stack.Toolbar.Button icon="plus" onPress={handleAddPanel} />
         {selectedId && (
           <>
-            <Link href={`/link-inverter?panelId=${selectedId}`} asChild>
+            <Link href={`/panel-details?panelId=${selectedId}`} asChild>
               <Stack.Toolbar.Button icon="link" />
             </Link>
             <Stack.Toolbar.Button
