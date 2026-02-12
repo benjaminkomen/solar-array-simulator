@@ -200,8 +200,17 @@ ZOOM_LEVELS = [1.0, 0.66, 0.4]  // Scale factors (most zoomed in → most zoomed
 
 1. **Tap on panel** → Select panel, show rotate/delete buttons
 2. **Tap on empty space** → Deselect panel
-3. **Drag panel** → Move with collision prevention, snap on release
+3. **Drag panel** → Free movement (can drag over other panels), snap on release
 4. **Drag empty space** → Pan the infinite canvas viewport
+
+### Snap-on-Release Behavior
+
+When a panel drag ends, the snap system tries positions in order:
+1. **Neighbor snap** - Align to adjacent panel edges (within 90px threshold)
+2. **Grid snap** - Snap to 30px grid
+3. **Revert** - Return to original position if all snap positions collide
+
+This allows dragging panels through tight spaces to reach valid gaps.
 
 ### Zoom Controls
 
@@ -220,9 +229,10 @@ Both Custom and Production screens include a floating zoom control in the bottom
 ### Collision Detection
 
 - AABB (Axis-Aligned Bounding Box) collision
-- 4px minimum gap enforced between panels
-- Collision checked during drag (blocks invalid moves)
-- Collision checked on grid snap (prevents snap into collision)
+- 8px minimum gap enforced between panels (PANEL_GAP constant)
+- **No collision blocking during drag** - panels move freely
+- Collision checked on release (snap validation)
+- Invalid snap positions revert to original drag-start position
 - Rotation checks for valid position, moves panel if needed
 
 ### Worklet Functions
@@ -378,6 +388,7 @@ Adding/editing inverters navigates to `inverter-details.tsx` form sheet.
 
 The production monitor (`src/app/production.tsx`) displays real-time array output:
 
+- **Auto-centered viewport** - On load, centers viewport on panels bounding box
 - **Total output card** - Shows combined wattage of all panels at top
 - **Read-only canvas** - Same layout as editor, no editing allowed
 - **Panel wattage display** - Each panel shows current output with color coding:

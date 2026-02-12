@@ -55,12 +55,15 @@ Create or confirm your panel layout:
 - **From Upload**: Review AI-generated layout, make adjustments
 - **Manual**: Add panels, arrange them on the canvas
 - Link each panel to its micro-inverter
-- Drag to reposition, rotate panels, use grid snapping
+- Drag to reposition (can drag over other panels), snap on release
+- If dropped in invalid position, panel reverts to original location
+- Rotate panels, use grid snapping
 - Zoom in/out (3 levels) to view large arrays on smaller screens
 
 ### Production Monitor
 
 After completing the wizard, view real-time power production:
+- **Auto-centered viewport** - On load, centers on all panels for optimal visibility
 - **Total array output** displayed prominently at top
 - Same canvas view as editor, but read-only (no editing)
 - Each panel displays current wattage with color coding:
