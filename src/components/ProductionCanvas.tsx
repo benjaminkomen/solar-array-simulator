@@ -6,9 +6,12 @@ import {
   useDerivedValue,
   type SharedValue,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { ProductionPanel } from "./ProductionPanel";
 import type { PanelData } from "@/hooks/usePanelsManager";
 import type { PanelColors } from "./SolarPanel";
+import type { PanelState } from "@/utils/panelUtils";
+import { hitTestPanels } from "@/utils/panelUtils";
 import { useColors } from "@/utils/theme";
 
 interface ProductionCanvasProps {
@@ -19,6 +22,7 @@ interface ProductionCanvasProps {
   scale: SharedValue<number>;
   canvasWidth: SharedValue<number>;
   canvasHeight: SharedValue<number>;
+  onPanelTap?: (panelId: string) => void;
 }
 
 export function ProductionCanvas({
@@ -29,6 +33,7 @@ export function ProductionCanvas({
   scale,
   canvasWidth,
   canvasHeight,
+  onPanelTap,
 }: ProductionCanvasProps) {
   const colors = useColors();
   const panelColors: PanelColors = {
@@ -55,6 +60,34 @@ export function ProductionCanvas({
     ];
   });
 
+  // Tap gesture for panel selection
+  const tapGesture = Gesture.Tap()
+    .onEnd((e) => {
+      "worklet";
+      // Convert screen coordinates to world coordinates
+      const cx = canvasWidth.value / 2;
+      const cy = canvasHeight.value / 2;
+      const worldX = (e.x - cx) / scale.value + cx - viewportX.value;
+      const worldY = (e.y - cy) / scale.value + cy - viewportY.value;
+
+      // Build states for hit testing
+      const states: PanelState[] = [];
+      for (const p of panels) {
+        states.push({
+          id: p.id,
+          x: p.x.value,
+          y: p.y.value,
+          rotation: p.rotation.value,
+          inverterId: p.inverterId.value,
+        });
+      }
+
+      const hitId = hitTestPanels(worldX, worldY, states);
+      if (hitId && onPanelTap) {
+        scheduleOnRN(onPanelTap, hitId);
+      }
+    });
+
   // Pan gesture for viewport panning only
   const panGesture = Gesture.Pan()
     .onStart(() => {
@@ -74,8 +107,11 @@ export function ProductionCanvas({
       isPanningViewport.value = false;
     });
 
+  // Combine gestures - pan takes priority but tap works when no drag occurs
+  const combinedGestures = Gesture.Exclusive(panGesture, tapGesture);
+
   return (
-    <GestureDetector gesture={panGesture}>
+    <GestureDetector gesture={combinedGestures}>
       <Canvas style={styles.canvas}>
         <Group transform={canvasTransform}>
           {panels.map((panel) => (

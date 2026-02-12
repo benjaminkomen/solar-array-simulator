@@ -38,12 +38,11 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
-          name="link-inverter"
+          name="panel-details"
           options={{
             presentation: "formSheet",
             sheetGrabberVisible: true,
-            sheetAllowedDetents: [0.6, 1.0],
-            title: "Link Inverter",
+            title: "Panel Details",
             contentStyle: { backgroundColor: "transparent" },
           }}
         />
