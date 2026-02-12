@@ -245,31 +245,16 @@ export default function Upload() {
             </Pressable>
           </Animated.View>
 
-          {/* Skip link - only in wizard mode */}
-          {isWizardMode && (
-            <Animated.View entering={FadeIn.duration(300).delay(400)}>
-              <Pressable
-                testID="skip-button"
-                onPress={handleSkip}
-                style={{
-                  paddingVertical: 16,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 15,
-                    fontWeight: "500",
-                    color: colors.text.tertiary,
-                  }}
-                >
-                  Skip, create layout manually
-                </Text>
-              </Pressable>
-            </Animated.View>
-          )}
         </View>
       </ScrollView>
+
+      {isWizardMode && (
+        <Stack.Toolbar placement="bottom">
+          <Stack.Toolbar.Button onPress={handleSkip}>
+            Skip
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      )}
 
       {modalState && (
         <PermissionModal

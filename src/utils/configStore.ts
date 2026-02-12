@@ -200,6 +200,15 @@ export function setWizardCompleted(completed: boolean): void {
 }
 
 /**
+ * Reset all configuration to defaults
+ */
+export function resetAllData(): void {
+  currentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  saveConfig();
+  notifyListeners();
+}
+
+/**
  * Subscribe to configuration changes
  */
 export function subscribe(listener: (config: SystemConfig) => void): () => void {

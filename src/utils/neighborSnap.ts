@@ -20,7 +20,9 @@ export function snapToNeighbors(
   panelWidth: number,
   panelHeight: number,
   panelId: string,
-  allPanelRects: (Rect & { id: string })[]
+  allPanelRects: (Rect & { id: string })[],
+  originalX?: number,
+  originalY?: number
 ): { x: number; y: number } {
   "worklet";
 
@@ -88,6 +90,6 @@ export function snapToNeighbors(
     return { x: gridX, y: gridY };
   }
 
-  // Last resort: keep current position
-  return { x: currentX, y: currentY };
+  // Last resort: revert to original position (or current if not provided)
+  return { x: originalX ?? currentX, y: originalY ?? currentY };
 }

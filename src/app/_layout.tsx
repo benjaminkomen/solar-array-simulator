@@ -47,17 +47,20 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
-          name="production"
+          name="inverter-details"
           options={{
-            title: "",
-            headerBackTitle: "",
-            headerTransparent: true,
+            presentation: "formSheet",
+            sheetGrabberVisible: true,
+            title: "Inverter Details",
+            contentStyle: { backgroundColor: "transparent" },
           }}
         />
         <Stack.Screen
-          name="debug"
+          name="production"
           options={{
-            title: "Debug Tools",
+            title: "",
+            headerBackVisible: false,
+            headerTransparent: true,
           }}
         />
       </Stack>

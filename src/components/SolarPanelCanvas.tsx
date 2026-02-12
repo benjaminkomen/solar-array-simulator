@@ -11,7 +11,6 @@ import { SolarPanel, type PanelColors } from "./SolarPanel";
 import type { PanelData } from "@/hooks/usePanelsManager";
 import type { PanelState } from "@/utils/panelUtils";
 import { hitTestPanels, getPanelDimensions, getPanelRect } from "@/utils/panelUtils";
-import { collidesWithAny } from "@/utils/collision";
 import { snapToNeighbors } from "@/utils/neighborSnap";
 import { useColors } from "@/utils/theme";
 
@@ -131,40 +130,9 @@ export function SolarPanelCanvas({
       if (!panel) return;
 
       // Calculate new position in world coordinates (divide by scale for consistent drag)
-      const newX = panelOffsetX.value + e.translationX / scale.value;
-      const newY = panelOffsetY.value + e.translationY / scale.value;
-
-      // Get panel dimensions based on rotation
-      const dims = getPanelDimensions(panel.rotation.value);
-
-      // Create test rectangle for collision
-      const testRect = {
-        x: newX,
-        y: newY,
-        width: dims.width,
-        height: dims.height,
-      };
-
-      // Get other panel rects for collision detection
-      const otherRects: { id: string; x: number; y: number; width: number; height: number }[] = [];
-      for (const p of panels) {
-        if (p.id === panelId) continue;
-        const rect = getPanelRect({
-          id: p.id,
-          x: p.x.value,
-          y: p.y.value,
-          rotation: p.rotation.value,
-          inverterId: p.inverterId.value,
-        });
-        otherRects.push({ ...rect, id: p.id });
-      }
-
-      // Check for collisions
-      if (!collidesWithAny(testRect, otherRects)) {
-        // No collision - update position
-        panel.x.value = newX;
-        panel.y.value = newY;
-      }
+      // Allow free dragging - collision is only checked on release (snap)
+      panel.x.value = panelOffsetX.value + e.translationX / scale.value;
+      panel.y.value = panelOffsetY.value + e.translationY / scale.value;
     })
     .onEnd(() => {
       "worklet";
@@ -196,14 +164,16 @@ export function SolarPanelCanvas({
         otherRects.push({ ...rect, id: p.id });
       }
 
-      // Snap to neighbors (with grid fallback)
+      // Snap to neighbors (with grid fallback, revert to original if all fail)
       const snapped = snapToNeighbors(
         panel.x.value,
         panel.y.value,
         dims.width,
         dims.height,
         panelId,
-        otherRects
+        otherRects,
+        panelOffsetX.value,
+        panelOffsetY.value
       );
 
       // Apply snapped position
