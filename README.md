@@ -65,6 +65,7 @@ After completing the wizard, view real-time power production:
   - Yellow: Medium output (40-80%)
   - Red: Low output (<40%)
   - Gray: Unlinked panels (0W)
+- **Tap any panel** to view its linked inverter details (serial number, efficiency)
 - Production updates every second with realistic fluctuation
 - Formula: `efficiency × maxWattage × (0.95 + random × 0.1)`
 
@@ -167,7 +168,7 @@ src/
 │   ├── upload.tsx         # Step 2: Upload & AI analysis
 │   ├── custom.tsx         # Step 3: Canvas editor with toolbar
 │   ├── production.tsx     # Production monitor (real-time wattage)
-│   ├── link-inverter.tsx  # Modal: Link panel to inverter
+│   ├── panel-details.tsx  # Form sheet: View/link panel to inverter
 │   └── api/
 │       └── analyze+api.ts # Bedrock API route (Claude vision analysis)
 ├── components/
@@ -228,9 +229,13 @@ terraform/
   - 3-step progress indicator (Configure → Photo → Layout)
   - Navigation buttons (Continue, Skip, Finish)
   - wizardCompleted flag for returning users
+- [x] Create panel details form sheet
+  - Unified form sheet for viewing and linking inverters
+  - Dynamic sheet height: 30% for view mode, 60% for edit mode
+  - Uses native @expo/ui/swift-ui components
+  - Tap panels in Production screen to view inverter details
 - [ ] Deploy API routes to EAS Hosting
 - [ ] Implement compass orientation indicator
-- [ ] Create panel detail bottom sheet
 
 ---
 

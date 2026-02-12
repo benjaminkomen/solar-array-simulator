@@ -125,7 +125,7 @@ src/
 │   ├── upload.tsx          # Step 2: Upload & AI analysis
 │   ├── custom.tsx          # Step 3: Canvas editor with toolbar
 │   ├── production.tsx      # Production monitor (real-time wattage)
-│   ├── link-inverter.tsx   # Modal: Link panel to inverter
+│   ├── panel-details.tsx   # Form sheet: View/link panel to inverter
 │   └── api/
 │       └── analyze+api.ts  # Bedrock API route (Claude vision)
 ├── components/
@@ -391,13 +391,24 @@ The production monitor (`src/app/production.tsx`) displays real-time array outpu
 |---------|------------------|------------------|
 | Panel dragging | Yes | No |
 | Panel selection | Yes | No |
+| Panel tap action | Select + toolbar | Opens panel-details sheet |
 | Wattage display | No | Yes |
 | Color coding | Link status only | Output level |
 | Viewport panning | Yes | Yes |
 | Zoom controls | Yes | Yes |
 
+## Panel Details Form Sheet
+
+The `panel-details.tsx` screen is a unified form sheet for viewing and editing panel-inverter links:
+
+- **View mode** (`mode=view`): Opens at 30% height, shows serial number and efficiency (read-only)
+- **Edit mode** (default): Opens at 60% height, allows linking/unlinking inverters
+- Uses native `@expo/ui/swift-ui` components (Form, Section, LabeledContent, List.ForEach)
+- Accessed from:
+  - **Custom screen**: Tap link button in toolbar to edit panel-inverter link
+  - **Production screen**: Tap any linked panel to view its inverter details
+
 ## Planned Integrations
 
 - **EAS Hosting** - Server-side API route deployment
 - **Compass indicator** - Array orientation display
-- **Panel detail sheet** - Bottom sheet with serial number and metadata
