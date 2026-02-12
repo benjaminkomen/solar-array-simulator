@@ -9,6 +9,7 @@ interface ButtonProps {
   variant?: ButtonVariant;
   disabled?: boolean;
   style?: ViewStyle;
+  testID?: string;
 }
 
 export function Button({
@@ -17,6 +18,7 @@ export function Button({
   variant = "filled",
   disabled,
   style,
+  testID,
 }: ButtonProps) {
   const colors = useColors();
 
@@ -35,6 +37,7 @@ export function Button({
 
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
       disabled={disabled}
       style={[styles.button, buttonStyles, disabled && styles.disabled, style]}
