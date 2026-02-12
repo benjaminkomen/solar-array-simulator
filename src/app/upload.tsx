@@ -165,7 +165,7 @@ export default function Upload() {
             paddingHorizontal: 16,
           }}
         >
-          Photograph your solar panel array with visible barcodes or QR codes
+          Photograph your solar panel array with visible serial numbers
         </Animated.Text>
 
         <View style={{ gap: 12, width: "100%", marginTop: 16 }}>
