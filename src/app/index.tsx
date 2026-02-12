@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, useWindowDimensions, View, Text, Pressable } from "react-native";
+import { ScrollView, useWindowDimensions, View, Text, Pressable, useColorScheme } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -15,6 +15,8 @@ export default function Index() {
   const { getWizardCompleted } = useConfigStore();
   const [showCards, setShowCards] = useState(false);
   const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const wizardCompleted = getWizardCompleted();
 
@@ -54,7 +56,9 @@ export default function Index() {
               backgroundColor: colors.primaryLight,
               justifyContent: "center",
               alignItems: "center",
-              boxShadow: "0 8px 24px rgba(59, 130, 246, 0.15)",
+              boxShadow: isDark
+                ? "0 8px 24px rgba(96, 165, 250, 0.4)"
+                : "0 8px 24px rgba(59, 130, 246, 0.15)",
             }}
           >
             <Image

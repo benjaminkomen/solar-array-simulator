@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, type LayoutChangeEvent } from "react-native";
+import { View, Text, StyleSheet, type LayoutChangeEvent, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState, useCallback } from "react";
 import { Stack } from "expo-router";
@@ -21,6 +21,8 @@ export default function ProductionScreen() {
   const [totalWattage, setTotalWattage] = useState(0);
   const insets = useSafeAreaInsets();
   const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   // Viewport shared values
   const viewportX = useSharedValue(0);
@@ -129,7 +131,9 @@ export default function ProductionScreen() {
             marginHorizontal: 16,
             marginTop: insets.top + 30,
             marginBottom: 0,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
+            boxShadow: isDark
+              ? "0 2px 8px rgba(255, 255, 255, 0.2)"
+              : "0 2px 8px rgba(0, 0, 0, 0.08)",
             borderWidth: 1,
             borderColor: colors.border.light,
           }}

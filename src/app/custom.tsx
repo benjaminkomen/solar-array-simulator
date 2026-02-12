@@ -218,7 +218,7 @@ export default function Custom() {
   const handleFinish = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setWizardCompleted(true);
-    router.replace('/production');
+    router.push('/production');
   }, [setWizardCompleted, router]);
 
   const handleZoomIn = useCallback(() => {

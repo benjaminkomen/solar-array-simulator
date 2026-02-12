@@ -1,5 +1,5 @@
 import {useCallback, useState, useEffect} from 'react';
-import {ScrollView, View, Text, Pressable, StyleSheet} from 'react-native';
+import {ScrollView, View, Text, Pressable, StyleSheet, useColorScheme} from 'react-native';
 import {Link, useLocalSearchParams, useRouter} from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {useConfigStore} from '@/hooks/useConfigStore';
@@ -14,6 +14,8 @@ export default function LinkInverterScreen() {
   const { linkInverter } = usePanelsContext();
   const router = useRouter();
   const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   // Read from store instead of SharedValues
   const [storeData, setStoreData] = useState(() => getPanelStore());
@@ -71,7 +73,7 @@ export default function LinkInverterScreen() {
         // Show currently linked inverter
         <View style={styles.section}>
           <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>LINKED INVERTER</Text>
-          <View style={[styles.card, { backgroundColor: colors.background.primary }]}>
+          <View style={[styles.card, { backgroundColor: colors.background.primary, boxShadow: isDark ? '0 1px 3px rgba(255, 255, 255, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)' }]}>
             <View style={styles.infoRow}>
               <Text style={[styles.label, { color: colors.text.primary }]}>Serial Number</Text>
               <Text style={[styles.value, { color: colors.text.secondary }]}>{currentInverter.serialNumber}</Text>
@@ -98,7 +100,7 @@ export default function LinkInverterScreen() {
         // Show list of available inverters
         <View style={styles.section}>
           <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>AVAILABLE INVERTERS</Text>
-          <View style={[styles.card, { backgroundColor: colors.background.primary }]}>
+          <View style={[styles.card, { backgroundColor: colors.background.primary, boxShadow: isDark ? '0 1px 3px rgba(255, 255, 255, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.08)' }]}>
             {availableInverters.map((inv, index) => (
               <View key={inv.id}>
                 {index > 0 && <View style={[styles.separator, { backgroundColor: colors.border.medium }]} />}
@@ -135,7 +137,7 @@ export default function LinkInverterScreen() {
               <Pressable
                 style={({pressed}) => [
                   styles.addButton,
-                  { backgroundColor: colors.primary },
+                  { backgroundColor: colors.primary, boxShadow: isDark ? '0 4px 12px rgba(96, 165, 250, 0.6)' : '0 4px 12px rgba(59, 130, 246, 0.6)' },
                   pressed && styles.addButtonPressed
                 ]}
               >
