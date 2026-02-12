@@ -137,6 +137,9 @@ export default function Index() {
   // Returning user view with option cards
   return (
     <>
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button icon="wrench" onPress={() => router.push("/debug")} />
+      </Stack.Toolbar>
       <Stack.Screen.Title style={{ fontSize: 20, color: colors.text.primary }}>
         Array Builder
       </Stack.Screen.Title>

@@ -55,6 +55,12 @@ export default function RootLayout() {
             headerTransparent: true,
           }}
         />
+        <Stack.Screen
+          name="debug"
+          options={{
+            title: "Debug Tools",
+          }}
+        />
       </Stack>
       </PanelsProvider>
     </GestureHandlerRootView>
