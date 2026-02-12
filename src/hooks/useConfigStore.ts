@@ -9,6 +9,7 @@ import {
   removeInverter as deleteInverter,
   getWizardCompleted,
   setWizardCompleted,
+  updateCompassDirection as updateDirection,
   subscribe,
   SystemConfig,
 } from '@/utils/configStore';
@@ -38,5 +39,6 @@ export function useConfigStore() {
     removeInverter: (inverterId: string) => deleteInverter(inverterId),
     getWizardCompleted: () => getWizardCompleted(),
     setWizardCompleted: (completed: boolean) => setWizardCompleted(completed),
+    updateCompassDirection: (degrees: number) => updateDirection(degrees),
   };
 }

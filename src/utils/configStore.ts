@@ -17,12 +17,14 @@ export interface SystemConfig {
   defaultMaxWattage: number;
   inverters: InverterConfig[];
   wizardCompleted: boolean;
+  compassDirection: number; // 0-360 degrees, 0 = North
 }
 
 // Default configuration: 14 inverters with realistic efficiency distribution
 const DEFAULT_CONFIG: SystemConfig = {
   defaultMaxWattage: 430,
   wizardCompleted: false,
+  compassDirection: 0, // Default to North
   inverters: [
     // 7 inverters at 95% (optimal)
     { id: '1', serialNumber: generateSerialNumber(), efficiency: 95 },
@@ -70,6 +72,11 @@ function loadConfig(): void {
       // Migrate: ensure wizardCompleted field exists
       if (currentConfig.wizardCompleted === undefined) {
         currentConfig.wizardCompleted = false;
+        needsSave = true;
+      }
+      // Migrate: ensure compassDirection field exists
+      if (currentConfig.compassDirection === undefined) {
+        currentConfig.compassDirection = 0;
         needsSave = true;
       }
       if (needsSave) {
@@ -196,6 +203,15 @@ export function getWizardCompleted(): boolean {
 export function setWizardCompleted(completed: boolean): void {
   const newConfig = getConfig();
   newConfig.wizardCompleted = completed;
+  updateConfig(newConfig);
+}
+
+/**
+ * Update compass direction (0-360 degrees, 0 = North)
+ */
+export function updateCompassDirection(degrees: number): void {
+  const newConfig = getConfig();
+  newConfig.compassDirection = ((degrees % 360) + 360) % 360; // Normalize to 0-359
   updateConfig(newConfig);
 }
 

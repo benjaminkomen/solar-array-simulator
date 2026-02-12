@@ -56,6 +56,16 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="compass-help"
+          options={{
+            presentation: "formSheet",
+            sheetGrabberVisible: true,
+            title: "",
+            headerShown: false,
+            contentStyle: { backgroundColor: "transparent" },
+          }}
+        />
+        <Stack.Screen
           name="production"
           options={{
             title: "",

@@ -7,6 +7,7 @@ import * as Haptics from "expo-haptics";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
+import { Compass } from "@/components/Compass";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { GRID_SIZE } from "@/utils/gridSnap";
@@ -114,7 +115,7 @@ export default function Custom() {
   const canvasHeight = useSharedValue(0);
   const hasInitialized = useRef(false);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
-  const { config, setWizardCompleted } = useConfigStore();
+  const { config, setWizardCompleted, updateCompassDirection } = useConfigStore();
 
   const {
     panels,
@@ -240,6 +241,10 @@ export default function Custom() {
     }
   }, [zoomIndex, scale]);
 
+  const handleCompassTap = useCallback(() => {
+    router.push('/compass-help');
+  }, [router]);
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
@@ -254,6 +259,13 @@ export default function Custom() {
       </Stack.Toolbar>
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
+        <View style={styles.compassContainer}>
+          <Compass
+            direction={config.compassDirection}
+            onDirectionChange={updateCompassDirection}
+            onTap={handleCompassTap}
+          />
+        </View>
         <SolarPanelCanvas
           panels={panels}
           selectedId={selectedId}
@@ -299,5 +311,11 @@ export default function Custom() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  compassContainer: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 10,
   },
 });
