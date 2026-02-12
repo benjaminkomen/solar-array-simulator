@@ -10,17 +10,11 @@ const BORDER_RADIUS = 8;
 const STROKE_WIDTH = 2;
 const SELECTION_STROKE_WIDTH = 3;
 
-// Linked panel colors (blue)
-const FILL_COLOR = "#3b82f6"; // blue-500
-const STROKE_COLOR = "#1d4ed8"; // blue-800
-const GRID_COLOR = "#60a5fa"; // blue-400
-
-// Unlinked panel colors (gray)
-const UNLINKED_FILL_COLOR = "#9ca3af"; // gray-400
-const UNLINKED_STROKE_COLOR = "#6b7280"; // gray-500
-const UNLINKED_GRID_COLOR = "#d1d5db"; // gray-300
-
-const SELECTION_COLOR = "#fbbf24"; // amber-400
+export interface PanelColors {
+  linked: { fill: string; stroke: string; grid: string };
+  unlinked: { fill: string; stroke: string; grid: string };
+  selection: string;
+}
 
 interface SolarPanelProps {
   x: SharedValue<number>;
@@ -28,9 +22,10 @@ interface SolarPanelProps {
   rotation?: SharedValue<0 | 90>;
   isSelected?: boolean;
   inverterId?: SharedValue<string | null>;
+  colors: PanelColors;
 }
 
-export function SolarPanel({ x, y, rotation, isSelected = false, inverterId }: SolarPanelProps) {
+export function SolarPanel({ x, y, rotation, isSelected = false, inverterId, colors }: SolarPanelProps) {
   const transform = useDerivedValue(() => {
     if (rotation && rotation.value === 90) {
       // For 90° rotation:
@@ -48,13 +43,13 @@ export function SolarPanel({ x, y, rotation, isSelected = false, inverterId }: S
 
   // Derive colors based on link state - gray when unlinked, blue when linked
   const fillColor = useDerivedValue(() =>
-    inverterId?.value === null ? UNLINKED_FILL_COLOR : FILL_COLOR
+    inverterId?.value === null ? colors.unlinked.fill : colors.linked.fill
   );
   const strokeColor = useDerivedValue(() =>
-    inverterId?.value === null ? UNLINKED_STROKE_COLOR : STROKE_COLOR
+    inverterId?.value === null ? colors.unlinked.stroke : colors.linked.stroke
   );
   const gridColor = useDerivedValue(() =>
-    inverterId?.value === null ? UNLINKED_GRID_COLOR : GRID_COLOR
+    inverterId?.value === null ? colors.unlinked.grid : colors.linked.grid
   );
 
   return (
@@ -67,7 +62,7 @@ export function SolarPanel({ x, y, rotation, isSelected = false, inverterId }: S
           width={PANEL_WIDTH + SELECTION_STROKE_WIDTH * 2}
           height={PANEL_HEIGHT + SELECTION_STROKE_WIDTH * 2}
           r={BORDER_RADIUS + SELECTION_STROKE_WIDTH}
-          color={SELECTION_COLOR}
+          color={colors.selection}
           style="stroke"
           strokeWidth={SELECTION_STROKE_WIDTH}
         />

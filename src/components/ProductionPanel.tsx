@@ -3,21 +3,12 @@ import {
   useDerivedValue,
   type SharedValue,
 } from "react-native-reanimated";
+import type { PanelColors } from "./SolarPanel";
 
 const PANEL_WIDTH = 60;
 const PANEL_HEIGHT = 120;
 const BORDER_RADIUS = 8;
 const STROKE_WIDTH = 2;
-
-// Linked panel colors (blue)
-const FILL_COLOR = "#3b82f6"; // blue-500
-const STROKE_COLOR = "#1d4ed8"; // blue-800
-const GRID_COLOR = "#60a5fa"; // blue-400
-
-// Unlinked panel colors (gray)
-const UNLINKED_FILL_COLOR = "#9ca3af"; // gray-400
-const UNLINKED_STROKE_COLOR = "#6b7280"; // gray-500
-const UNLINKED_GRID_COLOR = "#d1d5db"; // gray-300
 
 interface ProductionPanelProps {
   x: SharedValue<number>;
@@ -25,9 +16,10 @@ interface ProductionPanelProps {
   rotation?: SharedValue<0 | 90>;
   wattage: number;
   inverterId?: SharedValue<string | null>;
+  colors: PanelColors;
 }
 
-export function ProductionPanel({ x, y, rotation, wattage, inverterId }: ProductionPanelProps) {
+export function ProductionPanel({ x, y, rotation, wattage, inverterId, colors }: ProductionPanelProps) {
   // Use system font for text rendering
   const font = matchFont({
     fontFamily: "System",
@@ -68,13 +60,13 @@ export function ProductionPanel({ x, y, rotation, wattage, inverterId }: Product
 
   // Derive colors based on link state
   const fillColor = useDerivedValue(() =>
-    inverterId?.value === null ? UNLINKED_FILL_COLOR : FILL_COLOR
+    inverterId?.value === null ? colors.unlinked.fill : colors.linked.fill
   );
   const strokeColor = useDerivedValue(() =>
-    inverterId?.value === null ? UNLINKED_STROKE_COLOR : STROKE_COLOR
+    inverterId?.value === null ? colors.unlinked.stroke : colors.linked.stroke
   );
   const gridColor = useDerivedValue(() =>
-    inverterId?.value === null ? UNLINKED_GRID_COLOR : GRID_COLOR
+    inverterId?.value === null ? colors.unlinked.grid : colors.linked.grid
   );
 
   // Derived values for text positioning (computed unconditionally to satisfy hooks rules)

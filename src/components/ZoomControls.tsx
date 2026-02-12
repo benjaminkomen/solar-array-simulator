@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { ZOOM_LEVELS } from "@/utils/zoomConstants";
+import { useColors } from "@/utils/theme";
 
 interface ZoomControlsProps {
   currentIndex: number;
@@ -16,6 +17,7 @@ export function ZoomControls({
   onZoomOut,
 }: ZoomControlsProps) {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const canZoomIn = currentIndex > 0;
   const canZoomOut = currentIndex < ZOOM_LEVELS.length - 1;
 
@@ -34,7 +36,7 @@ export function ZoomControls({
   };
 
   return (
-    <View style={[styles.container, { bottom: insets.bottom + 80 }]}>
+    <View style={[styles.container, { bottom: insets.bottom + 80, backgroundColor: colors.background.primary }]}>
       <Pressable
         onPress={handleZoomIn}
         style={[styles.button, !canZoomIn && styles.buttonDisabled]}
@@ -44,7 +46,7 @@ export function ZoomControls({
         <Ionicons
           name="add"
           size={22}
-          color={canZoomIn ? "#374151" : "#d1d5db"}
+          color={canZoomIn ? colors.text.primary : colors.border.medium}
         />
       </Pressable>
       <View style={styles.indicator}>
@@ -53,7 +55,7 @@ export function ZoomControls({
             key={index}
             style={[
               styles.line,
-              index === currentIndex ? styles.lineActive : styles.lineInactive,
+              { backgroundColor: index === currentIndex ? colors.text.primary : colors.border.medium },
             ]}
           />
         ))}
@@ -67,7 +69,7 @@ export function ZoomControls({
         <Ionicons
           name="remove"
           size={22}
-          color={canZoomOut ? "#374151" : "#d1d5db"}
+          color={canZoomOut ? colors.text.primary : colors.border.medium}
         />
       </Pressable>
     </View>
@@ -78,7 +80,6 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     right: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -107,11 +108,5 @@ const styles = StyleSheet.create({
     width: 20,
     height: 2,
     borderRadius: 1,
-  },
-  lineActive: {
-    backgroundColor: "#1f2937",
-  },
-  lineInactive: {
-    backgroundColor: "#d1d5db",
   },
 });

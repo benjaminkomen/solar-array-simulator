@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Text, ScrollView, Pressable, View } from "react-native";
+import { Alert, Text, ScrollView, Pressable, View, useColorScheme } from "react-native";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -10,6 +10,7 @@ import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { resizeForAnalysis } from "@/utils/imageResize";
 import { setAnalysisResult } from "@/utils/analysisStore";
 import { WizardProgress } from "@/components/WizardProgress";
+import { useColors } from "@/utils/theme";
 
 export default function Upload() {
   const router = useRouter();
@@ -17,6 +18,9 @@ export default function Upload() {
   const isWizardMode = wizard === 'true';
   const abortRef = useRef<AbortController | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const {
     image,
@@ -108,6 +112,7 @@ export default function Upload() {
       {isWizardMode && <WizardProgress currentStep={2} />}
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
+        style={{ backgroundColor: colors.background.primary }}
         contentContainerStyle={{
           alignItems: "center",
           gap: 24,
@@ -122,17 +127,19 @@ export default function Upload() {
             height: 200,
             borderRadius: 32,
             overflow: "hidden",
-            backgroundColor: "#ffffff",
+            backgroundColor: colors.background.secondary,
             justifyContent: "center",
             alignItems: "center",
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+            boxShadow: isDark
+              ? "0 8px 24px rgba(255, 255, 255, 0.2)"
+              : "0 8px 24px rgba(0, 0, 0, 0.12)",
           }}
         >
           <Image
             source="sf:photo.on.rectangle"
             style={{ width: 80, height: 80 }}
             contentFit="contain"
-            tintColor="#6366f1"
+            tintColor={colors.primary}
           />
         </Animated.View>
 
@@ -141,7 +148,7 @@ export default function Upload() {
           style={{
             fontSize: 28,
             fontWeight: "700",
-            color: "#000000",
+            color: colors.text.primary,
             textAlign: "center",
           }}
         >
@@ -152,7 +159,7 @@ export default function Upload() {
           entering={FadeIn.duration(300).delay(150)}
           style={{
             fontSize: 15,
-            color: "#6b7280",
+            color: colors.text.secondary,
             textAlign: "center",
             lineHeight: 22,
             paddingHorizontal: 16,
@@ -170,7 +177,7 @@ export default function Upload() {
                 pickFromCamera();
               }}
               style={{
-                backgroundColor: "#6366f1",
+                backgroundColor: colors.primary,
                 paddingHorizontal: 24,
                 paddingVertical: 16,
                 borderRadius: 14,
@@ -185,13 +192,13 @@ export default function Upload() {
                 source="sf:camera"
                 style={{ width: 22, height: 22 }}
                 contentFit="contain"
-                tintColor="#ffffff"
+                tintColor={colors.text.inverse}
               />
               <Text
                 style={{
                   fontSize: 17,
                   fontWeight: "600",
-                  color: "#ffffff",
+                  color: colors.text.inverse,
                 }}
               >
                 Take Photo
@@ -207,13 +214,13 @@ export default function Upload() {
                 pickFromGallery();
               }}
               style={{
-                backgroundColor: "#ffffff",
+                backgroundColor: colors.background.primary,
                 paddingHorizontal: 24,
                 paddingVertical: 16,
                 borderRadius: 14,
                 borderCurve: "continuous",
                 borderWidth: 2,
-                borderColor: "#e5e7eb",
+                borderColor: colors.border.light,
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
@@ -224,13 +231,13 @@ export default function Upload() {
                 source="sf:photo.on.rectangle"
                 style={{ width: 22, height: 22 }}
                 contentFit="contain"
-                tintColor="#6366f1"
+                tintColor={colors.primary}
               />
               <Text
                 style={{
                   fontSize: 17,
                   fontWeight: "600",
-                  color: "#6366f1",
+                  color: colors.primary,
                 }}
               >
                 Choose from Gallery
@@ -253,7 +260,7 @@ export default function Upload() {
                   style={{
                     fontSize: 15,
                     fontWeight: "500",
-                    color: "#9ca3af",
+                    color: colors.text.tertiary,
                   }}
                 >
                   Skip, create layout manually

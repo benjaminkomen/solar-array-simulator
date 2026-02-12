@@ -1,6 +1,7 @@
 import { View, Text } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColors } from "@/utils/theme";
 
 interface WizardProgressProps {
   currentStep: 1 | 2 | 3;
@@ -14,6 +15,7 @@ const STEPS = [
 
 export function WizardProgress({ currentStep }: WizardProgressProps) {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
 
   return (
     <View
@@ -24,9 +26,9 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
         paddingTop: insets.top + 50,
         paddingBottom: 16,
         paddingHorizontal: 24,
-        backgroundColor: "#ffffff",
+        backgroundColor: colors.background.primary,
         borderBottomWidth: 1,
-        borderBottomColor: "#f3f4f6",
+        borderBottomColor: colors.background.tertiary,
       }}
     >
       {STEPS.map((step, index) => {
@@ -50,9 +52,9 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
                   width: 32,
                   height: 32,
                   borderRadius: 16,
-                  backgroundColor: isCompleted || isCurrent ? "#6366f1" : "#ffffff",
+                  backgroundColor: isCompleted || isCurrent ? colors.primary : colors.background.primary,
                   borderWidth: isFuture ? 2 : 0,
-                  borderColor: "#d1d5db",
+                  borderColor: colors.border.medium,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -62,14 +64,14 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
                     source="sf:checkmark"
                     style={{ width: 16, height: 16 }}
                     contentFit="contain"
-                    tintColor="#ffffff"
+                    tintColor={colors.text.inverse}
                   />
                 ) : (
                   <Text
                     style={{
                       fontSize: 14,
                       fontWeight: "600",
-                      color: isCurrent ? "#ffffff" : "#9ca3af",
+                      color: isCurrent ? colors.text.inverse : colors.text.tertiary,
                     }}
                   >
                     {stepNumber}
@@ -80,7 +82,7 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
                 style={{
                   fontSize: 11,
                   fontWeight: isCurrent ? "600" : "400",
-                  color: isCurrent ? "#6366f1" : isCompleted ? "#374151" : "#9ca3af",
+                  color: isCurrent ? colors.primary : isCompleted ? colors.text.primary : colors.text.tertiary,
                 }}
               >
                 {step.label}
@@ -93,7 +95,7 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
                 style={{
                   width: 40,
                   height: 2,
-                  backgroundColor: stepNumber < currentStep ? "#6366f1" : "#e5e7eb",
+                  backgroundColor: stepNumber < currentStep ? colors.primary : colors.border.light,
                   marginHorizontal: 8,
                   marginBottom: 20,
                 }}

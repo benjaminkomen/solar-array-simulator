@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Pressable, StyleSheet, View, Text as RNText} from 'react-native';
+import {StyleSheet, View, TouchableWithoutFeedback, Keyboard} from 'react-native';
 import {
   BottomSheet,
   Button,
@@ -18,12 +18,13 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   bold,
+  buttonStyle,
   font,
-  foregroundStyle,
+  foregroundStyle, opacity,
   presentationDetents,
   presentationDragIndicator,
+  scrollDismissesKeyboard,
 } from '@expo/ui/swift-ui/modifiers';
-import {Ionicons} from '@expo/vector-icons';
 import {useConfigStore} from '@/hooks/useConfigStore';
 import type {InverterConfig} from '@/utils/configStore';
 import {Stack, useLocalSearchParams, useRouter} from "expo-router";
@@ -107,9 +108,10 @@ export default function ConfigScreen() {
     <>
       <Stack.Screen.BackButton displayMode="minimal"/>
       {isWizardMode && <WizardProgress currentStep={1} />}
-      <View style={styles.container}>
-        <Host style={styles.form}>
-          <Form>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.container}>
+          <Host style={styles.form}>
+          <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
             {/* Panel Settings Section */}
             <Section
               header={<Text>Panel Settings</Text>}
@@ -141,7 +143,7 @@ export default function ConfigScreen() {
             >
               <List.ForEach onDelete={handleDelete}>
                 {config.inverters.map((inverter) => (
-                  <Button key={inverter.id} onPress={() => handleOpenEditSheet(inverter)}>
+                  <Button key={inverter.id} onPress={() => handleOpenEditSheet(inverter)} modifiers={[buttonStyle('plain')]}>
                     <HStack>
                       <VStack alignment="leading" spacing={2}>
                         <Text modifiers={[foregroundStyle({type: 'hierarchical', style: 'primary'})]}>
@@ -149,7 +151,7 @@ export default function ConfigScreen() {
                         </Text>
                         <Text
                           modifiers={[
-                            foregroundStyle({type: 'hierarchical', style: 'tertiary'}),
+                            opacity(0.6),
                             font({size: 14}),
                           ]}
                         >
@@ -171,7 +173,7 @@ export default function ConfigScreen() {
             onIsPresentedChange={setShowAddSheet}
             modifiers={[presentationDetents(['large']), presentationDragIndicator('visible')]}
           >
-            <Form>
+            <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
               {/* Header */}
               <Section>
                 <HStack>
@@ -228,7 +230,7 @@ export default function ConfigScreen() {
             modifiers={[presentationDetents(['large']), presentationDragIndicator('visible')]}
           >
             {editingInverter && (
-              <Form>
+              <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
                 {/* Header */}
                 <Section>
                   <HStack>
@@ -274,28 +276,17 @@ export default function ConfigScreen() {
               </Form>
             )}
           </BottomSheet>
-        </Host>
-
-        {/* Floating add button */}
-        <View style={styles.floatingButtonContainer}>
-          <Pressable style={styles.floatingButton} onPress={handleOpenAddSheet}>
-            <Ionicons name="add" size={28} color="#fff"/>
-          </Pressable>
+          </Host>
         </View>
-
-        {/* Continue button for wizard mode */}
+      </TouchableWithoutFeedback>
+      <Stack.Toolbar placement="bottom">
         {isWizardMode && (
-          <View style={styles.continueButtonContainer}>
-            <Pressable
-              testID="continue-button"
-              style={styles.continueButton}
-              onPress={handleContinue}
-            >
-              <RNText style={styles.continueButtonText}>Continue</RNText>
-            </Pressable>
-          </View>
+          <Stack.Toolbar.Button onPress={handleContinue}>
+            Continue
+          </Stack.Toolbar.Button>
         )}
-      </View>
+        <Stack.Toolbar.Button icon="plus" onPress={handleOpenAddSheet} />
+      </Stack.Toolbar>
     </>
   );
 }
@@ -306,40 +297,5 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
-  },
-  floatingButtonContainer: {
-    position: 'absolute',
-    bottom: 32,
-    right: 20,
-  },
-  floatingButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#6366f1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  continueButtonContainer: {
-    position: 'absolute',
-    bottom: 32,
-    left: 20,
-    right: 90,
-  },
-  continueButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  continueButtonText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#ffffff',
   },
 });

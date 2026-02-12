@@ -12,6 +12,7 @@ import { GRID_SIZE } from "@/utils/gridSnap";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { WizardProgress } from "@/components/WizardProgress";
 import { ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from "@/utils/zoomConstants";
+import { useColors } from "@/utils/theme";
 
 // Fallback: 2 rows x 5 columns mock grid
 const COLS = 5;
@@ -104,6 +105,7 @@ export default function Custom() {
   const { initialPanels, wizard } = useLocalSearchParams<{ initialPanels?: string; wizard?: string }>();
   const isWizardMode = wizard === 'true';
   const canvasSize = useRef({ width: 0, height: 0 });
+  const colors = useColors();
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
   const scale = useSharedValue(ZOOM_LEVELS[DEFAULT_ZOOM_INDEX]);
@@ -248,7 +250,7 @@ export default function Custom() {
         <Stack.Toolbar.Button icon="location" onPress={handleSnapToOrigin} />
       </Stack.Toolbar>
       {isWizardMode && <WizardProgress currentStep={3} />}
-      <View style={styles.container} onLayout={handleLayout} testID="canvas-container">
+      <View style={[styles.container, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
         <SolarPanelCanvas
           panels={panels}
           selectedId={selectedId}
@@ -294,6 +296,5 @@ export default function Custom() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb",
   },
 });
