@@ -1,5 +1,23 @@
-import { bedrock } from "@ai-sdk/amazon-bedrock";
+import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { generateText } from "ai";
+
+// Create provider with custom fetch that has 60s timeout
+// Vision requests can take 10-30+ seconds, but the SDK's default is shorter
+const bedrock = createAmazonBedrock({
+  fetch: async (input, init) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60_000);
+
+    try {
+      return await fetch(input, {
+        ...init,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  },
+});
 
 interface AnalyzeRequest {
   image: string; // base64-encoded image
@@ -43,6 +61,8 @@ Rules:
 - Return ONLY valid JSON, no markdown fences, no explanation.`;
 
 export async function POST(request: Request) {
+  let startTime: number | undefined;
+
   try {
     const { image, mimeType } = (await request.json()) as AnalyzeRequest;
 
@@ -52,6 +72,11 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+
+    // Log payload size for debugging
+    const payloadSizeKB = Math.round(image.length / 1024);
+    console.log(`[Bedrock] Starting request - payload: ${payloadSizeKB} KB`);
+    startTime = Date.now();
 
     const { text } = await generateText({
       model: bedrock("us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
@@ -76,8 +101,10 @@ export async function POST(request: Request) {
       temperature: 0.2,
     });
 
-    // Log raw response for debugging
-    console.log("Bedrock raw response:", text);
+    // Log timing and response
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(`[Bedrock] Response received in ${elapsed}s`);
+    console.log("[Bedrock] Raw response:", text);
 
     // Extract JSON from the response — the model may wrap it in markdown
     // fences or include explanatory text before/after the JSON
@@ -101,7 +128,10 @@ export async function POST(request: Request) {
 
     return Response.json(result);
   } catch (error) {
-    console.error("Analyze API error:", error);
+    const elapsed = startTime
+      ? ((Date.now() - startTime) / 1000).toFixed(1) + "s"
+      : "N/A";
+    console.error(`[Bedrock] Failed after ${elapsed}:`, error);
     return Response.json(
       { error: "Failed to analyze image" },
       { status: 500 },
