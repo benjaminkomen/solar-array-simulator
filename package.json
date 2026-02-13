@@ -9,6 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "test": "bun test",
     "test:maestro": "maestro test .maestro",
     "test:maestro:local": "maestro test .maestro --format junit"
   },
