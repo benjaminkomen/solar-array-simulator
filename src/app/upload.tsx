@@ -7,7 +7,7 @@ import * as Haptics from "expo-haptics";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { PermissionModal } from "@/components/PermissionModal";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
-import { resizeForAnalysis } from "@/utils/imageResize";
+import { resizeForAnalysis, cropPanelRegions } from "@/utils/imageResize";
 import { setAnalysisResult } from "@/utils/analysisStore";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
@@ -76,9 +76,61 @@ export default function Upload() {
 
         const result = await response.json();
 
+        // Pass 2: Crop each detected panel from the original full-res image
+        // and extract serial numbers that were too small in the resized image
+        let panelsWithSerials = result.panels;
+        try {
+          const crops = await cropPanelRegions(
+            image!.uri,
+            result.panels.map((p: { x: number; y: number; width: number; height: number }) => ({
+              x: p.x,
+              y: p.y,
+              width: p.width,
+              height: p.height,
+            })),
+            resized.width,
+            resized.height,
+          );
+
+          if (crops.length > 0) {
+            const serialResponse = await fetch("/api/extract-serials", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                crops: crops.map((c) => ({
+                  base64: c.base64,
+                  mimeType: c.mimeType,
+                  index: c.index,
+                })),
+              }),
+              signal: controller.signal,
+            });
+
+            if (serialResponse.ok) {
+              const serialData = await serialResponse.json();
+              // Merge serial numbers into panel results
+              panelsWithSerials = result.panels.map(
+                (panel: { label: string }, i: number) => {
+                  const match = serialData.results?.find(
+                    (r: { index: number; serial: string }) => r.index === i,
+                  );
+                  return {
+                    ...panel,
+                    label:
+                      match?.serial || panel.label || "",
+                  };
+                },
+              );
+            }
+          }
+        } catch (serialErr) {
+          // Serial extraction is best-effort; don't fail the whole flow
+          console.warn("Serial extraction failed, using labels from pass 1:", serialErr);
+        }
+
         // Store the result for the canvas screen to consume
         setAnalysisResult({
-          panels: result.panels,
+          panels: panelsWithSerials,
           imageWidth: resized.width,
           imageHeight: resized.height,
         });
