@@ -1,199 +1,317 @@
-# Plan: Realistic Energy Production Simulation
+# Plan: 3D Solar Energy Simulation Screen
 
-## Current State
+## Overview
 
-The production screen calculates wattage with a simple formula:
+New **Simulation screen** accessible from the Production screen. Features a 3D view of the roof with solar panels, a movable sun, and a time-of-day slider. As the user scrubs through the day, the sun moves across the sky, lighting changes on the 3D roof, and per-panel wattage output updates in real time.
+
+**3D stack:** WebGPU via `react-native-wgpu` + `three` (WebGPU build) + `@react-three/fiber`
+
+## User Experience
+
+1. From Production screen, tap "Simulate" button → navigates to Simulation screen
+2. Screen shows:
+   - **3D view** filling most of the screen: roof + solar panels + sun
+   - **Time slider** at bottom: scrub from sunrise → sunset
+   - **Date picker** (or season selector): change the day of year
+   - **Total output label**: updates as slider moves
+   - **Per-panel wattage**: shown as floating labels or color intensity on panels
+3. User drags the time slider → sun moves across the 3D sky → shadows shift → panel output changes
+4. User can orbit/rotate the 3D camera with touch gestures to view from different angles
+
+## Architecture
+
 ```
-wattage = maxWattage × (efficiency / 100) × (0.95 + random × 0.1)
+┌──────────────────────────────────────────┐
+│  Simulation Screen (src/app/simulation.tsx) │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │  FiberCanvas (WebGPU + R3F)       │  │
+│  │                                    │  │
+│  │  ┌─────────┐  ┌─────────────────┐ │  │
+│  │  │  Sun    │  │  RoofModel      │ │  │
+│  │  │ (light) │  │  + PanelMeshes  │ │  │
+│  │  └─────────┘  └─────────────────┘ │  │
+│  │                                    │  │
+│  │  OrbitControls (touch to rotate)  │  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │  Time Slider: sunrise ←──●──→ sunset │  │
+│  │  Date: [Season picker]              │  │
+│  │  Total: 3,240W                      │  │
+│  └────────────────────────────────────┘  │
+└──────────────────────────────────────────┘
 ```
 
-Compass direction is stored but **not used** in the calculation. There is no location awareness, no time-of-day variation, and no seasonal variation. The ±5% random fluctuation is the only variability.
+## Implementation Steps
 
-## Factors That Affect Real Solar Output
+### Step 1: Install WebGPU + Three.js dependencies
 
-| Factor | Impact | Source |
-|--------|--------|--------|
-| **Geographic latitude** | Determines sun angle and day length | User input or device GPS |
-| **Compass direction (azimuth)** | How directly panels face the sun | Already stored in configStore |
-| **Season / date** | Sun elevation changes throughout year | Device clock |
-| **Time of day** | Sun rises, peaks at solar noon, sets | Device clock |
-| **Panel tilt angle** | Angle from horizontal (affects incidence angle) | New config field |
-| **Weather / cloud cover** | Reduces irradiance significantly | Optional weather API or skip |
-
-### What to include vs. skip
-
-**Include (deterministic, no external API needed):**
-- Location (latitude/longitude)
-- Compass direction (already have)
-- Date (season)
-- Time of day
-- Panel tilt angle
-
-**Skip for now:**
-- Real-time weather/cloud cover — requires a weather API, adds complexity and cost. Instead, keep the existing ±5% random fluctuation as a simple "weather noise" stand-in.
-
-## Implementation Plan
-
-### Step 1: Add solar position math utility
-
-**New file:** `src/utils/solarCalculations.ts`
-
-Pure math functions (no React, no state). Core calculations:
-
-1. **`getSolarPosition(lat, lon, date)`** → `{ elevation, azimuth }`
-   - Uses standard solar position algorithm (solar declination, hour angle, etc.)
-   - Returns sun elevation above horizon (0-90°) and azimuth (0-360°)
-
-2. **`getIncidenceAngle(sunElevation, sunAzimuth, panelTilt, panelAzimuth)`** → `number`
-   - Angle between sun rays and panel normal vector
-   - Uses: `cos(θ) = sin(elevation)×cos(tilt) + cos(elevation)×sin(tilt)×cos(sunAzimuth - panelAzimuth)`
-
-3. **`calculateIrradiance(lat, dayOfYear, sunElevation)`** → `number` (W/m²)
-   - Clear-sky irradiance model (simplified)
-   - Peak ~1000 W/m² at solar noon in summer at mid-latitudes
-   - Accounts for atmospheric mass at low sun angles (air mass model)
-   - Returns 0 when sun is below horizon
-
-4. **`getEffectiveOutput(params)`** → `number` (watts)
-   - Combines: `maxWattage × inverterEfficiency × irradianceFactor × incidenceAngleFactor × randomFluctuation`
-   - `irradianceFactor` = actual irradiance / 1000 (normalized to STC)
-   - `incidenceAngleFactor` = max(0, cos(incidenceAngle))
-   - `randomFluctuation` = existing 0.95-1.05 noise
-
-All functions are pure, testable, and run on the JS thread (not worklets).
-
-### Step 2: Add location and tilt to configStore
-
-**Modify:** `src/utils/configStore.ts`
-
-Add new fields to `SystemConfig`:
-
-```typescript
-interface SystemConfig {
-  // ... existing fields ...
-  latitude: number | null;     // null = not set
-  longitude: number | null;    // null = not set
-  panelTiltAngle: number;      // degrees from horizontal, default 30
+**New dependencies:**
+```json
+{
+  "react-native-wgpu": "^0.4.1",
+  "three": "0.172.0",
+  "@react-three/fiber": "^9.4.0",
+  "wgpu-matrix": "^3.0.2",
+  "@types/three": "0.172.0"
 }
 ```
 
-Add store functions:
+**New file:** `metro.config.js` — resolver to route `three` → `three/webgpu` and fix R3F imports for native.
+
+**Note:** WebGPU requires a dev build (already the workflow for this project). Does NOT work in Expo Go.
+
+### Step 2: Create R3F lib files
+
+Following the Expo WebGPU skill exactly:
+
+- **`src/lib/make-webgpu-renderer.ts`** — ReactNativeCanvas wrapper + WebGPU renderer factory
+- **`src/lib/fiber-canvas.tsx`** — FiberCanvas component that initializes WebGPU context, extends THREE namespace, configures R3F root
+- **`src/lib/orbit-controls.tsx`** — Touch orbit controls for camera rotation
+
+The `extend()` call needs these THREE components at minimum:
+- AmbientLight, DirectionalLight
+- Mesh, Group
+- BoxGeometry, PlaneGeometry, CylinderGeometry
+- MeshStandardMaterial, MeshBasicMaterial
+- PerspectiveCamera, Scene
+
+### Step 3: Solar position math utility
+
+**New file:** `src/utils/solarCalculations.ts`
+
+Pure math, no React. Functions:
+
+1. **`getSolarPosition(lat, lon, date)`** → `{ elevation, azimuth }`
+   - Solar declination, hour angle, elevation, azimuth
+   - Returns sun elevation (degrees above horizon) and azimuth (0-360°)
+
+2. **`getSunriseAndSunset(lat, lon, date)`** → `{ sunrise: Date, sunset: Date }`
+   - For the time slider range
+
+3. **`getSun3DPosition(elevation, azimuth, distance)`** → `{ x, y, z }`
+   - Converts solar position to Three.js world coordinates
+   - Used to position the directional light (sun)
+
+4. **`getIncidenceAngle(sunElevation, sunAzimuth, panelTilt, panelAzimuth)`** → `number`
+   - Angle between sun rays and panel normal
+
+5. **`calculateIrradiance(sunElevation)`** → `number` (W/m²)
+   - Clear-sky model, 0 when sun below horizon, peak ~1000 W/m²
+
+6. **`getEffectiveOutput(params)`** → `number` (watts per panel)
+   - `maxWattage × efficiency × (irradiance/1000) × max(0, cos(incidenceAngle)) × noise`
+   - Fallback to simple formula if location not set
+
+### Step 4: Add location, tilt, and roof type to configStore
+
+**Modify:** `src/utils/configStore.ts`
+
+```typescript
+type RoofType = 'flat' | 'gable' | 'hip' | 'shed';
+
+interface SystemConfig {
+  // ... existing fields ...
+  latitude: number | null;
+  longitude: number | null;
+  panelTiltAngle: number;      // default 30°
+  roofType: RoofType;          // default 'gable'
+}
+```
+
+Store functions:
 - `updateLocation(lat, lon)`
 - `updatePanelTiltAngle(degrees)`
+- `updateRoofType(type)`
 
-Default tilt: 30° (common residential install angle).
-Default location: `null` (prompts user to set it).
+**New dependency:** `expo-location` for GPS.
 
-Migration: existing configs without these fields get defaults on load (same pattern already used for `compassDirection`).
-
-### Step 3: Add location input to Config screen
+### Step 5: Add location & roof config to Config screen
 
 **Modify:** `src/app/config.tsx`
 
-Add a new section to the config form:
+New form sections:
+- **"Location" section**: "Use Current Location" button + manual lat/lon fallback
+- **"Roof Type" section**: Picker/segmented control with flat/gable/hip/shed options (with small illustrations or labels)
+- **"Panel Tilt" section**: Slider 0-90°, default 30°
 
-- **"Location" section** with:
-  - "Use Current Location" button — calls `expo-location` to get device GPS coordinates
-  - Manual latitude/longitude entry as fallback
-  - Display current location as city name if possible (reverse geocode), or just lat/lon
-  - **Tilt angle slider** (0-90°, default 30°)
+### Step 6: Create 3D roof + panel components
 
-**New dependency:** `expo-location` for GPS access.
+**New file:** `src/components/simulation/RoofModel.tsx`
 
-### Step 4: Update production wattage calculation
+3D roof geometry based on `roofType`:
+
+| Roof Type | Geometry | Description |
+|-----------|----------|-------------|
+| **Flat** | Single tilted plane | Simple rectangle at tilt angle |
+| **Gable** | Two planes meeting at ridge | Classic A-frame, ridge runs along length |
+| **Hip** | Four sloping planes | Ridge with sloped ends |
+| **Shed** | Single plane, one-direction slope | Lean-to style, slope one way |
+
+The roof dimensions derive from the panel layout bounding box (with some padding). Panels sit on the roof surface.
+
+**New file:** `src/components/simulation/PanelMesh.tsx`
+
+Each panel rendered as a slightly raised box on the roof surface:
+- Blue-tinted when producing, darker when low output
+- Opacity/color intensity maps to current wattage
+- Positioned to match the 2D layout (x,y mapped to roof surface coordinates)
+
+**New file:** `src/components/simulation/SunLight.tsx`
+
+Directional light representing the sun:
+- Position driven by `getSun3DPosition(elevation, azimuth)`
+- Intensity proportional to irradiance
+- Casts shadows onto roof
+- Visual sun sphere (small yellow emissive sphere at light position)
+
+### Step 7: Create the Simulation screen
+
+**New file:** `src/app/simulation.tsx`
+
+Screen composition:
+1. **FiberCanvas** (lazy-loaded for bundle splitting):
+   - Camera: PerspectiveCamera, starts at 45° overhead angle
+   - OrbitControls: touch to rotate/zoom the view
+   - Scene contents: RoofModel + PanelMeshes + SunLight + AmbientLight
+   - Ground plane (subtle grid or flat surface below roof)
+2. **Time slider** (React Native, overlay at bottom):
+   - Range: sunrise → sunset for the selected date/location
+   - Drives `currentTime` state → recalculates sun position → updates light + wattages
+   - Shows formatted time label (e.g., "2:30 PM")
+3. **Season/date control**:
+   - Four season buttons (Winter/Spring/Summer/Fall) that set representative dates
+   - Or a date picker for exact date
+4. **Output display**:
+   - Total array output label, updates as slider moves
+   - Optionally per-panel floating labels in 3D (or just color intensity)
+
+**Navigation:** Accessible from Production screen via toolbar button or menu item.
+
+### Step 8: Update Production screen wattage calculation
 
 **Modify:** `src/app/production.tsx`
 
-Replace the current `calculateWattage` callback:
+Replace the simple formula with `getEffectiveOutput()` using the current real time. The existing 1-second interval now shows realistic output that changes throughout the day.
 
-```typescript
-// Before
-const baseWattage = config.defaultMaxWattage * efficiency;
-const fluctuation = 0.95 + Math.random() * 0.1;
-return Math.round(baseWattage * fluctuation);
+Fallback: if `latitude` is null, keep the old formula.
 
-// After
-const output = getEffectiveOutput({
-  maxWattage: config.defaultMaxWattage,
-  inverterEfficiency: inverter.efficiency,
-  latitude: config.latitude,
-  longitude: config.longitude,
-  panelTilt: config.panelTiltAngle,
-  panelAzimuth: config.compassDirection,
-  date: new Date(),
-});
-return Math.round(output);
-```
-
-**Fallback:** If location is `null`, fall back to the current simple formula so the app still works without location set.
-
-### Step 5: Add time-of-day and season visual indicators
+### Step 9: Wire up navigation
 
 **Modify:** `src/app/production.tsx`
 
-Add informational display below the total output card:
+Add "Simulate" button to the production screen (toolbar or header). Navigates to `/simulation`.
 
-- Current sun elevation and azimuth
-- Day/night indicator (if sun below horizon, show "Night — 0W" for all panels)
-- Sunrise/sunset times for current location and date
+### Step 10: Update CLAUDE.md
 
-This is lightweight — just text display using the solar calculation utility.
-
-### Step 6: Update CLAUDE.md
-
-Document the new simulation system, formulas, and config fields.
+Document the simulation screen, 3D setup, and new config fields.
 
 ## File Changes Summary
 
 | File | Action | What |
 |------|--------|------|
-| `src/utils/solarCalculations.ts` | **Create** | Solar position math, irradiance model |
-| `src/utils/configStore.ts` | Modify | Add latitude, longitude, panelTiltAngle fields |
+| `package.json` | Modify | Add react-native-wgpu, three, @react-three/fiber, wgpu-matrix, expo-location |
+| `metro.config.js` | **Create** | Three.js WebGPU resolver + R3F native fix |
+| `src/lib/make-webgpu-renderer.ts` | **Create** | WebGPU renderer factory (from Expo skill) |
+| `src/lib/fiber-canvas.tsx` | **Create** | FiberCanvas R3F wrapper (from Expo skill) |
+| `src/lib/orbit-controls.tsx` | **Create** | Touch orbit camera controls |
+| `src/utils/solarCalculations.ts` | **Create** | Solar position math, irradiance, output formulas |
+| `src/utils/configStore.ts` | Modify | Add latitude, longitude, panelTiltAngle, roofType |
 | `src/hooks/useConfigStore.ts` | Modify | Expose new store functions |
-| `src/app/config.tsx` | Modify | Add location section and tilt slider |
-| `src/app/production.tsx` | Modify | Use realistic calculation, add sun info display |
-| `CLAUDE.md` | Modify | Document new simulation system |
-| `package.json` | Modify | Add `expo-location` dependency |
+| `src/app/config.tsx` | Modify | Add location, roof type, tilt angle sections |
+| `src/components/simulation/RoofModel.tsx` | **Create** | 3D roof geometry (flat/gable/hip/shed) |
+| `src/components/simulation/PanelMesh.tsx` | **Create** | 3D panel on roof surface with wattage coloring |
+| `src/components/simulation/SunLight.tsx` | **Create** | Directional light + sun sphere driven by time |
+| `src/app/simulation.tsx` | **Create** | Simulation screen with 3D view + time slider |
+| `src/app/production.tsx` | Modify | Add Simulate button, use realistic wattage calc |
+| `CLAUDE.md` | Modify | Document simulation system |
+
+## 3D Scene Details
+
+### Coordinate System
+- Three.js Y-up: Y is vertical, XZ is the ground plane
+- Roof sits above Y=0 ground plane
+- Sun orbits in a hemisphere above the scene
+- Panel 2D layout (x, y) maps to roof surface (x → X, y → Z on roof slope)
+
+### Roof Geometry Detail
+
+**Gable (most common):**
+```
+        /\
+       /  \
+      /    \
+     /      \
+    /________\
+```
+- Two PlaneGeometry surfaces angled to meet at ridge
+- Ridge height = `roofWidth/2 × tan(tiltAngle)`
+- Panels placed on south-facing slope (or slope matching compass direction)
+
+**Hip:**
+```
+     ____
+    /    \
+   /      \
+  /________\
+```
+- Four sloped planes, ridge shorter than base
+- More complex but still constructible from PlaneGeometry + transforms
+
+**Flat:** Single horizontal plane (or very slight tilt)
+
+**Shed:** Single plane tilted in one direction
+
+### Sun Movement
+- Sun position calculated from `getSun3DPosition()` at distance ~50 units
+- DirectionalLight pointed at scene center
+- As time slider moves: light position updates → shadows shift → panel colors change
+- Below horizon (before sunrise / after sunset): minimal ambient only, all panels at 0W
+
+### Performance Considerations
+- Lazy-load the simulation screen (React.lazy) so Three.js doesn't bloat initial load
+- Roof + panels are simple geometry (low poly count)
+- Shadow map only from the single directional light (sun)
+- Panel wattage recalculated only on slider change, not every frame
 
 ## Solar Math Reference
 
-The key formula for solar panel output:
-
 ```
-P = P_max × η_inverter × (G / G_STC) × max(0, cos θ_i) × noise
+P = P_max × η_inverter × (G / 1000) × max(0, cos θ_i) × noise
 
-Where:
-  P_max       = panel max wattage (e.g., 430W)
-  η_inverter  = inverter efficiency (0-1)
-  G           = clear-sky irradiance at current sun position (W/m²)
-  G_STC       = 1000 W/m² (Standard Test Conditions)
-  θ_i         = angle of incidence between sun and panel normal
-  noise       = 0.95 + random(0, 0.1)  — simulates clouds/dust
+Sun position:
+  declination = 23.45° × sin(360/365 × (dayOfYear - 81))
+  hourAngle = 15° × (solarHour - 12)
+  elevation = arcsin(sin(lat)×sin(decl) + cos(lat)×cos(decl)×cos(hourAngle))
+  azimuth = arctan2(-cos(decl)×sin(hourAngle), cos(lat)×sin(decl) - sin(lat)×cos(decl)×cos(hourAngle))
 
 Angle of incidence:
   cos(θ_i) = sin(α)×cos(β) + cos(α)×sin(β)×cos(γ_s - γ_p)
+  α = solar elevation, β = panel tilt, γ_s = sun azimuth, γ_p = panel azimuth
 
-Where:
-  α   = solar elevation angle
-  β   = panel tilt from horizontal
-  γ_s = solar azimuth
-  γ_p = panel azimuth (compass direction)
+Clear-sky irradiance:
+  airMass = 1 / max(sin(elevation), 0.01)
+  G = 1361 × 0.7^(airMass^0.678)  (simplified Kasten model)
 ```
 
 ## Scope Boundaries
 
 **In scope:**
-- Solar position calculation from lat/lon/date/time
-- Panel orientation effect (azimuth + tilt)
-- Seasonal and diurnal variation
-- Clear-sky irradiance model
-- GPS location capture
-- Graceful fallback when location not set
+- 3D roof visualization with 4 roof type presets
+- Solar panels mapped from 2D layout onto 3D roof
+- Animated sun with directional lighting and shadows
+- Time-of-day slider (sunrise → sunset)
+- Season/date selection
+- Per-panel wattage calculation based on sun position
+- GPS location input
+- Touch orbit controls for 3D camera
+- Realistic production calculation on Production screen too
 
-**Out of scope (future work):**
-- Real weather API integration
-- Historical production data / graphs
-- Shading analysis from surrounding objects
+**Out of scope (future):**
+- Weather API / cloud simulation
+- Custom roof geometry editor
+- Shading from trees/buildings
 - Temperature derating
-- Soiling/degradation factors
-- Multi-orientation arrays (all panels share one azimuth/tilt)
+- Historical data / graphs
+- Multi-roof-plane arrays
