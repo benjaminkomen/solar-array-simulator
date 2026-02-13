@@ -12,10 +12,10 @@ const COMPASS_SIZE = 80;
 const CENTER = COMPASS_SIZE / 2;
 const RING_RADIUS = 24;
 
-// 8 curved arc segments (positioned between cardinal directions)
-const DASH_COUNT = 8;
-const SEGMENT_ANGLE = 360 / DASH_COUNT; // 45° per segment
-const ARC_SWEEP = 20; // Visible arc span in degrees (with gaps between)
+// 4 curved arc segments at diagonal positions (NE, SE, SW, NW)
+// Letters N, E, S, W are positioned between the arcs on the ring
+const ARC_COUNT = 4;
+const ARC_SWEEP = 40; // Arc span in degrees (leaves wider gaps for letters)
 
 interface CompassProps {
   direction: number;
@@ -123,7 +123,7 @@ export function Compass({
 
   const composedGesture = Gesture.Exclusive(panGesture, tapGesture);
 
-  // Generate 8 curved arc segments for the ring (positioned between cardinal directions)
+  // Generate 4 curved arc segments at diagonal positions (NE, SE, SW, NW)
   // Skia angles: 0° = right (East), 90° = down (South), 180° = left (West), 270° = up (North)
   const oval = Skia.XYWHRect(
     CENTER - RING_RADIUS,
@@ -132,21 +132,20 @@ export function Compass({
     RING_RADIUS * 2
   );
 
-  const arcPaths = [];
-  for (let i = 0; i < DASH_COUNT; i++) {
-    // Start at -90° (North/top) and offset by half segment so arcs are between letters
-    const startAngle = -90 + (i * SEGMENT_ANGLE) + (SEGMENT_ANGLE - ARC_SWEEP) / 2;
-    const path = Skia.Path.Make().addArc(oval, startAngle, ARC_SWEEP);
-    arcPaths.push({ path, key: i });
-  }
+  // Arcs centered at diagonals: -45° (NE), 45° (SE), 135° (SW), 225° (NW)
+  const arcStartAngles = [-45, 45, 135, 225].map(a => a - ARC_SWEEP / 2);
+  const arcPaths = arcStartAngles.map((startAngle, i) => ({
+    path: Skia.Path.Make().addArc(oval, startAngle, ARC_SWEEP),
+    key: i,
+  }));
 
-  // Cardinal label positions (outside ring)
-  const labelRadius = RING_RADIUS + 10;
+  // Cardinal labels positioned ON the ring (between arcs)
+  const labelRadius = RING_RADIUS;
   const labels = [
-    { text: "N", angle: -Math.PI / 2 },
-    { text: "E", angle: 0 },
-    { text: "S", angle: Math.PI / 2 },
-    { text: "W", angle: Math.PI },
+    { text: "N", angle: -Math.PI / 2 },  // Top
+    { text: "E", angle: 0 },              // Right
+    { text: "S", angle: Math.PI / 2 },    // Bottom
+    { text: "W", angle: Math.PI },        // Left
   ];
 
   return (
