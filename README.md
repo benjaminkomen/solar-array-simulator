@@ -59,6 +59,7 @@ Create or confirm your panel layout:
 - If dropped in invalid position, panel reverts to original location
 - Rotate panels, use grid snapping
 - Zoom in/out (3 levels) to view large arrays on smaller screens
+- **Compass indicator** in top-right corner to set array orientation (tap for help)
 
 ### Production Monitor
 
@@ -66,6 +67,7 @@ After completing the wizard, view real-time power production:
 - **Auto-centered viewport** - On load, centers on all panels for optimal visibility
 - **Total array output** displayed prominently at top
 - Same canvas view as editor, but read-only (no editing)
+- **Compass indicator** shows saved array orientation (read-only)
 - Each panel displays current wattage with color coding:
   - Green: High output (>80% efficiency)
   - Yellow: Medium output (40-80%)
@@ -178,9 +180,11 @@ src/
 │   ├── custom.tsx         # Step 3: Canvas editor with toolbar
 │   ├── production.tsx     # Production monitor (real-time wattage)
 │   ├── panel-details.tsx  # Form sheet: View/link panel to inverter
+│   ├── compass-help.tsx   # Form sheet: Compass usage instructions
 │   └── api/
 │       └── analyze+api.ts # Bedrock API route (Claude vision analysis)
 ├── components/
+│   ├── Compass.tsx        # Interactive compass for array orientation
 │   ├── ImagePreview.tsx   # Image preview component
 │   ├── PermissionModal.tsx # Camera permission modal
 │   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text overlay
@@ -242,8 +246,12 @@ terraform/
   - Dynamic sheet height: 30% for view mode, 60% for edit mode
   - Uses native @expo/ui/swift-ui components
   - Tap panels in Production screen to view inverter details
+- [x] Implement compass orientation indicator
+  - Interactive compass in top-right of Custom screen
+  - Drag arrow to set array orientation (snaps to 8 directions)
+  - Tap for help sheet with usage instructions
+  - Read-only compass on Production screen
 - [ ] Deploy API routes to EAS Hosting
-- [ ] Implement compass orientation indicator
 
 ---
 

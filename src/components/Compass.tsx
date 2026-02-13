@@ -14,7 +14,6 @@ const RING_RADIUS = 24;
 
 // 4 curved arc segments at diagonal positions (NE, SE, SW, NW)
 // Letters N, E, S, W are positioned between the arcs on the ring
-const ARC_COUNT = 4;
 const ARC_SWEEP = 40; // Arc span in degrees (leaves wider gaps for letters)
 
 interface CompassProps {
