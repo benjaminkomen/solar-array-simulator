@@ -36,13 +36,13 @@ export function BasePanelShape({ x, y, rotation, inverterId, colors, children }:
   });
 
   const fillColor = useDerivedValue(() =>
-    inverterId?.value === null ? colors.unlinked.fill : colors.linked.fill
+    !inverterId || inverterId.value === null ? colors.unlinked.fill : colors.linked.fill
   );
   const strokeColor = useDerivedValue(() =>
-    inverterId?.value === null ? colors.unlinked.stroke : colors.linked.stroke
+    !inverterId || inverterId.value === null ? colors.unlinked.stroke : colors.linked.stroke
   );
   const gridColor = useDerivedValue(() =>
-    inverterId?.value === null ? colors.unlinked.grid : colors.linked.grid
+    !inverterId || inverterId.value === null ? colors.unlinked.grid : colors.linked.grid
   );
 
   return (
