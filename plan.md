@@ -115,25 +115,51 @@ interface SystemConfig {
   // ... existing fields ...
   latitude: number | null;
   longitude: number | null;
-  panelTiltAngle: number;      // default 30°
-  roofType: RoofType;          // default 'gable'
+  locationName: string | null;  // e.g. "Amsterdam, Netherlands"
+  panelTiltAngle: number;       // default 30°
+  roofType: RoofType;           // default 'gable'
 }
 ```
 
 Store functions:
-- `updateLocation(lat, lon)`
+- `updateLocation(lat, lon, name)` — stores coords + display name
 - `updatePanelTiltAngle(degrees)`
 - `updateRoofType(type)`
 
-**New dependency:** `expo-location` for GPS.
+No `expo-location` dependency — location comes from city search, not GPS.
+
+### Step 4b: City geocoding utility
+
+**New file:** `src/utils/geocoding.ts`
+
+Uses the **OpenStreetMap Nominatim API** (free, no API key, no dependency):
+
+```typescript
+interface GeocodingResult {
+  displayName: string;   // "Amsterdam, North Holland, Netherlands"
+  latitude: number;
+  longitude: number;
+}
+
+async function searchCity(query: string): Promise<GeocodingResult[]>
+```
+
+- Endpoint: `https://nominatim.openstreetmap.org/search?q={query}&format=json&limit=5&addressdetails=1`
+- Debounce requests (Nominatim asks max 1 req/sec)
+- Returns top 5 matches for autocomplete
+- No API key needed, just a `User-Agent` header (required by Nominatim policy)
 
 ### Step 5: Add location & roof config to Config screen
 
 **Modify:** `src/app/config.tsx`
 
 New form sections:
-- **"Location" section**: "Use Current Location" button + manual lat/lon fallback
-- **"Roof Type" section**: Picker/segmented control with flat/gable/hip/shed options (with small illustrations or labels)
+- **"Location" section**:
+  - Text input for city + country (e.g. "Amsterdam, Netherlands")
+  - Autocomplete dropdown showing matches from Nominatim as user types (debounced)
+  - Selecting a result stores lat/lon/name in configStore
+  - Shows saved location name when already configured
+- **"Roof Type" section**: Picker/segmented control with flat/gable/hip/shed options
 - **"Panel Tilt" section**: Slider 0-90°, default 30°
 
 ### Step 6: Create 3D roof + panel components
@@ -180,9 +206,14 @@ Screen composition:
    - Range: sunrise → sunset for the selected date/location
    - Drives `currentTime` state → recalculates sun position → updates light + wattages
    - Shows formatted time label (e.g., "2:30 PM")
-3. **Season/date control**:
-   - Four season buttons (Winter/Spring/Summer/Fall) that set representative dates
-   - Or a date picker for exact date
+3. **Season dropdown**:
+   - Four options: Spring, Summer, Fall, Winter
+   - Maps to representative dates for sun path calculation:
+     - Spring → March 20 (equinox)
+     - Summer → June 21 (solstice, longest day)
+     - Fall → September 22 (equinox)
+     - Winter → December 21 (solstice, shortest day)
+   - Defaults to current season
 4. **Output display**:
    - Total array output label, updates as slider moves
    - Optionally per-panel floating labels in 3D (or just color intensity)
@@ -211,7 +242,8 @@ Document the simulation screen, 3D setup, and new config fields.
 
 | File | Action | What |
 |------|--------|------|
-| `package.json` | Modify | Add react-native-wgpu, three, @react-three/fiber, wgpu-matrix, expo-location |
+| `package.json` | Modify | Add react-native-wgpu, three, @react-three/fiber, wgpu-matrix |
+| `src/utils/geocoding.ts` | **Create** | Nominatim city search + autocomplete |
 | `metro.config.js` | **Create** | Three.js WebGPU resolver + R3F native fix |
 | `src/lib/make-webgpu-renderer.ts` | **Create** | WebGPU renderer factory (from Expo skill) |
 | `src/lib/fiber-canvas.tsx` | **Create** | FiberCanvas R3F wrapper (from Expo skill) |
@@ -304,7 +336,7 @@ Clear-sky irradiance:
 - Time-of-day slider (sunrise → sunset)
 - Season/date selection
 - Per-panel wattage calculation based on sun position
-- GPS location input
+- City autocomplete location input (Nominatim geocoding, no API key)
 - Touch orbit controls for 3D camera
 - Realistic production calculation on Production screen too
 
