@@ -92,14 +92,21 @@ export function getSolarPosition(
     Math.cos(latRad) * Math.cos(declRad) * Math.cos(haRad);
   const elevation = Math.asin(sinElevation) * RAD_TO_DEG;
 
-  // Solar azimuth
-  const cosAzimuth =
-    (Math.sin(declRad) - Math.sin(latRad) * sinElevation) /
-    (Math.cos(latRad) * Math.cos(elevation * DEG_TO_RAD));
+  // Solar azimuth — guard against division by zero at zenith (elevation ≈ 90°)
+  const cosElevation = Math.cos(elevation * DEG_TO_RAD);
+  let azimuth: number;
+  if (Math.abs(cosElevation) < 0.001 || Math.abs(Math.cos(latRad)) < 0.001) {
+    // Sun is at zenith or observer at pole — azimuth is undefined, use 180° (south)
+    azimuth = 180;
+  } else {
+    const cosAzimuth =
+      (Math.sin(declRad) - Math.sin(latRad) * sinElevation) /
+      (Math.cos(latRad) * cosElevation);
 
-  let azimuth = Math.acos(Math.max(-1, Math.min(1, cosAzimuth))) * RAD_TO_DEG;
-  if (hourAngle > 0) {
-    azimuth = 360 - azimuth;
+    azimuth = Math.acos(Math.max(-1, Math.min(1, cosAzimuth))) * RAD_TO_DEG;
+    if (hourAngle > 0) {
+      azimuth = 360 - azimuth;
+    }
   }
 
   return { elevation, azimuth };

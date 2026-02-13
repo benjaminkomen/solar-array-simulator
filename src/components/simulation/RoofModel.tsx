@@ -53,11 +53,17 @@ function FlatRoof({ width, depth, tiltAngle }: Omit<RoofModelProps, "roofType">)
   );
 }
 
+function safeSlopeLength(halfWidth: number, tiltRad: number): number {
+  const cosTilt = Math.cos(tiltRad);
+  if (Math.abs(cosTilt) < 0.001) return halfWidth * 100; // Near-vertical fallback
+  return halfWidth / cosTilt;
+}
+
 function GableRoof({ width, depth, tiltAngle }: Omit<RoofModelProps, "roofType">) {
   const wallHeight = 1.5;
   const tiltRad = (tiltAngle * Math.PI) / 180;
-  const ridgeHeight = (width / 2) * Math.tan(tiltRad);
-  const slopeLength = (width / 2) / Math.cos(tiltRad);
+  const ridgeHeight = (width / 2) * Math.tan(Math.min(tiltAngle, 89) * Math.PI / 180);
+  const slopeLength = safeSlopeLength(width / 2, tiltRad);
 
   const leftGeom = useMemo(() => {
     const geom = new THREE.PlaneGeometry(slopeLength, depth + 0.4);
@@ -99,9 +105,9 @@ function GableRoof({ width, depth, tiltAngle }: Omit<RoofModelProps, "roofType">
 function HipRoof({ width, depth, tiltAngle }: Omit<RoofModelProps, "roofType">) {
   const wallHeight = 1.5;
   const tiltRad = (tiltAngle * Math.PI) / 180;
-  const ridgeHeight = (width / 2) * Math.tan(tiltRad);
+  const ridgeHeight = (width / 2) * Math.tan(Math.min(tiltAngle, 89) * Math.PI / 180);
   const ridgeLength = Math.max(0, depth - width) * 0.6;
-  const slopeLength = (width / 2) / Math.cos(tiltRad);
+  const slopeLength = safeSlopeLength(width / 2, tiltRad);
 
   return (
     <group>
@@ -148,7 +154,7 @@ function ShedRoof({ width, depth, tiltAngle }: Omit<RoofModelProps, "roofType">)
   const wallHeight = 1.5;
   const tiltRad = (tiltAngle * Math.PI) / 180;
   const rise = width * Math.sin(tiltRad);
-  const slopeLength = width / Math.cos(tiltRad);
+  const slopeLength = safeSlopeLength(width, tiltRad);
 
   return (
     <group>

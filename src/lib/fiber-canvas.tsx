@@ -93,7 +93,8 @@ export const FiberCanvas = ({
         unmountComponentAtNode(canvas!);
       }
     };
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return <Canvas ref={canvasRef} style={style} />;
 };
