@@ -24,6 +24,86 @@ const ROW_SPACING = PANEL_HEIGHT + PANEL_GAP;
 const GRID_TOTAL_WIDTH = (COLS - 1) * COL_SPACING + PANEL_WIDTH;
 const GRID_TOTAL_HEIGHT = ROW_SPACING + PANEL_HEIGHT;
 
+/** Minimum gap between panels for overlap resolution */
+const MIN_GAP = 8;
+
+interface PositionWithRotation {
+  x: number;
+  y: number;
+  rotation: 0 | 90;
+}
+
+/**
+ * Resolve overlapping panels by iteratively nudging them apart.
+ * Works with canvas coordinates (after scaling/snapping).
+ */
+function resolveOverlaps(panels: PositionWithRotation[]): PositionWithRotation[] {
+  const resolved = panels.map((p) => ({ ...p }));
+  const maxIterations = 100;
+
+  for (let iteration = 0; iteration < maxIterations; iteration++) {
+    let hasOverlap = false;
+
+    for (let i = 0; i < resolved.length; i++) {
+      for (let j = i + 1; j < resolved.length; j++) {
+        const a = resolved[i];
+        const b = resolved[j];
+
+        // Get dimensions based on rotation
+        const aWidth = a.rotation === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
+        const aHeight = a.rotation === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
+        const bWidth = b.rotation === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
+        const bHeight = b.rotation === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
+
+        // Check if panels overlap (with gap)
+        const overlapX =
+          a.x < b.x + bWidth + MIN_GAP && a.x + aWidth + MIN_GAP > b.x;
+        const overlapY =
+          a.y < b.y + bHeight + MIN_GAP && a.y + aHeight + MIN_GAP > b.y;
+
+        if (overlapX && overlapY) {
+          hasOverlap = true;
+
+          // Calculate overlap amounts
+          const overlapAmountX = Math.min(
+            a.x + aWidth + MIN_GAP - b.x,
+            b.x + bWidth + MIN_GAP - a.x
+          );
+          const overlapAmountY = Math.min(
+            a.y + aHeight + MIN_GAP - b.y,
+            b.y + bHeight + MIN_GAP - a.y
+          );
+
+          // Move apart along the axis with smaller overlap, snap to grid
+          if (overlapAmountX < overlapAmountY) {
+            const shift = Math.ceil(overlapAmountX / 2 / GRID_SIZE) * GRID_SIZE + GRID_SIZE;
+            if (a.x < b.x) {
+              a.x -= shift;
+              b.x += shift;
+            } else {
+              a.x += shift;
+              b.x -= shift;
+            }
+          } else {
+            const shift = Math.ceil(overlapAmountY / 2 / GRID_SIZE) * GRID_SIZE + GRID_SIZE;
+            if (a.y < b.y) {
+              a.y -= shift;
+              b.y += shift;
+            } else {
+              a.y += shift;
+              b.y -= shift;
+            }
+          }
+        }
+      }
+    }
+
+    if (!hasOverlap) break;
+  }
+
+  return resolved;
+}
+
 function buildMockPanelGrid(canvasWidth: number, canvasHeight: number) {
   const offsetX = Math.round((canvasWidth - GRID_TOTAL_WIDTH) / 2);
   const offsetY = Math.round((canvasHeight - GRID_TOTAL_HEIGHT) / 2);
@@ -85,7 +165,7 @@ function mapAnalysisToCanvasPositions(
   const offsetX = Math.round((canvasWidth - scaledWidth) / 2);
   const offsetY = Math.round((canvasHeight - scaledHeight) / 2);
 
-  return panels.map((p) => {
+  const positions = panels.map((p) => {
     // Scale position relative to the layout bounding box
     const rawX = offsetX + (p.x - minX) * scale;
     const rawY = offsetY + (p.y - minY) * scale;
@@ -100,6 +180,9 @@ function mapAnalysisToCanvasPositions(
       rotation: p.rotation,
     };
   });
+
+  // Resolve any overlaps introduced by scaling/snapping
+  return resolveOverlaps(positions);
 }
 
 export default function Custom() {
