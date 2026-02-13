@@ -16,6 +16,9 @@ bun ios      # iOS simulator (opens dev build)
 bun android  # Android emulator (opens dev build)
 bun web      # Web browser
 
+# Unit tests
+bun test
+
 # Lint
 bun run lint
 
@@ -25,6 +28,8 @@ bun run lint
 # Maestro E2E tests
 bun run test:maestro
 ```
+
+**⚠️ IMPORTANT - Before committing:** Always run `bun test` and ensure all unit tests pass before creating a commit. Fix any failing tests before proceeding.
 
 **⚠️ IMPORTANT - Development Build Workflow:**
 
