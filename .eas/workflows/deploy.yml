@@ -1,0 +1,13 @@
+name: Deploy to EAS Hosting
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  deploy:
+    type: deploy
+    name: Deploy
+    environment: production
+    params:
+      prod: true
