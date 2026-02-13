@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useColors } from "@/utils/theme";
 
 export default function RootLayout() {
@@ -8,6 +9,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
       <PanelsProvider>
         <Stack
         screenOptions={{
@@ -75,6 +77,7 @@ export default function RootLayout() {
         />
       </Stack>
       </PanelsProvider>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }

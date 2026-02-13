@@ -3,15 +3,15 @@ import { Canvas, Group } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import {
   useSharedValue,
-  useDerivedValue,
   type SharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { SolarPanel, type PanelColors } from "./SolarPanel";
 import type { PanelData } from "@/hooks/usePanelsManager";
 import type { PanelState } from "@/utils/panelUtils";
-import { hitTestPanels, getPanelDimensions, getPanelRect } from "@/utils/panelUtils";
+import { hitTestPanels, getPanelDimensions, getPanelRect, screenToWorld } from "@/utils/panelUtils";
 import { snapToNeighbors } from "@/utils/neighborSnap";
+import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useColors } from "@/utils/theme";
 
 interface SolarPanelCanvasProps {
@@ -56,46 +56,33 @@ export function SolarPanelCanvas({
   const viewportStartX = useSharedValue(0);
   const viewportStartY = useSharedValue(0);
 
-  // Transform for the entire canvas content (viewport offset + scale centered on canvas)
-  const canvasTransform = useDerivedValue(() => {
-    const cx = canvasWidth.value / 2;
-    const cy = canvasHeight.value / 2;
-    return [
-      { translateX: cx },
-      { translateY: cy },
-      { scale: scale.value },
-      { translateX: -cx + viewportX.value },
-      { translateY: -cy + viewportY.value },
-    ];
-  });
+  const canvasTransform = useCanvasTransform(canvasWidth, canvasHeight, viewportX, viewportY, scale);
+
+  // Helper to build panel states array on the UI thread
+  function buildPanelStates(): PanelState[] {
+    "worklet";
+    const states: PanelState[] = [];
+    for (const p of panels) {
+      states.push({
+        id: p.id,
+        x: p.x.value,
+        y: p.y.value,
+        rotation: p.rotation.value,
+        inverterId: p.inverterId.value,
+      });
+    }
+    return states;
+  }
 
   // Main pan gesture - handles both panel dragging and viewport panning
   const panGesture = Gesture.Pan()
     .onStart((e) => {
       "worklet";
-      // Convert screen coordinates to world coordinates (accounting for scale)
-      const cx = canvasWidth.value / 2;
-      const cy = canvasHeight.value / 2;
-      const worldX = (e.x - cx) / scale.value + cx - viewportX.value;
-      const worldY = (e.y - cy) / scale.value + cy - viewportY.value;
-
-      // Get current panel states for hit testing (in world coordinates)
-      const states: PanelState[] = [];
-      for (const p of panels) {
-        states.push({
-          id: p.id,
-          x: p.x.value,
-          y: p.y.value,
-          rotation: p.rotation.value,
-          inverterId: p.inverterId.value,
-        });
-      }
-
-      // Hit test to find which panel was touched
-      const hitId = hitTestPanels(worldX, worldY, states);
+      const world = screenToWorld(e.x, e.y, canvasWidth.value, canvasHeight.value, viewportX.value, viewportY.value, scale.value);
+      const states = buildPanelStates();
+      const hitId = hitTestPanels(world.x, world.y, states);
 
       if (hitId) {
-        // Dragging a panel
         draggedPanelId.value = hitId;
         isPanningViewport.value = false;
         const panel = panels.find((p) => p.id === hitId);
@@ -106,7 +93,6 @@ export function SolarPanelCanvas({
         scheduleOnRN(onSelectPanel, hitId);
         scheduleOnRN(onBringToFront, hitId);
       } else {
-        // Panning the viewport
         draggedPanelId.value = null;
         isPanningViewport.value = true;
         viewportStartX.value = viewportX.value;
@@ -117,7 +103,6 @@ export function SolarPanelCanvas({
     .onUpdate((e) => {
       "worklet";
       if (isPanningViewport.value) {
-        // Pan the viewport (divide by scale for consistent pan feel)
         viewportX.value = viewportStartX.value + e.translationX / scale.value;
         viewportY.value = viewportStartY.value + e.translationY / scale.value;
         return;
@@ -129,8 +114,6 @@ export function SolarPanelCanvas({
       const panel = panels.find((p) => p.id === panelId);
       if (!panel) return;
 
-      // Calculate new position in world coordinates (divide by scale for consistent drag)
-      // Allow free dragging - collision is only checked on release (snap)
       panel.x.value = panelOffsetX.value + e.translationX / scale.value;
       panel.y.value = panelOffsetY.value + e.translationY / scale.value;
     })
@@ -147,10 +130,8 @@ export function SolarPanelCanvas({
       const panel = panels.find((p) => p.id === panelId);
       if (!panel) return;
 
-      // Get panel dimensions based on rotation
       const dims = getPanelDimensions(panel.rotation.value);
 
-      // Get other panel rects for neighbor snapping
       const otherRects: { id: string; x: number; y: number; width: number; height: number }[] = [];
       for (const p of panels) {
         if (p.id === panelId) continue;
@@ -164,7 +145,6 @@ export function SolarPanelCanvas({
         otherRects.push({ ...rect, id: p.id });
       }
 
-      // Snap to neighbors (with grid fallback, revert to original if all fail)
       const snapped = snapToNeighbors(
         panel.x.value,
         panel.y.value,
@@ -176,11 +156,9 @@ export function SolarPanelCanvas({
         panelOffsetY.value
       );
 
-      // Apply snapped position
       panel.x.value = snapped.x;
       panel.y.value = snapped.y;
 
-      // Save final position to persistent storage
       scheduleOnRN(onSavePanelPosition, panelId, panel.x.value, panel.y.value);
 
       draggedPanelId.value = null;
@@ -190,32 +168,15 @@ export function SolarPanelCanvas({
   const tapGesture = Gesture.Tap()
     .onStart((e) => {
       "worklet";
-      // Convert screen coordinates to world coordinates (accounting for scale)
-      const cx = canvasWidth.value / 2;
-      const cy = canvasHeight.value / 2;
-      const worldX = (e.x - cx) / scale.value + cx - viewportX.value;
-      const worldY = (e.y - cy) / scale.value + cy - viewportY.value;
-
-      // Get current panel states for hit testing
-      const states: PanelState[] = [];
-      for (const p of panels) {
-        states.push({
-          id: p.id,
-          x: p.x.value,
-          y: p.y.value,
-          rotation: p.rotation.value,
-          inverterId: p.inverterId.value,
-        });
-      }
-
-      const hitId = hitTestPanels(worldX, worldY, states);
+      const world = screenToWorld(e.x, e.y, canvasWidth.value, canvasHeight.value, viewportX.value, viewportY.value, scale.value);
+      const states = buildPanelStates();
+      const hitId = hitTestPanels(world.x, world.y, states);
       scheduleOnRN(onSelectPanel, hitId);
       if (hitId) {
         scheduleOnRN(onBringToFront, hitId);
       }
     });
 
-  // Combine gestures - pan takes priority
   const composedGesture = Gesture.Exclusive(panGesture, tapGesture);
 
   return (

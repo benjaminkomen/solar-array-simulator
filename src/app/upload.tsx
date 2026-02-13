@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Text, ScrollView, Pressable, View, useColorScheme } from "react-native";
+import { Alert, Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -41,8 +41,6 @@ export default function Upload() {
   };
 
   // Call the analysis API when an image is picked.
-  // This is a legitimate effect: synchronizing with an external system (API)
-  // that should be called when the image state changes.
   useEffect(() => {
     if (!isProcessing) return;
 
@@ -53,10 +51,8 @@ export default function Upload() {
       try {
         setError(null);
 
-        // Resize and compress the image for upload
         const resized = await resizeForAnalysis(image!.uri);
 
-        // Call the API route
         const response = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -76,7 +72,6 @@ export default function Upload() {
 
         const result = await response.json();
 
-        // Store the result for the canvas screen to consume
         setAnalysisResult({
           panels: result.panels,
           imageWidth: resized.width,
@@ -113,31 +108,23 @@ export default function Upload() {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={{ backgroundColor: colors.background.primary }}
-        contentContainerStyle={{
-          alignItems: "center",
-          gap: 24,
-          paddingHorizontal: 24,
-          paddingVertical: 32,
-        }}
+        contentContainerStyle={styles.scrollContent}
       >
         <Animated.View
           entering={FadeIn.duration(300)}
-          style={{
-            width: 200,
-            height: 200,
-            borderRadius: 32,
-            overflow: "hidden",
-            backgroundColor: colors.background.secondary,
-            justifyContent: "center",
-            alignItems: "center",
-            boxShadow: isDark
-              ? "0 8px 24px rgba(255, 255, 255, 0.2)"
-              : "0 8px 24px rgba(0, 0, 0, 0.12)",
-          }}
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: colors.background.secondary,
+              boxShadow: isDark
+                ? "0 8px 24px rgba(255, 255, 255, 0.2)"
+                : "0 8px 24px rgba(0, 0, 0, 0.12)",
+            },
+          ]}
         >
           <Image
             source="sf:photo.on.rectangle"
-            style={{ width: 80, height: 80 }}
+            style={styles.icon}
             contentFit="contain"
             tintColor={colors.primary}
           />
@@ -145,30 +132,19 @@ export default function Upload() {
 
         <Animated.Text
           entering={FadeIn.duration(300).delay(100)}
-          style={{
-            fontSize: 28,
-            fontWeight: "700",
-            color: colors.text.primary,
-            textAlign: "center",
-          }}
+          style={[styles.title, { color: colors.text.primary }]}
         >
           Take or Select Photo
         </Animated.Text>
 
         <Animated.Text
           entering={FadeIn.duration(300).delay(150)}
-          style={{
-            fontSize: 15,
-            color: colors.text.secondary,
-            textAlign: "center",
-            lineHeight: 22,
-            paddingHorizontal: 16,
-          }}
+          style={[styles.subtitle, { color: colors.text.secondary }]}
         >
           Photograph your solar panel array with visible serial numbers
         </Animated.Text>
 
-        <View style={{ gap: 12, width: "100%", marginTop: 16 }}>
+        <View style={styles.buttonsContainer}>
           <Animated.View entering={FadeIn.duration(300).delay(200)}>
             <Pressable
               testID="take-photo-button"
@@ -176,31 +152,15 @@ export default function Upload() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 pickFromCamera();
               }}
-              style={{
-                backgroundColor: colors.primary,
-                paddingHorizontal: 24,
-                paddingVertical: 16,
-                borderRadius: 14,
-                borderCurve: "continuous",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-              }}
+              style={[styles.button, { backgroundColor: colors.primary }]}
             >
               <Image
                 source="sf:camera"
-                style={{ width: 22, height: 22 }}
+                style={styles.buttonIcon}
                 contentFit="contain"
                 tintColor={colors.text.inverse}
               />
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: "600",
-                  color: colors.text.inverse,
-                }}
-              >
+              <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
                 Take Photo
               </Text>
             </Pressable>
@@ -213,33 +173,22 @@ export default function Upload() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 pickFromGallery();
               }}
-              style={{
-                backgroundColor: colors.background.primary,
-                paddingHorizontal: 24,
-                paddingVertical: 16,
-                borderRadius: 14,
-                borderCurve: "continuous",
-                borderWidth: 2,
-                borderColor: colors.border.light,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-              }}
+              style={[
+                styles.button,
+                styles.buttonOutline,
+                {
+                  backgroundColor: colors.background.primary,
+                  borderColor: colors.border.light,
+                },
+              ]}
             >
               <Image
                 source="sf:photo.on.rectangle"
-                style={{ width: 22, height: 22 }}
+                style={styles.buttonIcon}
                 contentFit="contain"
                 tintColor={colors.primary}
               />
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: "600",
-                  color: colors.primary,
-                }}
-              >
+              <Text style={[styles.buttonText, { color: colors.primary }]}>
                 Choose from Gallery
               </Text>
             </Pressable>
@@ -272,3 +221,61 @@ export default function Upload() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    alignItems: "center",
+    gap: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
+  iconContainer: {
+    width: 200,
+    height: 200,
+    borderRadius: 32,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  icon: {
+    width: 80,
+    height: 80,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 16,
+  },
+  buttonsContainer: {
+    gap: 12,
+    width: "100%",
+    marginTop: 16,
+  },
+  button: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 14,
+    borderCurve: "continuous",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  buttonOutline: {
+    borderWidth: 2,
+  },
+  buttonIcon: {
+    width: 22,
+    height: 22,
+  },
+  buttonText: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+});
