@@ -1,5 +1,5 @@
 import {useState, useCallback} from 'react';
-import {StyleSheet, View, Keyboard, TouchableWithoutFeedback} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import {Stack, useLocalSearchParams, useRouter} from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {useConfigStore} from '@/hooks/useConfigStore';
@@ -15,6 +15,7 @@ import {
 import {
   bold,
   scrollDismissesKeyboard,
+  submitLabel,
 } from '@expo/ui/swift-ui/modifiers';
 
 function generateSerialNumber(): string {
@@ -90,10 +91,9 @@ export default function InverterDetailsScreen() {
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button icon="checkmark" onPress={handleSave} />
       </Stack.Toolbar>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.container}>
-          <Host style={styles.host}>
-            <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
+      <View style={styles.container}>
+        <Host style={styles.host}>
+            <Form modifiers={[scrollDismissesKeyboard('immediately')]}>
               {/* Serial Number Section */}
               <Section header={<Text>Details</Text>}>
                 <LabeledContent label="Serial Number">
@@ -101,7 +101,8 @@ export default function InverterDetailsScreen() {
                     defaultValue={serial}
                     onChangeText={setSerial}
                     placeholder="Enter serial number"
-                    keyboardType="numeric"
+                    keyboardType="numbers-and-punctuation"
+                    modifiers={[submitLabel('done')]}
                   />
                 </LabeledContent>
               </Section>
@@ -130,7 +131,6 @@ export default function InverterDetailsScreen() {
             </Form>
           </Host>
         </View>
-      </TouchableWithoutFeedback>
     </>
   );
 }

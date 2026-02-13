@@ -1,4 +1,4 @@
-import {Keyboard, StyleSheet, TouchableWithoutFeedback, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import {
   Button,
   Form,
@@ -19,6 +19,7 @@ import {
   foregroundStyle,
   opacity,
   scrollDismissesKeyboard,
+  submitLabel,
 } from '@expo/ui/swift-ui/modifiers';
 import {useConfigStore} from '@/hooks/useConfigStore';
 import type {InverterConfig} from '@/utils/configStore';
@@ -64,10 +65,9 @@ export default function ConfigScreen() {
     <>
       <Stack.Screen.BackButton displayMode="minimal"/>
       {isWizardMode && <WizardProgress currentStep={1}/>}
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.container}>
-          <Host style={styles.form}>
-            <Form modifiers={[scrollDismissesKeyboard('interactively')]}>
+      <View style={styles.container}>
+        <Host style={styles.form}>
+            <Form modifiers={[scrollDismissesKeyboard('immediately')]}>
               {/* Panel Settings Section */}
               <Section
                 header={<Text>Panel Settings</Text>}
@@ -78,13 +78,14 @@ export default function ConfigScreen() {
                   </Text>
                 }
               >
-                <LabeledContent label="Default Wattage">
+                <LabeledContent label="Default Production">
                   <HStack>
                     <TextField
-                      keyboardType="numeric"
+                      keyboardType="numbers-and-punctuation"
                       defaultValue={config.defaultMaxWattage.toString()}
                       onChangeText={handleWattageChange}
                       placeholder="430"
+                      modifiers={[submitLabel('done')]}
                     />
                     <Spacer/>
                     <Text testID='text-input-unit'>W</Text>
@@ -129,7 +130,6 @@ export default function ConfigScreen() {
             </Form>
           </Host>
         </View>
-      </TouchableWithoutFeedback>
       <Stack.Toolbar placement="bottom">
         {isWizardMode && (
           <Stack.Toolbar.Button onPress={handleContinue}>
