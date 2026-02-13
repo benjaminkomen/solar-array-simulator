@@ -1,40 +1,21 @@
-import { useCallback, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
-import {
-  Canvas,
-  Group,
-  Line,
-  Path,
-  Text as SkiaText,
-  matchFont,
-  Skia,
-} from "@shopify/react-native-skia";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import {
-  useSharedValue,
-  useDerivedValue,
-  withTiming,
-} from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import {useCallback, useEffect} from "react";
+import {StyleSheet, View} from "react-native";
+import {Canvas, Group, matchFont, Path, Skia, Text as SkiaText,} from "@shopify/react-native-skia";
+import {Gesture, GestureDetector} from "react-native-gesture-handler";
+import {useDerivedValue, useSharedValue, withTiming,} from "react-native-reanimated";
+import {scheduleOnRN} from "react-native-worklets";
 import * as Haptics from "expo-haptics";
-import { useColors } from "@/utils/theme";
+import {useColors} from "@/utils/theme";
 
 // Larger size to fit labels
 const COMPASS_SIZE = 80;
 const CENTER = COMPASS_SIZE / 2;
 const RING_RADIUS = 24;
 
-// Arrow dimensions
-// Outer triangle (pointing up)
-const OUTER_TOP = -16;       // Top point (apex) relative to center
-const OUTER_BASE = 12;       // Base Y relative to center
-const BOTTOM_NOTCH = 6;     // Indent for bottom point of arrow to create notch
-const OUTER_HALF_WIDTH = 12;  // Half of base width
-
-// 8 dash segments (2 between each cardinal direction)
+// 8 curved arc segments (positioned between cardinal directions)
 const DASH_COUNT = 8;
-const DASH_ANGLE = (2 * Math.PI) / DASH_COUNT;
-const DASH_LENGTH = 0.5; // Portion of each segment that is filled
+const SEGMENT_ANGLE = 360 / DASH_COUNT; // 45° per segment
+const ARC_SWEEP = 20; // Visible arc span in degrees (with gaps between)
 
 interface CompassProps {
   direction: number;
@@ -65,25 +46,25 @@ export function Compass({
 
   const font = matchFont({
     fontFamily: "System",
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "800",
   });
 
-  // Create arrow path: outer triangle with inner diamond cutout (even-odd fill)
+  // Create arrow path: outer triangle with bottom notch and with inner triangle cutout (even-odd fill)
   const arrowPath = useDerivedValue(() => {
     const path = Skia.Path.Make();
 
     // Outer triangle (arrow shape)
-    path.moveTo(CENTER, CENTER + OUTER_TOP);                     // Top point of arrow
-    path.lineTo(CENTER - OUTER_HALF_WIDTH, CENTER + OUTER_BASE); // Bottom left of arrow
-    path.lineTo(CENTER, CENTER + OUTER_BASE - BOTTOM_NOTCH);     // Bottom center of arrow notch
-    path.lineTo(CENTER + OUTER_HALF_WIDTH, CENTER + OUTER_BASE); // Bottom right of arrow
+    path.moveTo(CENTER, CENTER + -16);                           // Top point of arrow
+    path.lineTo(CENTER - 12, CENTER + 12); // Bottom left of arrow
+    path.lineTo(CENTER, CENTER + 12 - 6);                // Bottom center of arrow notch
+    path.lineTo(CENTER + 12, CENTER + 12); // Bottom right of arrow
     path.close();
 
     // Inner cutout triangle
     path.moveTo(CENTER, CENTER - 9);                            // Top point of triangle
     path.lineTo(CENTER - 6, CENTER + 6);                        // Bottom left of triangle
-    path.lineTo(CENTER, CENTER + 3);                             // Bottom right of triangle
+    path.lineTo(CENTER, CENTER + 3);                            // Bottom right of triangle
     path.close();
 
     // Even-odd fill rule makes the inner region transparent
@@ -142,17 +123,21 @@ export function Compass({
 
   const composedGesture = Gesture.Exclusive(panGesture, tapGesture);
 
-  // Generate 8 dash segments for the ring (offset to be between cardinal directions)
-  const dashSegments = [];
+  // Generate 8 curved arc segments for the ring (positioned between cardinal directions)
+  // Skia angles: 0° = right (East), 90° = down (South), 180° = left (West), 270° = up (North)
+  const oval = Skia.XYWHRect(
+    CENTER - RING_RADIUS,
+    CENTER - RING_RADIUS,
+    RING_RADIUS * 2,
+    RING_RADIUS * 2
+  );
+
+  const arcPaths = [];
   for (let i = 0; i < DASH_COUNT; i++) {
-    // Offset by half a segment so dashes are between letters
-    const startAngle = i * DASH_ANGLE - Math.PI / 2 + DASH_ANGLE / 2;
-    const endAngle = startAngle + DASH_ANGLE * DASH_LENGTH;
-    const x1 = CENTER + RING_RADIUS * Math.cos(startAngle);
-    const y1 = CENTER + RING_RADIUS * Math.sin(startAngle);
-    const x2 = CENTER + RING_RADIUS * Math.cos(endAngle);
-    const y2 = CENTER + RING_RADIUS * Math.sin(endAngle);
-    dashSegments.push({ x1, y1, x2, y2, key: i });
+    // Start at -90° (North/top) and offset by half segment so arcs are between letters
+    const startAngle = -90 + (i * SEGMENT_ANGLE) + (SEGMENT_ANGLE - ARC_SWEEP) / 2;
+    const path = Skia.Path.Make().addArc(oval, startAngle, ARC_SWEEP);
+    arcPaths.push({ path, key: i });
   }
 
   // Cardinal label positions (outside ring)
@@ -168,12 +153,11 @@ export function Compass({
     <GestureDetector gesture={composedGesture}>
       <View style={styles.container}>
         <Canvas style={styles.canvas}>
-          {/* Dashed ring */}
-          {dashSegments.map((seg) => (
-            <Line
-              key={seg.key}
-              p1={{ x: seg.x1, y: seg.y1 }}
-              p2={{ x: seg.x2, y: seg.y2 }}
+          {/* Curved dashed ring */}
+          {arcPaths.map((arc) => (
+            <Path
+              key={arc.key}
+              path={arc.path}
               color={colors.border.medium}
               strokeWidth={2}
               style="stroke"
