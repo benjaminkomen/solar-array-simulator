@@ -26,7 +26,7 @@ interface CompassProps {
 // Snap to nearest 45 degree increment
 function snapToDirection(degrees: number): number {
   "worklet";
-  return Math.round(degrees / 45) * 45 % 360;
+  return (Math.round(degrees / 45) * 45) % 360;
 }
 
 export function Compass({
@@ -115,10 +115,12 @@ export function Compass({
     });
 
   // Tap gesture for opening help sheet
-  const tapGesture = Gesture.Tap().onEnd(() => {
-    scheduleOnRN(triggerHaptic);
-    scheduleOnRN(handleTap);
-  });
+  const tapGesture = Gesture.Tap()
+    .enabled(!readOnly)
+    .onEnd(() => {
+      scheduleOnRN(triggerHaptic);
+      scheduleOnRN(handleTap);
+    });
 
   const composedGesture = Gesture.Exclusive(panGesture, tapGesture);
 
