@@ -73,6 +73,13 @@ export default function RootLayout() {
             headerTransparent: true,
           }}
         />
+        <Stack.Screen
+          name="simulation"
+          options={{
+            title: "Simulation",
+            headerBackTitle: "",
+          }}
+        />
       </Stack>
       </PanelsProvider>
     </GestureHandlerRootView>

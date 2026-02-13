@@ -10,8 +10,12 @@ import {
   getWizardCompleted,
   setWizardCompleted,
   updateCompassDirection as updateDirection,
+  updateLocation as updateLoc,
+  updatePanelTiltAngle as updateTilt,
+  updateRoofType as updateRoof,
   subscribe,
-  SystemConfig,
+  type SystemConfig,
+  type RoofType,
 } from '@/utils/configStore';
 
 export function useConfigStore() {
@@ -40,5 +44,8 @@ export function useConfigStore() {
     getWizardCompleted: () => getWizardCompleted(),
     setWizardCompleted: (completed: boolean) => setWizardCompleted(completed),
     updateCompassDirection: (degrees: number) => updateDirection(degrees),
+    updateLocation: (lat: number, lon: number, name: string) => updateLoc(lat, lon, name),
+    updatePanelTiltAngle: (degrees: number) => updateTilt(degrees),
+    updateRoofType: (type: RoofType) => updateRoof(type),
   };
 }

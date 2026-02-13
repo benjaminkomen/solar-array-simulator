@@ -48,8 +48,9 @@ This is an Expo Router v55 preview app for creating solar panel array layouts. U
 - **@shopify/react-native-skia** - High-performance 2D canvas for solar panel layout
 - **@ai-sdk/amazon-bedrock** - Claude on AWS Bedrock for image analysis (no AWS SDK dependency)
 - **expo-image-manipulator** - Client-side image resize before upload
-- **@expo/ui/swift-ui** - Native SwiftUI components (Form, Section, List, Slider)
+- **@expo/ui/swift-ui** - Native SwiftUI components (Form, Section, List, Slider, Picker)
 - **expo-sqlite/kv-store** - Synchronous key-value storage for configuration
+- **react-native-wgpu** + **three** (WebGPU) + **@react-three/fiber** - 3D simulation rendering
 
 ## Wizard Flow
 
@@ -465,6 +466,70 @@ The `Compass.tsx` component displays array orientation on Custom and Production 
 **State:**
 - Direction stored in `configStore.compassDirection` (0-360°)
 - Persisted via `expo-sqlite/kv-store`
+
+## 3D Simulation Screen
+
+The simulation screen (`src/app/simulation.tsx`) provides a 3D visualization of solar panels on a roof with a movable sun.
+
+### 3D Stack
+
+- **react-native-wgpu** — WebGPU canvas for React Native
+- **three** (WebGPU build via `three/webgpu`) — 3D rendering
+- **@react-three/fiber** — React bindings for Three.js
+- **metro.config.js** — Routes `three` imports to `three/webgpu`, fixes R3F resolution for native
+
+### Lib Files (`src/lib/`)
+
+| File | Purpose |
+|------|---------|
+| `make-webgpu-renderer.ts` | ReactNativeCanvas wrapper + WebGPU renderer factory |
+| `fiber-canvas.tsx` | FiberCanvas component — initializes WebGPU, extends THREE namespace, configures R3F |
+| `orbit-controls.tsx` | Touch-based orbit camera controls (single-finger rotate, pinch zoom) |
+
+### Simulation Components (`src/components/simulation/`)
+
+| Component | Purpose |
+|-----------|---------|
+| `SimulationView.tsx` | Lazy-loaded wrapper: FiberCanvas + OrbitControls |
+| `SimulationScene.tsx` | Main 3D scene: roof + panels + sun + ground |
+| `RoofModel.tsx` | 3D roof geometry for 4 roof types (flat, gable, hip, shed) |
+| `PanelMesh.tsx` | Single panel mesh with wattage-based color coding |
+| `SunLight.tsx` | Directional light + visual sun sphere driven by solar position |
+
+### Solar Calculations (`src/utils/solarCalculations.ts`)
+
+Pure math functions for realistic solar output:
+
+- `getSolarPosition(lat, lon, date)` → `{ elevation, azimuth }`
+- `getSunriseAndSunset(lat, lon, date)` → `{ sunriseHour, sunsetHour }`
+- `getSun3DPosition(elevation, azimuth, distance)` → `{ x, y, z }`
+- `calculateIrradiance(sunElevation)` → W/m² (clear-sky Kasten model)
+- `getEffectiveOutput(params)` → watts per panel
+
+**Formula:** `P = P_max × η × (G / 1000) × max(0, cos θ_i) × noise`
+
+### Geocoding (`src/utils/geocoding.ts`)
+
+City search via OpenStreetMap Nominatim API (free, no API key):
+- `searchCity(query)` → autocomplete results with lat/lon
+- Debounced to respect Nominatim 1 req/sec rate limit
+
+### Config Fields Added
+
+| Field | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `latitude` | `number \| null` | `null` | User's location latitude |
+| `longitude` | `number \| null` | `null` | User's location longitude |
+| `locationName` | `string \| null` | `null` | Display name (e.g. "Amsterdam, Netherlands") |
+| `panelTiltAngle` | `number` | `30` | Panel tilt from horizontal (0-90°) |
+| `roofType` | `RoofType` | `'gable'` | Roof shape for 3D simulation |
+
+### Navigation
+
+- **Production screen** → sun icon in header toolbar → Simulation screen
+- Season dropdown (Spring/Summer/Fall/Winter) sets representative dates
+- Time slider (sunrise → sunset) controls sun position
+- Touch orbit controls for camera rotation and zoom
 
 ## Planned Integrations
 

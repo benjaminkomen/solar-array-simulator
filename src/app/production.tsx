@@ -15,6 +15,7 @@ import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { useColors } from "@/utils/theme";
 import { resetAllData } from "@/utils/configStore";
 import { clearPanels } from "@/utils/panelStore";
+import { getEffectiveOutput } from "@/utils/solarCalculations";
 
 interface WattageMap {
   [panelId: string]: number;
@@ -82,7 +83,7 @@ export default function ProductionScreen() {
     [canvasWidth, canvasHeight, panels, viewportX, viewportY]
   );
 
-  // Calculate wattage for a single panel
+  // Calculate wattage for a single panel using solar position model
   const calculateWattage = useCallback(
     (panelId: string): number => {
       const panel = panels.find((p) => p.id === panelId);
@@ -95,11 +96,16 @@ export default function ProductionScreen() {
         return 0;
       }
 
-      const efficiency = inverter.efficiency / 100;
-      const baseWattage = config.defaultMaxWattage * efficiency;
-      // Add ±5% fluctuation
-      const fluctuation = 0.95 + Math.random() * 0.1;
-      return Math.round(baseWattage * fluctuation);
+      const output = getEffectiveOutput({
+        maxWattage: config.defaultMaxWattage,
+        inverterEfficiency: inverter.efficiency,
+        latitude: config.latitude,
+        longitude: config.longitude,
+        panelTilt: config.panelTiltAngle,
+        panelAzimuth: config.compassDirection,
+        date: new Date(),
+      });
+      return Math.round(output);
     },
     [panels, config]
   );
@@ -177,9 +183,15 @@ export default function ProductionScreen() {
     router.replace("/");
   }, [router]);
 
+  const handleSimulate = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/simulation");
+  }, [router]);
+
   return (
     <>
       <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button icon="sun.max" onPress={handleSimulate} />
         <Stack.Toolbar.Menu icon="ellipsis.circle">
           <Stack.Toolbar.MenuAction icon="pencil" onPress={handleEditConfiguration}>
             Edit Configuration
