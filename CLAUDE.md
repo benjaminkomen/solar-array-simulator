@@ -128,10 +128,12 @@ src/
 │   ├── production.tsx      # Production monitor (real-time wattage, menu)
 │   ├── panel-details.tsx   # Form sheet: View/link panel to inverter
 │   ├── inverter-details.tsx # Form sheet: Add/edit micro-inverters
+│   ├── compass-help.tsx    # Form sheet: Compass usage instructions
 │   └── api/
 │       └── analyze+api.ts  # Bedrock API route (Claude vision)
 ├── components/
 │   ├── Button.tsx          # Reusable button component
+│   ├── Compass.tsx         # Interactive compass for array orientation
 │   ├── ImagePreview.tsx    # Image preview
 │   ├── PermissionModal.tsx # Camera permission UI
 │   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text
@@ -350,6 +352,7 @@ interface SystemConfig {
   defaultMaxWattage: number;
   inverters: InverterConfig[];
   wizardCompleted: boolean;  // Tracks if user has completed wizard
+  compassDirection: number;  // Array orientation in degrees (0-360, 0 = North)
 }
 ```
 
@@ -362,6 +365,7 @@ interface SystemConfig {
 - `removeInverter(id)` - Delete inverter
 - `getWizardCompleted()` - Check if wizard was completed
 - `setWizardCompleted(completed)` - Mark wizard as complete
+- `updateCompassDirection(degrees)` - Update array orientation (0-360°)
 - `resetAllData()` - Reset all config to defaults (used by Delete Configuration)
 - `subscribe(listener)` - Subscribe to config changes
 
@@ -436,7 +440,32 @@ The `inverter-details.tsx` screen is a form sheet for adding and editing micro-i
 - Form fields: Serial number (numeric), efficiency slider (0-100%)
 - Accessed from **Config screen**: Tap "+" to add, tap existing inverter to edit
 
+## Compass Component
+
+The `Compass.tsx` component displays array orientation on Custom and Production screens:
+
+**Location:** Top-right corner of canvas (absolute positioned)
+
+**Visual Design:**
+- 80×80px Skia canvas
+- 4 curved arc segments at diagonal positions (NE, SE, SW, NW)
+- N, E, S, W labels positioned between arcs on the ring
+- Arrow with triangle cutout pointing to current direction
+
+**Interaction (Custom screen):**
+- Drag arrow to rotate (follows touch position)
+- Snaps to 8 directions on release (N, NE, E, SE, S, SW, W, NW)
+- Haptic feedback on snap
+- Tap opens compass-help form sheet
+
+**Read-only mode (Production screen):**
+- Displays saved direction statically
+- No gesture interaction
+
+**State:**
+- Direction stored in `configStore.compassDirection` (0-360°)
+- Persisted via `expo-sqlite/kv-store`
+
 ## Planned Integrations
 
 - **EAS Hosting** - Server-side API route deployment
-- **Compass indicator** - Array orientation display

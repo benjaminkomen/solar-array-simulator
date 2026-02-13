@@ -9,6 +9,7 @@ import { usePanelsContext } from "@/contexts/PanelsContext";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { ProductionCanvas } from "@/components/ProductionCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
+import { Compass } from "@/components/Compass";
 import { ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from "@/utils/zoomConstants";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { useColors } from "@/utils/theme";
@@ -230,6 +231,9 @@ export default function ProductionScreen() {
           </Text>
         </View>
         <View style={styles.canvasContainer} onLayout={handleLayout}>
+          <View style={styles.compassContainer}>
+            <Compass direction={config.compassDirection} readOnly />
+          </View>
           <ProductionCanvas
             panels={panels}
             wattages={new Map(Object.entries(wattages))}
@@ -258,5 +262,11 @@ const styles = StyleSheet.create({
   },
   canvasContainer: {
     flex: 1,
+  },
+  compassContainer: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 10,
   },
 });
