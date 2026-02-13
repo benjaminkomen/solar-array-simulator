@@ -450,7 +450,7 @@ The `Compass.tsx` component displays array orientation on Custom and Production 
 - 80×80px Skia canvas
 - 4 curved arc segments at diagonal positions (NE, SE, SW, NW)
 - N, E, S, W labels positioned between arcs on the ring
-- Arrow with diamond cutout pointing to current direction
+- Arrow with triangle cutout pointing to current direction
 
 **Interaction (Custom screen):**
 - Drag arrow to rotate (follows touch position)
