@@ -115,6 +115,7 @@ export default function Custom() {
   const canvasHeight = useSharedValue(0);
   const hasInitialized = useRef(false);
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
+  const [compassVisible, setCompassVisible] = useState(false);
   const { config, setWizardCompleted, updateCompassDirection } = useConfigStore();
 
   const {
@@ -245,27 +246,41 @@ export default function Custom() {
     router.push('/compass-help');
   }, [router]);
 
+  const handleCompassToggle = useCallback(() => {
+    if (compassVisible) {
+      // Hide compass
+      setCompassVisible(false);
+    } else {
+      // Show compass and open help sheet
+      setCompassVisible(true);
+      router.push('/compass-help');
+    }
+  }, [compassVisible, router]);
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
       <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button icon="location.north.circle" onPress={handleCompassToggle} />
         <Stack.Toolbar.Button onPress={() => {}}>
           <Stack.Toolbar.Icon sf="link" />
           {unlinkedCount > 0 && (
             <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
           )}
         </Stack.Toolbar.Button>
-        <Stack.Toolbar.Button icon="location" onPress={handleSnapToOrigin} />
+        <Stack.Toolbar.Button icon="scope" onPress={handleSnapToOrigin} />
       </Stack.Toolbar>
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
-        <View style={styles.compassContainer}>
-          <Compass
-            direction={config.compassDirection}
-            onDirectionChange={updateCompassDirection}
-            onTap={handleCompassTap}
-          />
-        </View>
+        {compassVisible && (
+          <View style={styles.compassContainer}>
+            <Compass
+              direction={config.compassDirection}
+              onDirectionChange={updateCompassDirection}
+              onTap={handleCompassTap}
+            />
+          </View>
+        )}
         <SolarPanelCanvas
           panels={panels}
           selectedId={selectedId}
@@ -315,7 +330,7 @@ const styles = StyleSheet.create({
   compassContainer: {
     position: "absolute",
     top: 16,
-    right: 16,
+    right: 48,
     zIndex: 10,
   },
 });
