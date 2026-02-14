@@ -153,21 +153,6 @@ export function updateInverterSerialNumber(inverterId: string, serialNumber: str
 }
 
 /**
- * Add new inverter with default efficiency
- */
-export function addInverter(): void {
-  const newConfig = getConfig();
-  // Generate unique ID based on timestamp + random
-  const newId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  newConfig.inverters.push({
-    id: newId,
-    serialNumber: generateSerialNumber(),
-    efficiency: 95, // Default to optimal
-  });
-  updateConfig(newConfig);
-}
-
-/**
  * Add new inverter with custom serial number and efficiency
  */
 export function addInverterWithDetails(serialNumber: string, efficiency: number): void {

@@ -13,14 +13,14 @@ import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { GRID_SIZE } from "@/utils/gridSnap";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { WizardProgress } from "@/components/WizardProgress";
-import { ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from "@/utils/zoomConstants";
+import { useZoom } from "@/hooks/useZoom";
 import { useColors } from "@/utils/theme";
 
 // Fallback: 2 rows x 5 columns mock grid
 const COLS = 5;
-const PANEL_GAP = 6;
-const COL_SPACING = PANEL_WIDTH + PANEL_GAP;
-const ROW_SPACING = PANEL_HEIGHT + PANEL_GAP;
+const MOCK_GAP = 6;
+const COL_SPACING = PANEL_WIDTH + MOCK_GAP;
+const ROW_SPACING = PANEL_HEIGHT + MOCK_GAP;
 const GRID_TOTAL_WIDTH = (COLS - 1) * COL_SPACING + PANEL_WIDTH;
 const GRID_TOTAL_HEIGHT = ROW_SPACING + PANEL_HEIGHT;
 
@@ -135,7 +135,6 @@ function mapAnalysisToCanvasPositions(
 ) {
   if (panels.length === 0) return [];
 
-  // Find the bounding box of all panels in image space
   const minX = Math.min(...panels.map((p) => p.x));
   const minY = Math.min(...panels.map((p) => p.y));
   const maxX = Math.max(
@@ -148,8 +147,6 @@ function mapAnalysisToCanvasPositions(
   const layoutWidth = maxX - minX;
   const layoutHeight = maxY - minY;
 
-  // Scale factor: map image-space layout to canvas units
-  // Use the average panel size in image space to determine scale
   const avgPanelWidth =
     panels.reduce(
       (sum, p) => sum + (p.rotation === 90 ? p.height : p.width),
@@ -157,11 +154,9 @@ function mapAnalysisToCanvasPositions(
     ) / panels.length;
   const scale = PANEL_WIDTH / avgPanelWidth;
 
-  // Scale the total layout size
   const scaledWidth = layoutWidth * scale;
   const scaledHeight = layoutHeight * scale;
 
-  // Center in canvas
   const offsetX = Math.round((canvasWidth - scaledWidth) / 2);
   const offsetY = Math.round((canvasHeight - scaledHeight) / 2);
 
@@ -170,7 +165,6 @@ function mapAnalysisToCanvasPositions(
     const rawX = offsetX + (p.x - minX) * scale;
     const rawY = offsetY + (p.y - minY) * scale;
 
-    // Snap to grid
     const x = Math.round(rawX / GRID_SIZE) * GRID_SIZE;
     const y = Math.round(rawY / GRID_SIZE) * GRID_SIZE;
 
@@ -193,13 +187,12 @@ export default function Custom() {
   const colors = useColors();
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
-  const scale = useSharedValue(ZOOM_LEVELS[DEFAULT_ZOOM_INDEX]);
   const canvasWidth = useSharedValue(0);
   const canvasHeight = useSharedValue(0);
   const hasInitialized = useRef(false);
-  const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const [compassVisible, setCompassVisible] = useState(false);
   const { config, setWizardCompleted, updateCompassDirection } = useConfigStore();
+  const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
 
   const {
     panels,
@@ -226,14 +219,12 @@ export default function Custom() {
       const { width, height } = event.nativeEvent.layout;
       canvasSize.current = { width, height };
 
-      // Update shared values on UI thread to avoid render warnings
       scheduleOnUI(updateCanvasSize, width, height);
 
       // Initialize panels centered in the canvas after layout is known
       if (initialPanels && !hasInitialized.current && width > 0 && height > 0) {
         hasInitialized.current = true;
 
-        // Try to use real analysis results, fall back to mock grid
         const analysis = consumeAnalysisResult();
         if (analysis && analysis.panels.length > 0) {
           const positions = mapAnalysisToCanvasPositions(
@@ -244,7 +235,6 @@ export default function Custom() {
             height,
           );
 
-          // Auto-link panels based on label matching serial numbers
           const positionsWithInverters = positions.map((pos, idx) => {
             const label = analysis.panels[idx]?.label || '';
             const matchingInverter = config.inverters.find(
@@ -262,7 +252,7 @@ export default function Custom() {
         }
       }
     },
-    [initialPanels, initializePanels, config.inverters, canvasWidth, canvasHeight],
+    [initialPanels, initializePanels, config.inverters],
   );
 
   const handleAddPanel = useCallback(() => {
@@ -300,7 +290,6 @@ export default function Custom() {
     }
   }, [getPanelStates, viewportX, viewportY]);
 
-  // Compute unlinked count (uses cached state from hook, no SharedValue reads)
   const unlinkedCount = panels.length - getLinkedCount();
 
   const handleFinish = useCallback(() => {
@@ -309,32 +298,14 @@ export default function Custom() {
     router.push('/production');
   }, [setWizardCompleted, router]);
 
-  const handleZoomIn = useCallback(() => {
-    if (zoomIndex > 0) {
-      const newIndex = zoomIndex - 1;
-      setZoomIndex(newIndex);
-      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
-    }
-  }, [zoomIndex, scale]);
-
-  const handleZoomOut = useCallback(() => {
-    if (zoomIndex < ZOOM_LEVELS.length - 1) {
-      const newIndex = zoomIndex + 1;
-      setZoomIndex(newIndex);
-      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
-    }
-  }, [zoomIndex, scale]);
-
   const handleCompassTap = useCallback(() => {
     router.push('/compass-help');
   }, [router]);
 
   const handleCompassToggle = useCallback(() => {
     if (compassVisible) {
-      // Hide compass
       setCompassVisible(false);
     } else {
-      // Show compass and open help sheet
       setCompassVisible(true);
       router.push('/compass-help');
     }

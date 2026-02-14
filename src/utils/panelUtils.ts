@@ -1,6 +1,6 @@
 import type { Rect } from "./collision";
-import { collidesWithAny } from "./collision";
-import { snapToGrid, GRID_SIZE, PANEL_SPACING } from "./gridSnap";
+import { collidesWithAny, PANEL_GAP } from "./collision";
+import { snapToGrid, GRID_SIZE } from "./gridSnap";
 
 export const PANEL_WIDTH = 60;
 export const PANEL_HEIGHT = 120;
@@ -105,10 +105,10 @@ export function findFreePosition(
 
     // Try adjacent positions in priority order: right, below, left, above
     const adjacentPositions = [
-      { x: lastRect.x + lastRect.width + PANEL_SPACING, y: lastRect.y },  // right
-      { x: lastRect.x, y: lastRect.y + lastRect.height + PANEL_SPACING }, // below
-      { x: lastRect.x - dims.width - PANEL_SPACING, y: lastRect.y },      // left
-      { x: lastRect.x, y: lastRect.y - dims.height - PANEL_SPACING },     // above
+      { x: lastRect.x + lastRect.width + PANEL_GAP, y: lastRect.y },  // right
+      { x: lastRect.x, y: lastRect.y + lastRect.height + PANEL_GAP }, // below
+      { x: lastRect.x - dims.width - PANEL_GAP, y: lastRect.y },      // left
+      { x: lastRect.x, y: lastRect.y - dims.height - PANEL_GAP },     // above
     ];
 
     for (const pos of adjacentPositions) {
@@ -124,10 +124,10 @@ export function findFreePosition(
       const rect = getPanelRect(panel);
 
       const positions = [
-        { x: rect.x + rect.width + PANEL_SPACING, y: rect.y },  // right
-        { x: rect.x, y: rect.y + rect.height + PANEL_SPACING }, // below
-        { x: rect.x - dims.width - PANEL_SPACING, y: rect.y },  // left
-        { x: rect.x, y: rect.y - dims.height - PANEL_SPACING }, // above
+        { x: rect.x + rect.width + PANEL_GAP, y: rect.y },  // right
+        { x: rect.x, y: rect.y + rect.height + PANEL_GAP }, // below
+        { x: rect.x - dims.width - PANEL_GAP, y: rect.y },  // left
+        { x: rect.x, y: rect.y - dims.height - PANEL_GAP }, // above
       ];
 
       for (const pos of positions) {
@@ -169,6 +169,27 @@ export function findFreePosition(
   }
 
   return null; // No free position found (shouldn't happen with infinite canvas)
+}
+
+/**
+ * Convert screen coordinates to world coordinates, accounting for viewport and scale.
+ */
+export function screenToWorld(
+  screenX: number,
+  screenY: number,
+  canvasWidth: number,
+  canvasHeight: number,
+  viewportX: number,
+  viewportY: number,
+  scale: number
+): { x: number; y: number } {
+  "worklet";
+  const cx = canvasWidth / 2;
+  const cy = canvasHeight / 2;
+  return {
+    x: (screenX - cx) / scale + cx - viewportX,
+    y: (screenY - cy) / scale + cy - viewportY,
+  };
 }
 
 /**

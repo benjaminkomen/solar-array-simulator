@@ -5,8 +5,6 @@ import {
   findFreePosition,
   findValidPositionAfterRotation,
   generatePanelId,
-  PANEL_HEIGHT,
-  PANEL_WIDTH,
   type PanelState,
 } from "@/utils/panelUtils";
 import {
@@ -297,5 +295,3 @@ export function usePanelsManager(): UsePanelsManagerResult {
     savePanelPosition,
   };
 }
-
-export { PANEL_WIDTH, PANEL_HEIGHT };
