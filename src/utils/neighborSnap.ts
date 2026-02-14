@@ -1,6 +1,6 @@
 import type { Rect } from "./collision";
 import { collidesWithAny, PANEL_GAP } from "./collision";
-import { snapToGrid, SNAP_THRESHOLD, PANEL_SPACING } from "./gridSnap";
+import { snapToGrid, SNAP_THRESHOLD } from "./gridSnap";
 
 /**
  * Snap panel position using independent axis snapping.
@@ -31,8 +31,8 @@ export function snapToNeighbors(
   for (const panel of allPanelRects) {
     if (panel.id === panelId) continue;
     xPositions.push(panel.x); // Left edge alignment
-    xPositions.push(panel.x + panel.width + PANEL_SPACING); // Adjacent right
-    xPositions.push(panel.x - panelWidth - PANEL_SPACING); // Adjacent left
+    xPositions.push(panel.x + panel.width + PANEL_GAP); // Adjacent right
+    xPositions.push(panel.x - panelWidth - PANEL_GAP); // Adjacent left
   }
 
   // Collect all Y snap positions from all panels
@@ -40,8 +40,8 @@ export function snapToNeighbors(
   for (const panel of allPanelRects) {
     if (panel.id === panelId) continue;
     yPositions.push(panel.y); // Top edge alignment
-    yPositions.push(panel.y + panel.height + PANEL_SPACING); // Adjacent below
-    yPositions.push(panel.y - panelHeight - PANEL_SPACING); // Adjacent above
+    yPositions.push(panel.y + panel.height + PANEL_GAP); // Adjacent below
+    yPositions.push(panel.y - panelHeight - PANEL_GAP); // Adjacent above
   }
 
   // Find best X (closest within threshold)

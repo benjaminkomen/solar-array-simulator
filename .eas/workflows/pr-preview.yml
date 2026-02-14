@@ -1,0 +1,18 @@
+name: PR Preview
+
+on:
+  pull_request:
+    types: ['opened', 'synchronize', 'reopened']
+
+jobs:
+  deploy-preview:
+    type: deploy
+    name: Deploy Preview
+    environment: preview
+    params:
+      alias: pr-${{ github.pull_request.number }}
+
+  comment:
+    type: github-comment
+    name: Post Preview Link
+    needs: [deploy-preview]

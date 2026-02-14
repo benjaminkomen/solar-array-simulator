@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
   getConfig,
-  updateDefaultWattage as updateWattage,
+  updateDefaultWattage,
   updateInverterEfficiency,
   updateInverterSerialNumber,
-  addInverter as addNewInverter,
   addInverterWithDetails,
-  removeInverter as deleteInverter,
+  removeInverter,
   getWizardCompleted,
   setWizardCompleted,
-  updateCompassDirection as updateDirection,
+  updateCompassDirection,
   subscribe,
   SystemConfig,
 } from '@/utils/configStore';
@@ -18,7 +17,6 @@ export function useConfigStore() {
   const [config, setConfig] = useState<SystemConfig>(() => getConfig());
 
   useEffect(() => {
-    // Subscribe to store changes
     const unsubscribe = subscribe((newConfig) => {
       setConfig(newConfig);
     });
@@ -28,17 +26,13 @@ export function useConfigStore() {
 
   return {
     config,
-    updateDefaultWattage: (wattage: number) => updateWattage(wattage),
-    updateInverterEfficiency: (inverterId: string, efficiency: number) =>
-      updateInverterEfficiency(inverterId, efficiency),
-    updateInverterSerialNumber: (inverterId: string, serialNumber: string) =>
-      updateInverterSerialNumber(inverterId, serialNumber),
-    addInverter: () => addNewInverter(),
-    addInverterWithDetails: (serialNumber: string, efficiency: number) =>
-      addInverterWithDetails(serialNumber, efficiency),
-    removeInverter: (inverterId: string) => deleteInverter(inverterId),
-    getWizardCompleted: () => getWizardCompleted(),
-    setWizardCompleted: (completed: boolean) => setWizardCompleted(completed),
-    updateCompassDirection: (degrees: number) => updateDirection(degrees),
+    updateDefaultWattage,
+    updateInverterEfficiency,
+    updateInverterSerialNumber,
+    addInverterWithDetails,
+    removeInverter,
+    getWizardCompleted,
+    setWizardCompleted,
+    updateCompassDirection,
   };
 }

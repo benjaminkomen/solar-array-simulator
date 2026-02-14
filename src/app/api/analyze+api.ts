@@ -1,22 +1,11 @@
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { generateText } from "ai";
+import { fetch as nativeFetch } from "undici";
 
-// Create provider with custom fetch that has 60s timeout
-// Vision requests can take 10-30+ seconds, but the SDK's default is shorter
+// Create provider with native fetch (undici) instead of fetch-nodeshim
+// fetch-nodeshim has a hardcoded 5s timeout that's too short for vision requests
 const bedrock = createAmazonBedrock({
-  fetch: async (input, init) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60_000);
-
-    try {
-      return await fetch(input, {
-        ...init,
-        signal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  },
+  fetch: nativeFetch as unknown as typeof globalThis.fetch,
 });
 
 interface AnalyzeRequest {
@@ -34,6 +23,7 @@ interface PanelResult {
 }
 
 interface AnalyzeResponse {
+  reasoning?: string;
   panels: PanelResult[];
 }
 
@@ -41,6 +31,7 @@ const SYSTEM_PROMPT = `You are a solar panel array analyzer. You receive photos 
 
 Return a JSON object with this exact structure:
 {
+  "reasoning": "<brief explanation of what you see and any challenges>",
   "panels": [
     {
       "x": <number>,
@@ -54,11 +45,12 @@ Return a JSON object with this exact structure:
 }
 
 Rules:
+- reasoning: Briefly describe what you see in the image and any challenges identifying panels or labels
 - x, y: position of the panel's top-left corner in pixel coordinates relative to the image
 - width, height: panel dimensions in pixels
 - rotation: 0 for portrait (taller than wide), 90 for landscape (wider than tall)
-- label: any text, serial number, or identifier visible on or near the panel. Use "" if none visible.
-- Return ONLY valid JSON, no markdown fences, no explanation.`;
+- label: Look for serial numbers on micro-inverter labels attached to each panel. Serial numbers are typically alphanumeric codes like "G25309101383" (letter(s) followed by digits). If you see a label but can only read part of the serial number, include what you can read. Use "" only if no label or serial number is visible at all.
+- Return ONLY valid JSON, no markdown fences, no explanation outside the JSON.`;
 
 export async function POST(request: Request) {
   let startTime: number | undefined;
@@ -99,6 +91,8 @@ export async function POST(request: Request) {
       system: SYSTEM_PROMPT,
       maxOutputTokens: 4096,
       temperature: 0.2,
+      maxRetries: 1, // Don't retry on timeout - it wastes API calls
+      timeout: 120_000, // 120 seconds total timeout
     });
 
     // Log timing and response
@@ -126,7 +120,14 @@ export async function POST(request: Request) {
       );
     }
 
-    return Response.json(result);
+    // Log reasoning for debugging
+    if (result.reasoning) {
+      console.log("[Bedrock] Reasoning:", result.reasoning);
+    }
+    console.log(`[Bedrock] Found ${result.panels.length} panels`);
+
+    // Return raw panels - overlap resolution happens after coordinate transformation
+    return Response.json({ panels: result.panels });
   } catch (error) {
     const elapsed = startTime
       ? ((Date.now() - startTime) / 1000).toFixed(1) + "s"
