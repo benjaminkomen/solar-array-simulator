@@ -17,103 +17,83 @@ const bedrock = createAmazonBedrock({
   },
 });
 
-interface CropInput {
-  base64: string;
-  mimeType: string;
-  index: number;
-}
-
 interface ExtractSerialsRequest {
-  crops: CropInput[];
+  image: string; // base64-encoded full-res image
+  mimeType: string;
+  panelCount: number; // number of panels detected in pass 1
 }
 
-interface SerialResult {
-  index: number;
-  serial: string;
-}
-
-const SYSTEM_PROMPT = `You are a solar panel serial number reader. You receive cropped close-up images of individual solar panels and extract any visible serial numbers, model numbers, or identifying text.
+const SYSTEM_PROMPT = `You are a solar panel serial number reader. You receive a photo of a solar panel installation and extract all visible serial numbers, model numbers, or identifying text from the micro-inverters or panels.
 
 Return a JSON object with this exact structure:
 {
-  "serial": "<string>"
+  "serials": ["<serial1>", "<serial2>", ...]
 }
 
 Rules:
-- Extract the most prominent serial number, model number, or barcode text visible on the panel or its label.
-- Serial numbers are typically 8-16 alphanumeric characters, often on stickers or engraved plates.
-- If multiple numbers are visible, prefer the one that looks like a serial number (not wattage ratings or voltage specs).
-- Return "" if no serial number is legible.
+- Look for serial numbers on micro-inverter stickers, panel labels, barcodes, or engraved plates.
+- Serial numbers are typically 8-16 alphanumeric characters.
+- Do NOT include wattage ratings, voltage specs, or brand names — only serial/model numbers.
+- List each unique serial number found, in the order they appear (left-to-right, top-to-bottom).
+- If no serial numbers are legible, return {"serials": []}.
 - Return ONLY valid JSON, no markdown fences, no explanation.`;
 
 export async function POST(request: Request) {
   try {
-    const { crops } = (await request.json()) as ExtractSerialsRequest;
+    const { image, mimeType, panelCount } =
+      (await request.json()) as ExtractSerialsRequest;
 
-    if (!crops || !Array.isArray(crops) || crops.length === 0) {
+    if (!image || !mimeType) {
       return Response.json(
-        { error: "Missing required field: crops (non-empty array)" },
+        { error: "Missing required fields: image, mimeType" },
         { status: 400 },
       );
     }
 
     console.log(
-      `[Bedrock] Starting serial extraction for ${crops.length} panel crops`,
+      `[Bedrock] Starting serial extraction (${panelCount} panels detected)`,
     );
     const startTime = Date.now();
 
-    // Process crops in parallel (each is a separate Claude call)
-    const results: SerialResult[] = await Promise.all(
-      crops.map(async (crop) => {
-        try {
-          const { text } = await generateText({
-            model: bedrock("us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
-            messages: [
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: "Extract the serial number from this solar panel close-up image. Look for stickers, labels, engravings, or barcodes with serial/model numbers.",
-                  },
-                  {
-                    type: "image",
-                    image: crop.base64,
-                    mediaType: crop.mimeType,
-                  },
-                ],
-              },
-            ],
-            system: SYSTEM_PROMPT,
-            maxOutputTokens: 256,
-            temperature: 0.1,
-          });
-
-          const jsonMatch = text.match(/\{[\s\S]*\}/);
-          if (!jsonMatch) {
-            return { index: crop.index, serial: "" };
-          }
-
-          const parsed = JSON.parse(jsonMatch[0]);
-          return { index: crop.index, serial: parsed.serial ?? "" };
-        } catch (err) {
-          console.error(
-            `[Bedrock] Serial extraction failed for crop ${crop.index}:`,
-            err,
-          );
-          return { index: crop.index, serial: "" };
-        }
-      }),
-    );
+    const { text } = await generateText({
+      model: bedrock("us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `This solar panel array has ${panelCount} panels. Extract all visible serial numbers from the micro-inverters and panels in this image. Look carefully at stickers, labels, and barcodes.`,
+            },
+            {
+              type: "image",
+              image,
+              mediaType: mimeType,
+            },
+          ],
+        },
+      ],
+      system: SYSTEM_PROMPT,
+      maxOutputTokens: 1024,
+      temperature: 0.1,
+    });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[Bedrock] Serial extraction completed in ${elapsed}s`);
-    console.log(
-      "[Bedrock] Serial results:",
-      results.map((r) => `panel ${r.index}: "${r.serial}"`).join(", "),
-    );
+    console.log("[Bedrock] Raw serial response:", text);
 
-    return Response.json({ results });
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return Response.json({ serials: [] });
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    const serials: string[] = Array.isArray(parsed.serials)
+      ? parsed.serials.filter((s: unknown) => typeof s === "string" && s.length > 0)
+      : [];
+
+    console.log("[Bedrock] Extracted serials:", serials);
+    return Response.json({ serials });
   } catch (error) {
     console.error("[Bedrock] Serial extraction error:", error);
     return Response.json(
