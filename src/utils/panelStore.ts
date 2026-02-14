@@ -18,136 +18,105 @@ const DEFAULT_DATA: PanelStoreData = {
   selectedId: null,
 };
 
-// Listeners for reactivity
-type Listener = (data: PanelStoreData) => void;
-const listeners = new Set<Listener>();
+const STORAGE_KEY = "panelData";
 
-/**
- * Get current panel store data
- */
-export function getPanelStore(): PanelStoreData {
-  const stored = Storage.getItemSync("panelData");
-  if (!stored) {
-    return DEFAULT_DATA;
-  }
+// In-memory cache (matches configStore pattern)
+let currentData: PanelStoreData = DEFAULT_DATA;
+const listeners = new Set<(data: PanelStoreData) => void>();
+
+function loadData(): void {
   try {
-    return JSON.parse(stored);
+    const stored = Storage.getItemSync(STORAGE_KEY);
+    if (stored) {
+      currentData = JSON.parse(stored);
+    } else {
+      currentData = { ...DEFAULT_DATA };
+    }
   } catch {
-    return DEFAULT_DATA;
+    currentData = { ...DEFAULT_DATA };
   }
 }
 
-/**
- * Save panel store data and notify listeners
- */
-function savePanelStore(data: PanelStoreData) {
-  Storage.setItemSync("panelData", JSON.stringify(data));
-  // Notify all listeners
-  listeners.forEach((listener) => listener(data));
+function saveData(): void {
+  try {
+    Storage.setItemSync(STORAGE_KEY, JSON.stringify(currentData));
+  } catch (error) {
+    console.error("Failed to save panel data:", error);
+  }
 }
 
-/**
- * Subscribe to panel store changes
- */
-export function subscribe(listener: Listener): () => void {
+function updateData(data: PanelStoreData): void {
+  currentData = data;
+  saveData();
+  listeners.forEach((listener) => listener(currentData));
+}
+
+export function getPanelStore(): PanelStoreData {
+  return currentData;
+}
+
+export function subscribe(listener: (data: PanelStoreData) => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
-/**
- * Get all panels
- */
 export function getPanels(): StoredPanel[] {
-  return getPanelStore().panels;
+  return currentData.panels;
 }
 
-/**
- * Get selected panel ID
- */
 export function getSelectedId(): string | null {
-  return getPanelStore().selectedId;
+  return currentData.selectedId;
 }
 
-/**
- * Set selected panel ID
- */
 export function setSelectedId(id: string | null) {
-  const data = getPanelStore();
-  savePanelStore({ ...data, selectedId: id });
+  updateData({ ...currentData, selectedId: id });
 }
 
-/**
- * Save panels array
- */
 export function savePanels(panels: StoredPanel[]) {
-  const data = getPanelStore();
-  savePanelStore({ ...data, panels });
+  updateData({ ...currentData, panels });
 }
 
-/**
- * Add a panel
- */
 export function addPanel(panel: StoredPanel) {
-  const data = getPanelStore();
-  savePanelStore({ ...data, panels: [...data.panels, panel] });
+  updateData({ ...currentData, panels: [...currentData.panels, panel] });
 }
 
-/**
- * Remove a panel by ID
- */
 export function removePanel(id: string) {
-  const data = getPanelStore();
-  const panels = data.panels.filter((p) => p.id !== id);
-  const selectedId = data.selectedId === id ? null : data.selectedId;
-  savePanelStore({ panels, selectedId });
+  const panels = currentData.panels.filter((p) => p.id !== id);
+  const selectedId = currentData.selectedId === id ? null : currentData.selectedId;
+  updateData({ panels, selectedId });
 }
 
-/**
- * Update a panel
- */
 export function updatePanel(id: string, updates: Partial<Omit<StoredPanel, "id">>) {
-  const data = getPanelStore();
-  const panels = data.panels.map((p) =>
+  const panels = currentData.panels.map((p) =>
     p.id === id ? { ...p, ...updates } : p
   );
-  savePanelStore({ ...data, panels });
+  updateData({ ...currentData, panels });
 }
 
-/**
- * Link a panel to an inverter
- */
 export function linkPanelToInverter(panelId: string, inverterId: string | null) {
   updatePanel(panelId, { inverterId });
 }
 
-/**
- * Get count of linked panels
- */
 export function getLinkedCount(): number {
-  const panels = getPanels();
-  return panels.filter((p) => p.inverterId !== null).length;
+  return currentData.panels.filter((p) => p.inverterId !== null).length;
 }
 
-/**
- * Bring a panel to front (move to end of array)
- */
 export function bringPanelToFront(id: string) {
-  const data = getPanelStore();
-  const index = data.panels.findIndex((p) => p.id === id);
-  if (index === -1 || index === data.panels.length - 1) return;
+  const index = currentData.panels.findIndex((p) => p.id === id);
+  if (index === -1 || index === currentData.panels.length - 1) return;
 
-  const panel = data.panels[index];
+  const panel = currentData.panels[index];
   const panels = [
-    ...data.panels.slice(0, index),
-    ...data.panels.slice(index + 1),
+    ...currentData.panels.slice(0, index),
+    ...currentData.panels.slice(index + 1),
     panel,
   ];
-  savePanelStore({ ...data, panels });
+  updateData({ ...currentData, panels });
 }
 
-/**
- * Clear all panels
- */
 export function clearPanels() {
-  savePanelStore({ panels: [], selectedId: null });
+  updateData({ panels: [], selectedId: null });
 }
+
+// Initialize store on module load
+loadData();

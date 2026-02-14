@@ -3,7 +3,6 @@ import { Canvas, Group } from "@shopify/react-native-skia";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import {
   useSharedValue,
-  useDerivedValue,
   type SharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -11,7 +10,8 @@ import { ProductionPanel } from "./ProductionPanel";
 import type { PanelData } from "@/hooks/usePanelsManager";
 import type { PanelColors } from "./SolarPanel";
 import type { PanelState } from "@/utils/panelUtils";
-import { hitTestPanels } from "@/utils/panelUtils";
+import { hitTestPanels, screenToWorld } from "@/utils/panelUtils";
+import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useColors } from "@/utils/theme";
 
 interface ProductionCanvasProps {
@@ -47,30 +47,14 @@ export function ProductionCanvas({
   const viewportStartX = useSharedValue(0);
   const viewportStartY = useSharedValue(0);
 
-  // Transform for the entire canvas content (viewport offset + scale centered on canvas)
-  const canvasTransform = useDerivedValue(() => {
-    const cx = canvasWidth.value / 2;
-    const cy = canvasHeight.value / 2;
-    return [
-      { translateX: cx },
-      { translateY: cy },
-      { scale: scale.value },
-      { translateX: -cx + viewportX.value },
-      { translateY: -cy + viewportY.value },
-    ];
-  });
+  const canvasTransform = useCanvasTransform(canvasWidth, canvasHeight, viewportX, viewportY, scale);
 
   // Tap gesture for panel selection
   const tapGesture = Gesture.Tap()
     .onEnd((e) => {
       "worklet";
-      // Convert screen coordinates to world coordinates
-      const cx = canvasWidth.value / 2;
-      const cy = canvasHeight.value / 2;
-      const worldX = (e.x - cx) / scale.value + cx - viewportX.value;
-      const worldY = (e.y - cy) / scale.value + cy - viewportY.value;
+      const world = screenToWorld(e.x, e.y, canvasWidth.value, canvasHeight.value, viewportX.value, viewportY.value, scale.value);
 
-      // Build states for hit testing
       const states: PanelState[] = [];
       for (const p of panels) {
         states.push({
@@ -82,7 +66,7 @@ export function ProductionCanvas({
         });
       }
 
-      const hitId = hitTestPanels(worldX, worldY, states);
+      const hitId = hitTestPanels(world.x, world.y, states);
       if (hitId && onPanelTap) {
         scheduleOnRN(onPanelTap, hitId);
       }
@@ -98,7 +82,6 @@ export function ProductionCanvas({
     })
     .onUpdate((e) => {
       "worklet";
-      // Divide by scale for consistent pan feel
       viewportX.value = viewportStartX.value + e.translationX / scale.value;
       viewportY.value = viewportStartY.value + e.translationY / scale.value;
     })
@@ -107,7 +90,6 @@ export function ProductionCanvas({
       isPanningViewport.value = false;
     });
 
-  // Combine gestures - pan takes priority but tap works when no drag occurs
   const combinedGestures = Gesture.Exclusive(panGesture, tapGesture);
 
   return (

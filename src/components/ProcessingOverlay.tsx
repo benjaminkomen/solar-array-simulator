@@ -5,11 +5,11 @@ import {
   Blur,
   Canvas,
   Circle,
+  Fill,
   Group,
   LinearGradient,
   Mask,
   matchFont,
-  Rect,
   Shader,
   Skia,
   Text,
@@ -24,7 +24,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-// Fibonacci shader constants (no user controls)
+// Fibonacci shader constants
 const CIRCLE_COUNT = 90;
 const MAGICAL_MUL = 2.4;
 
@@ -39,6 +39,28 @@ const fontStyle = {
   fontSize: SHIMMER_TEXT_SIZE,
   fontWeight: "500" as const,
 };
+
+// Pre-compile shader once with uniforms instead of string interpolation per frame
+const shaderSource = Skia.RuntimeEffect.Make(`
+  uniform float iTime;
+  uniform vec2 iResolution;
+  const float N = ${CIRCLE_COUNT}.0;
+
+  vec4 main(vec2 FC) {
+    vec4 o = vec4(0, 0, 0, 1);
+    vec2 p = vec2(0);
+    vec2 c = p;
+    vec2 u = FC.xy * 2.0 - iResolution.xy;
+    float a;
+
+    for (float i = 0.0; i < N; i++) {
+      a = i / (N * 0.5) - 1.0;
+      p = cos(i * ${MAGICAL_MUL} + iTime + vec2(0, 11)) * sqrt(1.0 - a * a);
+      c = u / iResolution.y + vec2(p.x, a) / (p.y + 2.0);
+      o += (cos(i + vec4(0, 2, 4, 0)) + 1.0) / dot(c, c) * (1.0 - p.y) / (N * 75.0);
+    }
+    return o;
+  }`)!;
 
 interface ProcessingOverlayProps {
   imageUri: string;
@@ -58,35 +80,14 @@ export function ProcessingOverlay({ imageUri }: ProcessingOverlayProps) {
   );
   const textX = (screenWidth - textWidth) / 2;
 
-  const dynamicSource = useDerivedValue(() => {
-    return Skia.RuntimeEffect.Make(`
-      const vec2 iResolution = vec2(${canvasSize}, ${canvasSize});
-      const float iTime = ${iTime.value};
-      const float N = ${CIRCLE_COUNT}.0;
-
-      vec4 main(vec2 FC) {
-        vec4 o = vec4(0, 0, 0, 1);
-        vec2 p = vec2(0);
-        vec2 c = p;
-        vec2 u = FC.xy * 2.0 - iResolution.xy;
-        float a;
-
-        for (float i = 0.0; i < N; i++) {
-          a = i / (N * 0.5) - 1.0;
-          p = cos(i * ${MAGICAL_MUL} + iTime + vec2(0, 11)) * sqrt(1.0 - a * a);
-          c = u / iResolution.y + vec2(p.x, a) / (p.y + 2.0);
-          o += (cos(i + vec4(0, 2, 4, 0)) + 1.0) / dot(c, c) * (1.0 - p.y) / (N * 75.0);
-        }
-        return o;
-      }`)!;
-  }, []);
+  const shaderUniforms = useDerivedValue(() => ({
+    iTime: iTime.value,
+    iResolution: vec(canvasSize, canvasSize),
+  }));
 
   const shimmerStart = useDerivedValue(() => vec(shimmerX.value, 0));
   const shimmerEnd = useDerivedValue(() => vec(shimmerX.value + SHIMMER_WIDTH, 0));
 
-  // Start animations on mount. This component is only rendered when processing,
-  // so no `visible` guard needed — Reanimated animations are imperative
-  // side-effects that legitimately belong in an effect.
   useEffect(() => {
     iTime.value = withRepeat(
       withTiming(15, { duration: 20000, easing: Easing.linear }),
@@ -134,9 +135,9 @@ export function ProcessingOverlay({ imageUri }: ProcessingOverlayProps) {
             }
           >
             <Group opacity={0.7}>
-              <Rect x={0} y={0} width={canvasSize} height={canvasSize}>
-                <Shader source={dynamicSource} />
-              </Rect>
+              <Fill>
+                <Shader source={shaderSource} uniforms={shaderUniforms} />
+              </Fill>
             </Group>
           </Mask>
         </Canvas>
