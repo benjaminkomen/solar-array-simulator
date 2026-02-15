@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^4.0.50",
+    "@aws-sdk/client-rekognition": "^3.990.0",
     "@expo/ui": "~55.0.0-preview.4",
     "@expo/vector-icons": "^15.0.3",
     "@shopify/react-native-skia": "2.4.14",
