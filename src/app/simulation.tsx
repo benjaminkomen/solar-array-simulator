@@ -9,6 +9,7 @@ import {
 import { Stack } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
+  Host,
   Picker,
   Slider,
   Text as UIText,
@@ -185,7 +186,7 @@ export default function SimulationScreen() {
             <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>
               {formatTime(sunriseHour)}
             </Text>
-            <View style={styles.sliderContainer}>
+            <Host style={styles.sliderContainer}>
               <Slider
                 value={currentHour}
                 min={sunriseHour}
@@ -196,14 +197,14 @@ export default function SimulationScreen() {
                   <UIText>{formatTime(currentHour)}</UIText>
                 }
               />
-            </View>
+            </Host>
             <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>
               {formatTime(sunsetHour)}
             </Text>
           </View>
 
           {/* Season picker */}
-          <View style={styles.seasonRow}>
+          <Host style={styles.seasonRow}>
             <Picker
               selection={season}
               onSelectionChange={(value) => {
@@ -217,7 +218,7 @@ export default function SimulationScreen() {
                 </UIText>
               ))}
             </Picker>
-          </View>
+          </Host>
         </View>
       </View>
     </>
