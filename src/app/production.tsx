@@ -15,6 +15,7 @@ import { useZoom } from "@/hooks/useZoom";
 import { useColors } from "@/utils/theme";
 import { resetAllData } from "@/utils/configStore";
 import { clearPanels } from "@/utils/panelStore";
+import { getEffectiveOutput } from "@/utils/solarCalculations";
 
 function formatWattage(watts: number): string {
   if (watts >= 1000) {
@@ -81,7 +82,7 @@ export default function ProductionScreen() {
     [panels, viewportX, viewportY]
   );
 
-  // Calculate wattage for a single panel
+  // Calculate wattage for a single panel using solar position model
   const calculateWattage = useCallback(
     (panelId: string): number => {
       const panel = panels.find((p) => p.id === panelId);
@@ -94,10 +95,16 @@ export default function ProductionScreen() {
         return 0;
       }
 
-      const efficiency = inverter.efficiency / 100;
-      const baseWattage = config.defaultMaxWattage * efficiency;
-      const fluctuation = 0.95 + Math.random() * 0.1;
-      return Math.round(baseWattage * fluctuation);
+      const output = getEffectiveOutput({
+        maxWattage: config.defaultMaxWattage,
+        inverterEfficiency: inverter.efficiency,
+        latitude: config.latitude,
+        longitude: config.longitude,
+        panelTilt: config.panelTiltAngle,
+        panelAzimuth: config.compassDirection,
+        date: new Date(),
+      });
+      return Math.round(output);
     },
     [panels, config]
   );
@@ -147,6 +154,11 @@ export default function ProductionScreen() {
     router.replace("/");
   }, [router]);
 
+  const handleSimulate = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/simulation");
+  }, [router]);
+
   const cardStyle = useMemo(() => ({
     backgroundColor: colors.background.primary,
     borderRadius: 16,
@@ -165,7 +177,8 @@ export default function ProductionScreen() {
   return (
     <>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Menu icon="ellipsis.circle">
+        <Stack.Toolbar.Button icon="sun.max" onPress={handleSimulate} accessibilityLabel="Simulate" />
+        <Stack.Toolbar.Menu icon="ellipsis.circle" accessibilityLabel="More options">
           <Stack.Toolbar.MenuAction icon="pencil" onPress={handleEditConfiguration}>
             Edit Configuration
           </Stack.Toolbar.MenuAction>

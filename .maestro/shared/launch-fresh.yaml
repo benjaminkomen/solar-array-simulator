@@ -1,0 +1,25 @@
+appId: com.bkomen.reactnativearraylayout2
+---
+# Shared: Launch app with clear state, reconnect to dev server
+# Ends on the Welcome screen with "Array Builder" visible
+
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "http://localhost:8081"
+    timeout: 10000
+- tapOn: "http://localhost:8081"
+# Dismiss dev client onboarding dialog
+- extendedWaitUntil:
+    visible: "Continue"
+    timeout: 30000
+- tapOn: "Continue"
+# Dismiss dev menu if it appears
+- extendedWaitUntil:
+    visible: "Reload"
+    timeout: 10000
+- tapOn:
+    point: "50%,15%"
+- extendedWaitUntil:
+    visible: "Array Builder"
+    timeout: 30000

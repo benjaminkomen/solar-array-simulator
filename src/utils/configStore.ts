@@ -13,11 +13,18 @@ function generateSerialNumber(): string {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 }
 
+export type RoofType = 'flat' | 'gable' | 'hip' | 'shed';
+
 export interface SystemConfig {
   defaultMaxWattage: number;
   inverters: InverterConfig[];
   wizardCompleted: boolean;
   compassDirection: number; // 0-360 degrees, 0 = North
+  latitude: number | null;
+  longitude: number | null;
+  locationName: string | null; // e.g. "Amsterdam, Netherlands"
+  panelTiltAngle: number; // degrees from horizontal, default 30
+  roofType: RoofType;
 }
 
 // Default configuration: 14 inverters with realistic efficiency distribution
@@ -25,6 +32,11 @@ const DEFAULT_CONFIG: SystemConfig = {
   defaultMaxWattage: 430,
   wizardCompleted: false,
   compassDirection: 0, // Default to North
+  latitude: null,
+  longitude: null,
+  locationName: null,
+  panelTiltAngle: 30,
+  roofType: 'gable',
   inverters: [
     // 7 inverters at 95% (optimal)
     { id: '1', serialNumber: generateSerialNumber(), efficiency: 95 },
@@ -77,6 +89,21 @@ function loadConfig(): void {
       // Migrate: ensure compassDirection field exists
       if (currentConfig.compassDirection === undefined) {
         currentConfig.compassDirection = 0;
+        needsSave = true;
+      }
+      // Migrate: ensure location and simulation fields exist
+      if (currentConfig.latitude === undefined) {
+        currentConfig.latitude = null;
+        currentConfig.longitude = null;
+        currentConfig.locationName = null;
+        needsSave = true;
+      }
+      if (currentConfig.panelTiltAngle === undefined) {
+        currentConfig.panelTiltAngle = 30;
+        needsSave = true;
+      }
+      if (currentConfig.roofType === undefined) {
+        currentConfig.roofType = 'gable';
         needsSave = true;
       }
       if (needsSave) {
@@ -197,6 +224,35 @@ export function setWizardCompleted(completed: boolean): void {
 export function updateCompassDirection(degrees: number): void {
   const newConfig = getConfig();
   newConfig.compassDirection = ((degrees % 360) + 360) % 360; // Normalize to 0-359
+  updateConfig(newConfig);
+}
+
+/**
+ * Update location (latitude, longitude, display name)
+ */
+export function updateLocation(lat: number, lon: number, name: string): void {
+  const newConfig = getConfig();
+  newConfig.latitude = lat;
+  newConfig.longitude = lon;
+  newConfig.locationName = name;
+  updateConfig(newConfig);
+}
+
+/**
+ * Update panel tilt angle (0-90 degrees from horizontal)
+ */
+export function updatePanelTiltAngle(degrees: number): void {
+  const newConfig = getConfig();
+  newConfig.panelTiltAngle = Math.max(0, Math.min(90, degrees));
+  updateConfig(newConfig);
+}
+
+/**
+ * Update roof type
+ */
+export function updateRoofType(type: RoofType): void {
+  const newConfig = getConfig();
+  newConfig.roofType = type;
   updateConfig(newConfig);
 }
 

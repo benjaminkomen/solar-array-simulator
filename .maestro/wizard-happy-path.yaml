@@ -1,0 +1,58 @@
+appId: com.bkomen.reactnativearraylayout2
+---
+# Wizard Happy Path: Welcome → Config → Upload → Custom → Production
+# Tests the primary user flow through the entire wizard with assertions at each step
+
+- runFlow: shared/launch-fresh.yaml
+
+# Verify Welcome screen
+- assertVisible: "Configure your solar panel array in 3 easy steps"
+- assertVisible:
+    id: "get-started-button"
+
+# Navigate to Config
+- tapOn:
+    id: "get-started-button"
+- extendedWaitUntil:
+    visible: "Panel Settings"
+    timeout: 10000
+
+# Verify wizard progress (step 1)
+- assertVisible: "Configure"
+- assertVisible: "Photo"
+- assertVisible: "Layout"
+
+# Navigate to Upload
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Take or Select Photo"
+    timeout: 10000
+
+# Verify Upload screen elements
+- assertVisible:
+    id: "take-photo-button"
+- assertVisible:
+    id: "choose-gallery-button"
+
+# Navigate to Custom (skip photo)
+- tapOn: "Skip"
+- extendedWaitUntil:
+    visible:
+        id: "canvas-container"
+    timeout: 10000
+
+# Add a panel using the "+" bottom toolbar button
+- tapOn: "add"
+- waitForAnimationToEnd
+
+# Verify "Finish" appears (only when panels > 0 in wizard mode)
+- assertVisible: "Finish"
+
+# Navigate to Production
+- tapOn: "Finish"
+- extendedWaitUntil:
+    visible: "Total Array Output"
+    timeout: 10000
+
+# Verify Production screen loaded
+- assertVisible: "Total Array Output"

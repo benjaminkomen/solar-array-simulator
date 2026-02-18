@@ -9,8 +9,12 @@ import {
   getWizardCompleted,
   setWizardCompleted,
   updateCompassDirection,
+  updateLocation,
+  updatePanelTiltAngle,
+  updateRoofType,
   subscribe,
-  SystemConfig,
+  type SystemConfig,
+  type RoofType,
 } from '@/utils/configStore';
 
 export function useConfigStore() {
@@ -34,5 +38,8 @@ export function useConfigStore() {
     getWizardCompleted,
     setWizardCompleted,
     updateCompassDirection,
+    updateLocation,
+    updatePanelTiltAngle,
+    updateRoofType,
   };
 }

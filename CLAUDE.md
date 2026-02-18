@@ -16,6 +16,9 @@ bun ios      # iOS simulator (opens dev build)
 bun android  # Android emulator (opens dev build)
 bun web      # Web browser
 
+# Unit tests
+bun test
+
 # Lint
 bun run lint
 
@@ -25,6 +28,10 @@ bun run lint
 # Maestro E2E tests
 bun run test:maestro
 ```
+
+**⚠️ IMPORTANT - Before committing:** Always run `bun test` and ensure all unit tests pass before creating a commit. Fix any failing tests before proceeding.
+
+**⚠️ IMPORTANT - E2E Tests:** When modifying screens, navigation, or interactive elements, run `bun run test:maestro` to verify the Maestro E2E tests still pass. If your changes alter navigation flow, button text, or screen structure, update the affected Maestro test files in `.maestro/` accordingly. The E2E tests are the source of truth for whether the app's user-facing flows work correctly.
 
 **⚠️ IMPORTANT - Development Build Workflow:**
 
@@ -48,8 +55,9 @@ This is an Expo Router v55 preview app for creating solar panel array layouts. U
 - **@shopify/react-native-skia** - High-performance 2D canvas for solar panel layout
 - **@ai-sdk/amazon-bedrock** - Claude on AWS Bedrock for image analysis (no AWS SDK dependency)
 - **expo-image-manipulator** - Client-side image resize before upload
-- **@expo/ui/swift-ui** - Native SwiftUI components (Form, Section, List, Slider)
+- **@expo/ui/swift-ui** - Native SwiftUI components (Form, Section, List, Slider, Picker)
 - **expo-sqlite/kv-store** - Synchronous key-value storage for configuration
+- **react-native-wgpu** + **three** (WebGPU) + **@react-three/fiber** - 3D simulation rendering
 
 ## Wizard Flow
 
@@ -313,12 +321,30 @@ curl -X POST http://localhost:8081/api/analyze \
 
 Terraform config in `terraform/` creates an IAM user with minimal `bedrock:InvokeModel` permissions. See `terraform/README.md` for setup instructions.
 
-## Maestro Tests
+## Maestro E2E Tests
 
-E2E tests live in `.maestro/` directory. Current coverage:
-- Smoke test: app launch, home screen, navigation to upload/custom screens
+E2E tests live in `.maestro/` directory. They validate the app's full user-facing flows on a real simulator.
 
-**Run locally:**
+### Test Coverage
+
+| Test | What it covers |
+|------|---------------|
+| `smoke-test.yaml` | App launch, Welcome screen, navigate to Config |
+| `wizard-happy-path.yaml` | Full wizard: Welcome → Config → Upload → Custom → Production |
+| `production-menu.yaml` | Edit Configuration and Delete Configuration menu actions |
+| `simulation-nav.yaml` | Navigate to Simulation screen, verify season picker and output |
+
+### Shared Sub-flows
+
+Common sequences live in `.maestro/shared/` and are reused via `runFlow:`:
+
+| Sub-flow | Purpose |
+|----------|---------|
+| `shared/launch-fresh.yaml` | Clear state, connect to dev server, dismiss onboarding/dev menu |
+| `shared/wizard-to-production.yaml` | Navigate wizard from Welcome to Production |
+| `shared/wizard-resume-to-production.yaml` | Navigate wizard from Config to Production (for re-entry via Edit Configuration) |
+
+### Running Tests
 
 **IMPORTANT**: This project uses development builds. DO NOT use `npx expo run:ios` or `eas build --local` for local development.
 
@@ -331,9 +357,29 @@ curl -Ls "https://get.maestro.mobile.dev" | bash
 bun start
 
 # 2. Open development build on simulator (connects to dev server)
-# 3. Run Maestro tests
+# 3. Run all Maestro tests
 bun run test:maestro
+
+# Run a single test
+maestro test .maestro/wizard-happy-path.yaml
+
+# Debug selectors interactively
+maestro studio
 ```
+
+### Writing & Updating Tests
+
+- **Selectors**: Use `tapOn: "text"` for visible text/accessibility labels, `tapOn: { id: "testID" }` for React Native `testID` props
+- **Native toolbar buttons**: iOS exposes SF Symbol names as accessibility text (e.g., `icon="plus"` → `tapOn: "add"`)
+- **Header toolbar buttons**: `accessibilityLabel` props work as text selectors (e.g., `accessibilityLabel="Simulate"` → `tapOn: "Simulate"`)
+- **Skia canvas elements**: Not accessible to Maestro — test via toolbar side effects (e.g., add panel, verify "Finish" appears)
+- **SwiftUI components**: Section headers and form labels may not be visible to Maestro
+- **Dev client**: Tests use `clearState: true` which requires reconnecting to dev server and dismissing onboarding — this is handled by `shared/launch-fresh.yaml`
+- **`extendedWaitUntil` with `id:`**: Must nest under `visible:` — use `visible: { id: "myId" }`, not `id: "myId"` at top level
+
+### Maestro MCP
+
+A Maestro MCP server is configured in `.mcp.json` for interactive element inspection. After restarting Claude Code, Maestro tools become available for debugging selectors.
 
 ## Configuration System
 
@@ -465,6 +511,70 @@ The `Compass.tsx` component displays array orientation on Custom and Production 
 **State:**
 - Direction stored in `configStore.compassDirection` (0-360°)
 - Persisted via `expo-sqlite/kv-store`
+
+## 3D Simulation Screen
+
+The simulation screen (`src/app/simulation.tsx`) provides a 3D visualization of solar panels on a roof with a movable sun.
+
+### 3D Stack
+
+- **react-native-wgpu** — WebGPU canvas for React Native
+- **three** (WebGPU build via `three/webgpu`) — 3D rendering
+- **@react-three/fiber** — React bindings for Three.js
+- **metro.config.js** — Routes `three` imports to `three/webgpu`, fixes R3F resolution for native
+
+### Lib Files (`src/lib/`)
+
+| File | Purpose |
+|------|---------|
+| `make-webgpu-renderer.ts` | ReactNativeCanvas wrapper + WebGPU renderer factory |
+| `fiber-canvas.tsx` | FiberCanvas component — initializes WebGPU, extends THREE namespace, configures R3F |
+| `orbit-controls.tsx` | Touch-based orbit camera controls (single-finger rotate, pinch zoom) |
+
+### Simulation Components (`src/components/simulation/`)
+
+| Component | Purpose |
+|-----------|---------|
+| `SimulationView.tsx` | Lazy-loaded wrapper: FiberCanvas + OrbitControls |
+| `SimulationScene.tsx` | Main 3D scene: roof + panels + sun + ground |
+| `RoofModel.tsx` | 3D roof geometry for 4 roof types (flat, gable, hip, shed) |
+| `PanelMesh.tsx` | Single panel mesh with wattage-based color coding |
+| `SunLight.tsx` | Directional light + visual sun sphere driven by solar position |
+
+### Solar Calculations (`src/utils/solarCalculations.ts`)
+
+Pure math functions for realistic solar output:
+
+- `getSolarPosition(lat, lon, date)` → `{ elevation, azimuth }`
+- `getSunriseAndSunset(lat, lon, date)` → `{ sunriseHour, sunsetHour }`
+- `getSun3DPosition(elevation, azimuth, distance)` → `{ x, y, z }`
+- `calculateIrradiance(sunElevation)` → W/m² (clear-sky Kasten model)
+- `getEffectiveOutput(params)` → watts per panel
+
+**Formula:** `P = P_max × η × (G / 1000) × max(0, cos θ_i) × noise`
+
+### Geocoding (`src/utils/geocoding.ts`)
+
+City search via OpenStreetMap Nominatim API (free, no API key):
+- `searchCity(query)` → autocomplete results with lat/lon
+- Debounced to respect Nominatim 1 req/sec rate limit
+
+### Config Fields Added
+
+| Field | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `latitude` | `number \| null` | `null` | User's location latitude |
+| `longitude` | `number \| null` | `null` | User's location longitude |
+| `locationName` | `string \| null` | `null` | Display name (e.g. "Amsterdam, Netherlands") |
+| `panelTiltAngle` | `number` | `30` | Panel tilt from horizontal (0-90°) |
+| `roofType` | `RoofType` | `'gable'` | Roof shape for 3D simulation |
+
+### Navigation
+
+- **Production screen** → sun icon in header toolbar → Simulation screen
+- Season dropdown (Spring/Summer/Fall/Winter) sets representative dates
+- Time slider (sunrise → sunset) controls sun position
+- Touch orbit controls for camera rotation and zoom
 
 ## Planned Integrations
 

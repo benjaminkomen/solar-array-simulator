@@ -1,0 +1,37 @@
+appId: com.bkomen.reactnativearraylayout2
+---
+# Production Screen: Menu actions (Edit Config, Delete Config)
+
+# Run through wizard to reach Production
+- runFlow: shared/launch-fresh.yaml
+- runFlow: shared/wizard-to-production.yaml
+
+# Test "Edit Configuration" menu action
+- tapOn: "More options"
+- extendedWaitUntil:
+    visible: "Edit Configuration"
+    timeout: 5000
+- tapOn: "Edit Configuration"
+- extendedWaitUntil:
+    visible: "Panel Settings"
+    timeout: 10000
+
+# Verify we're back on Config screen
+- assertVisible: "Default Production"
+
+# Navigate back through wizard to Production
+- runFlow: shared/wizard-resume-to-production.yaml
+
+# Test "Delete Configuration" menu action
+- tapOn: "More options"
+- extendedWaitUntil:
+    visible: "Delete Configuration"
+    timeout: 5000
+- tapOn: "Delete Configuration"
+
+# Verify we're back on Welcome screen
+- extendedWaitUntil:
+    visible: "Array Builder"
+    timeout: 10000
+- assertVisible:
+    id: "get-started-button"

@@ -1,4 +1,5 @@
 import {StyleSheet, View} from 'react-native';
+import {useState, useCallback, useRef} from 'react';
 import {
   Button,
   Form,
@@ -7,7 +8,9 @@ import {
   Image,
   LabeledContent,
   List,
+  Picker,
   Section,
+  Slider,
   Spacer,
   Text,
   TextField,
@@ -18,21 +21,36 @@ import {
   font,
   foregroundStyle,
   opacity,
+  pickerStyle,
   scrollDismissesKeyboard,
   submitLabel,
+  tag,
 } from '@expo/ui/swift-ui/modifiers';
 import {useConfigStore} from '@/hooks/useConfigStore';
-import type {InverterConfig} from '@/utils/configStore';
+import type {InverterConfig, RoofType} from '@/utils/configStore';
 import {Stack, useLocalSearchParams, useRouter} from "expo-router";
 import {WizardProgress} from "@/components/WizardProgress";
+import {searchCity, type GeocodingResult} from "@/utils/geocoding";
 import * as Haptics from "expo-haptics";
+
+const ROOF_TYPES: { value: RoofType; label: string }[] = [
+  {value: 'gable', label: 'Gable'},
+  {value: 'hip', label: 'Hip'},
+  {value: 'flat', label: 'Flat'},
+  {value: 'shed', label: 'Shed'},
+];
 
 export default function ConfigScreen() {
   const router = useRouter();
   const {wizard} = useLocalSearchParams<{ wizard?: string }>();
   const isWizardMode = wizard === 'true';
 
-  const {config, updateDefaultWattage, removeInverter} = useConfigStore();
+  const {config, updateDefaultWattage, removeInverter, updateLocation, updatePanelTiltAngle, updateRoofType} = useConfigStore();
+
+  const [locationQuery, setLocationQuery] = useState('');
+  const [locationResults, setLocationResults] = useState<GeocodingResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleWattageChange = (text: string) => {
     const wattage = parseInt(text, 10);
@@ -60,6 +78,38 @@ export default function ConfigScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/upload?wizard=true');
   };
+
+  const handleLocationSearch = useCallback((text: string) => {
+    setLocationQuery(text);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+
+    if (text.trim().length < 2) {
+      setLocationResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    // Debounce: 1 second (Nominatim rate limit)
+    searchTimeout.current = setTimeout(async () => {
+      try {
+        const results = await searchCity(text);
+        setLocationResults(results);
+      } catch {
+        setLocationResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 1000);
+  }, []);
+
+  const handleSelectLocation = useCallback((result: GeocodingResult) => {
+    const parts = result.displayName.split(', ');
+    const shortName = parts.slice(0, 2).join(', ');
+    updateLocation(result.latitude, result.longitude, shortName);
+    setLocationQuery('');
+    setLocationResults([]);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, [updateLocation]);
 
   return (
     <>
@@ -90,6 +140,82 @@ export default function ConfigScreen() {
                     <Spacer/>
                     <Text testID='text-input-unit'>W</Text>
                   </HStack>
+                </LabeledContent>
+              </Section>
+
+              {/* Location Section */}
+              <Section
+                header={<Text>Location</Text>}
+                footer={
+                  <Text>
+                    {config.locationName
+                      ? `Current: ${config.locationName} (${config.latitude?.toFixed(2)}\u00B0, ${config.longitude?.toFixed(2)}\u00B0)`
+                      : 'Search for your city to enable realistic solar simulation.'}
+                  </Text>
+                }
+              >
+                <LabeledContent label="City">
+                  <TextField
+                    defaultValue={locationQuery || config.locationName || ''}
+                    onChangeText={handleLocationSearch}
+                    placeholder="e.g. Amsterdam, Netherlands"
+                    modifiers={[submitLabel('search')]}
+                  />
+                </LabeledContent>
+                {isSearching && (
+                  <LabeledContent label="">
+                    <Text modifiers={[opacity(0.6)]}>Searching...</Text>
+                  </LabeledContent>
+                )}
+                {locationResults.map((result, index) => (
+                  <Button
+                    key={`${result.latitude}-${result.longitude}-${index}`}
+                    onPress={() => handleSelectLocation(result)}
+                    modifiers={[buttonStyle('plain')]}
+                  >
+                    <VStack alignment="leading" spacing={2}>
+                      <Text modifiers={[foregroundStyle({type: 'hierarchical', style: 'primary'})]}>
+                        {result.displayName.split(', ').slice(0, 2).join(', ')}
+                      </Text>
+                      <Text modifiers={[opacity(0.6), font({size: 12})]}>
+                        {result.displayName}
+                      </Text>
+                    </VStack>
+                  </Button>
+                ))}
+              </Section>
+
+              {/* Roof Type Section */}
+              <Section
+                header={<Text>Roof</Text>}
+                footer={
+                  <Text>
+                    Select your roof shape for the 3D simulation view.
+                  </Text>
+                }
+              >
+                <Picker
+                  label="Roof Type"
+                  selection={config.roofType}
+                  onSelectionChange={(value) => {
+                    if (value) updateRoofType(value as RoofType);
+                  }}
+                  modifiers={[pickerStyle('segmented')]}
+                >
+                  {ROOF_TYPES.map((rt) => (
+                    <Text key={rt.value} modifiers={[tag(rt.value)]}>
+                      {rt.label}
+                    </Text>
+                  ))}
+                </Picker>
+                <LabeledContent label={`Tilt Angle: ${Math.round(config.panelTiltAngle)}\u00B0`}>
+                  <Slider
+                    value={config.panelTiltAngle}
+                    min={0}
+                    max={90}
+                    step={5}
+                    onValueChange={updatePanelTiltAngle}
+                  />
                 </LabeledContent>
               </Section>
 
@@ -136,7 +262,7 @@ export default function ConfigScreen() {
             Continue
           </Stack.Toolbar.Button>
         )}
-        <Stack.Toolbar.Button icon="plus" onPress={handleOpenAddSheet}/>
+        <Stack.Toolbar.Button icon="plus" onPress={handleOpenAddSheet} accessibilityLabel="Add inverter" />
       </Stack.Toolbar>
     </>
   );

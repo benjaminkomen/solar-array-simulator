@@ -1,0 +1,18 @@
+appId: com.bkomen.reactnativearraylayout2
+---
+# Shared: Resume wizard from Config screen to Production
+# Prerequisite: Must be on the Config screen (already in wizard mode)
+
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Take or Select Photo"
+    timeout: 10000
+- tapOn: "Skip"
+- extendedWaitUntil:
+    visible:
+        id: "canvas-container"
+    timeout: 10000
+- tapOn: "Finish"
+- extendedWaitUntil:
+    visible: "Total Array Output"
+    timeout: 10000
