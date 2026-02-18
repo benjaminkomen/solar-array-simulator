@@ -31,6 +31,8 @@ bun run test:maestro
 
 **⚠️ IMPORTANT - Before committing:** Always run `bun test` and ensure all unit tests pass before creating a commit. Fix any failing tests before proceeding.
 
+**⚠️ IMPORTANT - E2E Tests:** When modifying screens, navigation, or interactive elements, run `bun run test:maestro` to verify the Maestro E2E tests still pass. If your changes alter navigation flow, button text, or screen structure, update the affected Maestro test files in `.maestro/` accordingly. The E2E tests are the source of truth for whether the app's user-facing flows work correctly.
+
 **⚠️ IMPORTANT - Development Build Workflow:**
 
 This project uses **development builds** (Expo dev client), NOT bare `npx expo run:ios` builds.
@@ -319,12 +321,30 @@ curl -X POST http://localhost:8081/api/analyze \
 
 Terraform config in `terraform/` creates an IAM user with minimal `bedrock:InvokeModel` permissions. See `terraform/README.md` for setup instructions.
 
-## Maestro Tests
+## Maestro E2E Tests
 
-E2E tests live in `.maestro/` directory. Current coverage:
-- Smoke test: app launch, home screen, navigation to upload/custom screens
+E2E tests live in `.maestro/` directory. They validate the app's full user-facing flows on a real simulator.
 
-**Run locally:**
+### Test Coverage
+
+| Test | What it covers |
+|------|---------------|
+| `smoke-test.yaml` | App launch, Welcome screen, navigate to Config |
+| `wizard-happy-path.yaml` | Full wizard: Welcome → Config → Upload → Custom → Production |
+| `production-menu.yaml` | Edit Configuration and Delete Configuration menu actions |
+| `simulation-nav.yaml` | Navigate to Simulation screen, verify season picker and output |
+
+### Shared Sub-flows
+
+Common sequences live in `.maestro/shared/` and are reused via `runFlow:`:
+
+| Sub-flow | Purpose |
+|----------|---------|
+| `shared/launch-fresh.yaml` | Clear state, connect to dev server, dismiss onboarding/dev menu |
+| `shared/wizard-to-production.yaml` | Navigate wizard from Welcome to Production |
+| `shared/wizard-resume-to-production.yaml` | Navigate wizard from Config to Production (for re-entry via Edit Configuration) |
+
+### Running Tests
 
 **IMPORTANT**: This project uses development builds. DO NOT use `npx expo run:ios` or `eas build --local` for local development.
 
@@ -337,9 +357,29 @@ curl -Ls "https://get.maestro.mobile.dev" | bash
 bun start
 
 # 2. Open development build on simulator (connects to dev server)
-# 3. Run Maestro tests
+# 3. Run all Maestro tests
 bun run test:maestro
+
+# Run a single test
+maestro test .maestro/wizard-happy-path.yaml
+
+# Debug selectors interactively
+maestro studio
 ```
+
+### Writing & Updating Tests
+
+- **Selectors**: Use `tapOn: "text"` for visible text/accessibility labels, `tapOn: { id: "testID" }` for React Native `testID` props
+- **Native toolbar buttons**: iOS exposes SF Symbol names as accessibility text (e.g., `icon="plus"` → `tapOn: "add"`)
+- **Header toolbar buttons**: `accessibilityLabel` props work as text selectors (e.g., `accessibilityLabel="Simulate"` → `tapOn: "Simulate"`)
+- **Skia canvas elements**: Not accessible to Maestro — test via toolbar side effects (e.g., add panel, verify "Finish" appears)
+- **SwiftUI components**: Section headers and form labels may not be visible to Maestro
+- **Dev client**: Tests use `clearState: true` which requires reconnecting to dev server and dismissing onboarding — this is handled by `shared/launch-fresh.yaml`
+- **`extendedWaitUntil` with `id:`**: Must nest under `visible:` — use `visible: { id: "myId" }`, not `id: "myId"` at top level
+
+### Maestro MCP
+
+A Maestro MCP server is configured in `.mcp.json` for interactive element inspection. After restarting Claude Code, Maestro tools become available for debugging selectors.
 
 ## Configuration System
 
