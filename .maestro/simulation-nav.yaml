@@ -1,0 +1,22 @@
+appId: com.bkomen.reactnativearraylayout2
+---
+# Simulation Screen: Navigate from Production and verify loading
+
+# Run through wizard to reach Production
+- runFlow: shared/launch-fresh.yaml
+- runFlow: shared/wizard-to-production.yaml
+
+# Tap simulation button in header
+- tapOn: "Simulate"
+
+# Verify Simulation screen loads
+- extendedWaitUntil:
+    visible: "Simulation"
+    timeout: 15000
+
+# Verify simulation UI elements
+- assertVisible: "Total Output"
+- assertVisible: "Spring"
+- assertVisible: "Summer"
+- assertVisible: "Fall"
+- assertVisible: "Winter"

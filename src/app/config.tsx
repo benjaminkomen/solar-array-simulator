@@ -262,7 +262,7 @@ export default function ConfigScreen() {
             Continue
           </Stack.Toolbar.Button>
         )}
-        <Stack.Toolbar.Button icon="plus" onPress={handleOpenAddSheet}/>
+        <Stack.Toolbar.Button icon="plus" onPress={handleOpenAddSheet} accessibilityLabel="Add inverter" />
       </Stack.Toolbar>
     </>
   );

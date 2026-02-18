@@ -86,10 +86,10 @@ export default function InverterDetailsScreen() {
         }}
       />
       <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="xmark" onPress={handleCancel} />
+        <Stack.Toolbar.Button icon="xmark" onPress={handleCancel} accessibilityLabel="Cancel" />
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="checkmark" onPress={handleSave} />
+        <Stack.Toolbar.Button icon="checkmark" onPress={handleSave} accessibilityLabel="Save" />
       </Stack.Toolbar>
       <View style={styles.container}>
         <Host style={styles.host}>

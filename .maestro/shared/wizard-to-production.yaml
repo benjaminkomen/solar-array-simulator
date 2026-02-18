@@ -1,0 +1,25 @@
+appId: com.bkomen.reactnativearraylayout2
+---
+# Shared: Navigate through the wizard from Welcome to Production
+# Prerequisite: Must be on the Welcome screen
+
+- tapOn:
+    id: "get-started-button"
+- extendedWaitUntil:
+    visible: "Panel Settings"
+    timeout: 10000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Take or Select Photo"
+    timeout: 10000
+- tapOn: "Skip"
+- extendedWaitUntil:
+    visible:
+        id: "canvas-container"
+    timeout: 10000
+- tapOn: "add"
+- waitForAnimationToEnd
+- tapOn: "Finish"
+- extendedWaitUntil:
+    visible: "Total Array Output"
+    timeout: 10000

@@ -107,6 +107,7 @@ export default function Index() {
               title="Get Started"
               onPress={handleGetStarted}
               style={{ paddingVertical: 18, borderRadius: 14 }}
+              testID='get-started-button'
             />
           </Animated.View>
 

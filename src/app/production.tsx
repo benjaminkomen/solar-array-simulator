@@ -191,8 +191,8 @@ export default function ProductionScreen() {
   return (
     <>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="sun.max" onPress={handleSimulate} />
-        <Stack.Toolbar.Menu icon="ellipsis.circle">
+        <Stack.Toolbar.Button icon="sun.max" onPress={handleSimulate} accessibilityLabel="Simulate" />
+        <Stack.Toolbar.Menu icon="ellipsis.circle" accessibilityLabel="More options">
           <Stack.Toolbar.MenuAction icon="pencil" onPress={handleEditConfiguration}>
             Edit Configuration
           </Stack.Toolbar.MenuAction>

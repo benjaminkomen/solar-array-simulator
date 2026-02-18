@@ -261,14 +261,14 @@ export default function Custom() {
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="location.north.circle" onPress={handleCompassToggle} />
+        <Stack.Toolbar.Button icon="location.north.circle" onPress={handleCompassToggle} accessibilityLabel="Toggle compass" />
         <Stack.Toolbar.Button onPress={() => {}}>
           <Stack.Toolbar.Icon sf="link" />
           {unlinkedCount > 0 && (
             <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
           )}
         </Stack.Toolbar.Button>
-        <Stack.Toolbar.Button icon="scope" onPress={handleSnapToOrigin} />
+        <Stack.Toolbar.Button icon="scope" onPress={handleSnapToOrigin} accessibilityLabel="Snap to origin" />
       </Stack.Toolbar>
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
@@ -300,17 +300,18 @@ export default function Custom() {
         />
       </View>
       <Stack.Toolbar placement="bottom">
-        <Stack.Toolbar.Button icon="plus" onPress={handleAddPanel} />
+        <Stack.Toolbar.Button icon="plus" onPress={handleAddPanel} accessibilityLabel="Add panel" />
         {selectedId && (
           <>
             <Link href={`/panel-details?panelId=${selectedId}`} asChild>
-              <Stack.Toolbar.Button icon="link" />
+              <Stack.Toolbar.Button icon="link" accessibilityLabel="Link inverter" />
             </Link>
             <Stack.Toolbar.Button
               icon="rotate.right"
               onPress={handleRotatePanel}
+              accessibilityLabel="Rotate panel"
             />
-            <Stack.Toolbar.Button icon="trash" onPress={handleDeletePanel} />
+            <Stack.Toolbar.Button icon="trash" onPress={handleDeletePanel} accessibilityLabel="Delete panel" />
           </>
         )}
         {isWizardMode && panels.length > 0 && (

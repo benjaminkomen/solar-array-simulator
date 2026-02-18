@@ -1,36 +1,13 @@
 appId: com.bkomen.reactnativearraylayout2
 ---
 # Basic smoke test for solar panel array layout app
-# Tests main navigation flows and screen loading
+# Tests app launch and Welcome screen
 
-- launchApp
+- runFlow: shared/launch-fresh.yaml
+- assertVisible:
+    id: "get-started-button"
+- tapOn:
+    id: "get-started-button"
 - extendedWaitUntil:
-    visible: "Array Builder"
-    timeout: 30000
-
-# Verify home screen loaded
-- assertVisible: "Array Builder"
-- assertVisible:
-    id: "upload-option"
-- assertVisible:
-    id: "custom-option"
-
-# Test Upload option
-- tapOn:
-    id: "upload-option"
-- assertVisible: "Take or Select Photo"
-- assertVisible:
-    id: "take-photo-button"
-- assertVisible:
-    id: "choose-gallery-button"
-
-# Go back to home
-- back
-- assertVisible: "Array Builder"
-
-# Test Custom option
-- tapOn:
-    id: "custom-option"
-# Wait a moment for canvas to load
-- assertVisible:
-    id: "canvas-container"
+    visible: "Panel Settings"
+    timeout: 10000
