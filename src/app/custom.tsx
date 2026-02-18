@@ -13,16 +13,96 @@ import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { GRID_SIZE } from "@/utils/gridSnap";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { WizardProgress } from "@/components/WizardProgress";
-import { ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from "@/utils/zoomConstants";
+import { useZoom } from "@/hooks/useZoom";
 import { useColors } from "@/utils/theme";
 
 // Fallback: 2 rows x 5 columns mock grid
 const COLS = 5;
-const PANEL_GAP = 6;
-const COL_SPACING = PANEL_WIDTH + PANEL_GAP;
-const ROW_SPACING = PANEL_HEIGHT + PANEL_GAP;
+const MOCK_GAP = 6;
+const COL_SPACING = PANEL_WIDTH + MOCK_GAP;
+const ROW_SPACING = PANEL_HEIGHT + MOCK_GAP;
 const GRID_TOTAL_WIDTH = (COLS - 1) * COL_SPACING + PANEL_WIDTH;
 const GRID_TOTAL_HEIGHT = ROW_SPACING + PANEL_HEIGHT;
+
+/** Minimum gap between panels for overlap resolution */
+const MIN_GAP = 8;
+
+interface PositionWithRotation {
+  x: number;
+  y: number;
+  rotation: 0 | 90;
+}
+
+/**
+ * Resolve overlapping panels by iteratively nudging them apart.
+ * Works with canvas coordinates (after scaling/snapping).
+ */
+function resolveOverlaps(panels: PositionWithRotation[]): PositionWithRotation[] {
+  const resolved = panels.map((p) => ({ ...p }));
+  const maxIterations = 100;
+
+  for (let iteration = 0; iteration < maxIterations; iteration++) {
+    let hasOverlap = false;
+
+    for (let i = 0; i < resolved.length; i++) {
+      for (let j = i + 1; j < resolved.length; j++) {
+        const a = resolved[i];
+        const b = resolved[j];
+
+        // Get dimensions based on rotation
+        const aWidth = a.rotation === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
+        const aHeight = a.rotation === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
+        const bWidth = b.rotation === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
+        const bHeight = b.rotation === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
+
+        // Check if panels overlap (with gap)
+        const overlapX =
+          a.x < b.x + bWidth + MIN_GAP && a.x + aWidth + MIN_GAP > b.x;
+        const overlapY =
+          a.y < b.y + bHeight + MIN_GAP && a.y + aHeight + MIN_GAP > b.y;
+
+        if (overlapX && overlapY) {
+          hasOverlap = true;
+
+          // Calculate overlap amounts
+          const overlapAmountX = Math.min(
+            a.x + aWidth + MIN_GAP - b.x,
+            b.x + bWidth + MIN_GAP - a.x
+          );
+          const overlapAmountY = Math.min(
+            a.y + aHeight + MIN_GAP - b.y,
+            b.y + bHeight + MIN_GAP - a.y
+          );
+
+          // Move apart along the axis with smaller overlap, snap to grid
+          if (overlapAmountX < overlapAmountY) {
+            const shift = Math.ceil(overlapAmountX / 2 / GRID_SIZE) * GRID_SIZE + GRID_SIZE;
+            if (a.x < b.x) {
+              a.x -= shift;
+              b.x += shift;
+            } else {
+              a.x += shift;
+              b.x -= shift;
+            }
+          } else {
+            const shift = Math.ceil(overlapAmountY / 2 / GRID_SIZE) * GRID_SIZE + GRID_SIZE;
+            if (a.y < b.y) {
+              a.y -= shift;
+              b.y += shift;
+            } else {
+              a.y += shift;
+              b.y -= shift;
+            }
+          }
+        }
+      }
+    }
+
+    if (!hasOverlap) break;
+  }
+
+  return resolved;
+}
 
 function buildMockPanelGrid(canvasWidth: number, canvasHeight: number) {
   const offsetX = Math.round((canvasWidth - GRID_TOTAL_WIDTH) / 2);
@@ -55,7 +135,6 @@ function mapAnalysisToCanvasPositions(
 ) {
   if (panels.length === 0) return [];
 
-  // Find the bounding box of all panels in image space
   const minX = Math.min(...panels.map((p) => p.x));
   const minY = Math.min(...panels.map((p) => p.y));
   const maxX = Math.max(
@@ -68,8 +147,6 @@ function mapAnalysisToCanvasPositions(
   const layoutWidth = maxX - minX;
   const layoutHeight = maxY - minY;
 
-  // Scale factor: map image-space layout to canvas units
-  // Use the average panel size in image space to determine scale
   const avgPanelWidth =
     panels.reduce(
       (sum, p) => sum + (p.rotation === 90 ? p.height : p.width),
@@ -77,20 +154,17 @@ function mapAnalysisToCanvasPositions(
     ) / panels.length;
   const scale = PANEL_WIDTH / avgPanelWidth;
 
-  // Scale the total layout size
   const scaledWidth = layoutWidth * scale;
   const scaledHeight = layoutHeight * scale;
 
-  // Center in canvas
   const offsetX = Math.round((canvasWidth - scaledWidth) / 2);
   const offsetY = Math.round((canvasHeight - scaledHeight) / 2);
 
-  return panels.map((p) => {
+  const positions = panels.map((p) => {
     // Scale position relative to the layout bounding box
     const rawX = offsetX + (p.x - minX) * scale;
     const rawY = offsetY + (p.y - minY) * scale;
 
-    // Snap to grid
     const x = Math.round(rawX / GRID_SIZE) * GRID_SIZE;
     const y = Math.round(rawY / GRID_SIZE) * GRID_SIZE;
 
@@ -100,6 +174,9 @@ function mapAnalysisToCanvasPositions(
       rotation: p.rotation,
     };
   });
+
+  // Resolve any overlaps introduced by scaling/snapping
+  return resolveOverlaps(positions);
 }
 
 export default function Custom() {
@@ -110,13 +187,12 @@ export default function Custom() {
   const colors = useColors();
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
-  const scale = useSharedValue(ZOOM_LEVELS[DEFAULT_ZOOM_INDEX]);
   const canvasWidth = useSharedValue(0);
   const canvasHeight = useSharedValue(0);
   const hasInitialized = useRef(false);
-  const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const [compassVisible, setCompassVisible] = useState(false);
   const { config, setWizardCompleted, updateCompassDirection } = useConfigStore();
+  const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
 
   const {
     panels,
@@ -143,14 +219,12 @@ export default function Custom() {
       const { width, height } = event.nativeEvent.layout;
       canvasSize.current = { width, height };
 
-      // Update shared values on UI thread to avoid render warnings
       scheduleOnUI(updateCanvasSize, width, height);
 
       // Initialize panels centered in the canvas after layout is known
       if (initialPanels && !hasInitialized.current && width > 0 && height > 0) {
         hasInitialized.current = true;
 
-        // Try to use real analysis results, fall back to mock grid
         const analysis = consumeAnalysisResult();
         if (analysis && analysis.panels.length > 0) {
           const positions = mapAnalysisToCanvasPositions(
@@ -161,7 +235,6 @@ export default function Custom() {
             height,
           );
 
-          // Auto-link panels based on label matching serial numbers
           const positionsWithInverters = positions.map((pos, idx) => {
             const label = analysis.panels[idx]?.label || '';
             const matchingInverter = config.inverters.find(
@@ -179,7 +252,7 @@ export default function Custom() {
         }
       }
     },
-    [initialPanels, initializePanels, config.inverters, canvasWidth, canvasHeight],
+    [initialPanels, initializePanels, config.inverters],
   );
 
   const handleAddPanel = useCallback(() => {
@@ -217,7 +290,6 @@ export default function Custom() {
     }
   }, [getPanelStates, viewportX, viewportY]);
 
-  // Compute unlinked count (uses cached state from hook, no SharedValue reads)
   const unlinkedCount = panels.length - getLinkedCount();
 
   const handleFinish = useCallback(() => {
@@ -226,32 +298,14 @@ export default function Custom() {
     router.push('/production');
   }, [setWizardCompleted, router]);
 
-  const handleZoomIn = useCallback(() => {
-    if (zoomIndex > 0) {
-      const newIndex = zoomIndex - 1;
-      setZoomIndex(newIndex);
-      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
-    }
-  }, [zoomIndex, scale]);
-
-  const handleZoomOut = useCallback(() => {
-    if (zoomIndex < ZOOM_LEVELS.length - 1) {
-      const newIndex = zoomIndex + 1;
-      setZoomIndex(newIndex);
-      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
-    }
-  }, [zoomIndex, scale]);
-
   const handleCompassTap = useCallback(() => {
     router.push('/compass-help');
   }, [router]);
 
   const handleCompassToggle = useCallback(() => {
     if (compassVisible) {
-      // Hide compass
       setCompassVisible(false);
     } else {
-      // Show compass and open help sheet
       setCompassVisible(true);
       router.push('/compass-help');
     }
