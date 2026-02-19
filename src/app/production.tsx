@@ -28,8 +28,11 @@ export default function ProductionScreen() {
   const { panels } = usePanelsContext();
   const { config } = useConfigStore();
   const router = useRouter();
-  const [wattages, setWattages] = useState<Map<string, number>>(new Map());
-  const [totalWattage, setTotalWattage] = useState(0);
+  const [wattageState, setWattageState] = useState<{ map: Map<string, number>; total: number }>(
+    { map: new Map(), total: 0 }
+  );
+  const wattages = wattageState.map;
+  const totalWattage = wattageState.total;
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const colorScheme = useColorScheme();
@@ -121,8 +124,7 @@ export default function ProductionScreen() {
         total += wattage;
       }
 
-      setWattages(newWattages);
-      setTotalWattage(total);
+      setWattageState({ map: newWattages, total });
     };
 
     updateWattages();

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { Image } from "expo-image";
 import {
@@ -74,10 +74,7 @@ export function ProcessingOverlay({ imageUri }: ProcessingOverlayProps) {
   const shimmerX = useSharedValue(-SHIMMER_WIDTH);
   const font = matchFont(fontStyle);
 
-  const textWidth = useMemo(
-    () => (font ? font.measureText(SHIMMER_TEXT).width : 250),
-    [font],
-  );
+  const textWidth = font ? font.measureText(SHIMMER_TEXT).width : 250;
   const textX = (screenWidth - textWidth) / 2;
 
   const shaderUniforms = useDerivedValue(() => ({

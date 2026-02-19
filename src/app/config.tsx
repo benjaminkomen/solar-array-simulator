@@ -169,7 +169,7 @@ export default function ConfigScreen() {
                 )}
                 {locationResults.map((result, index) => (
                   <Button
-                    key={`${result.latitude}-${result.longitude}-${index}`}
+                    key={`${result.latitude}-${result.longitude}`}
                     onPress={() => handleSelectLocation(result)}
                     modifiers={[buttonStyle('plain')]}
                   >

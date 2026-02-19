@@ -1,6 +1,5 @@
-import { useEffect } from "react";
 import { ScrollView, Text, useColorScheme } from "react-native";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -18,15 +17,8 @@ export default function Index() {
   const wizardCompleted = getWizardCompleted();
 
   // Redirect returning users directly to production
-  useEffect(() => {
-    if (wizardCompleted) {
-      router.replace("/production");
-    }
-  }, [wizardCompleted, router]);
-
-  // Show nothing while redirecting
   if (wizardCompleted) {
-    return null;
+    return <Redirect href="/production" />;
   }
 
   const handleGetStarted = () => {
