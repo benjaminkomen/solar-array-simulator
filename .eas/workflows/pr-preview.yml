@@ -9,12 +9,10 @@ jobs:
     name: Unit Tests & React Doctor
     steps:
       - uses: eas/checkout
-      - name: Install Bun
-        run: curl -fsSL https://bun.sh/install | bash
       - name: Install dependencies
-        run: ~/.bun/bin/bun install
+        run: bun install
       - name: Run unit tests
-        run: ~/.bun/bin/bun test
+        run: bun test
       - name: Fetch main branch
         run: git fetch origin main
       - name: Run React Doctor
