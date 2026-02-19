@@ -40,6 +40,10 @@ export default function Upload() {
     setImage(picked);
     setError(null);
 
+    const customRoute = isWizardMode
+      ? '/custom?initialPanels=true&wizard=true'
+      : '/custom?initialPanels=true';
+
     const handleAnalysisError = (message: string) => {
       console.error("Analysis failed:", message);
       setImage(null);
@@ -64,8 +68,16 @@ export default function Upload() {
       });
 
       if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        handleAnalysisError(body.error ?? `Server error: ${response.status}`);
+        let errorMessage = `Server error: ${response.status}`;
+        try {
+          const body = await response.json();
+          if (body.error) {
+            errorMessage = body.error;
+          }
+        } catch {
+          // ignore JSON parse error
+        }
+        handleAnalysisError(errorMessage);
         return;
       }
 
@@ -77,11 +89,14 @@ export default function Upload() {
         imageHeight: resized.height,
       });
 
-      const wizardParam = isWizardMode ? '&wizard=true' : '';
-      router.replace(`/custom?initialPanels=true${wizardParam}`);
+      router.replace(customRoute);
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") return;
-      handleAnalysisError(err instanceof Error ? err.message : "Unknown error");
+      let message = "Unknown error";
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      handleAnalysisError(message);
     }
   }, [isWizardMode, router]);
 

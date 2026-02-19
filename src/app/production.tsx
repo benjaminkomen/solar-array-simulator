@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, type LayoutChangeEvent, useColorScheme } from "
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Stack, useRouter } from "expo-router";
-import { useSharedValue } from "react-native-reanimated";
+import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
 import { usePanelsContext } from "@/contexts/PanelsContext";
@@ -24,6 +24,27 @@ function formatWattage(watts: number): string {
   return `${watts}W`;
 }
 
+function applyCanvasSize(
+  canvasWidth: SharedValue<number>,
+  canvasHeight: SharedValue<number>,
+  width: number,
+  height: number,
+) {
+  'worklet';
+  canvasWidth.value = width;
+  canvasHeight.value = height;
+}
+
+function applyViewportPosition(
+  viewportX: SharedValue<number>,
+  viewportY: SharedValue<number>,
+  x: number,
+  y: number,
+) {
+  viewportX.value = x;
+  viewportY.value = y;
+}
+
 function useViewport(panels: ReturnType<typeof usePanelsContext>["panels"]) {
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
@@ -31,17 +52,11 @@ function useViewport(panels: ReturnType<typeof usePanelsContext>["panels"]) {
   const canvasHeight = useSharedValue(0);
   const hasInitializedViewport = useRef(false);
 
-  const updateCanvasSize = (width: number, height: number) => {
-    'worklet';
-    canvasWidth.value = width;
-    canvasHeight.value = height;
-  };
-
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
 
-      scheduleOnUI(updateCanvasSize, width, height);
+      scheduleOnUI(applyCanvasSize, canvasWidth, canvasHeight, width, height);
 
       // Center viewport on panels bounding box (once, on first layout)
       if (!hasInitializedViewport.current && panels.length > 0 && width > 0 && height > 0) {
@@ -63,12 +78,10 @@ function useViewport(panels: ReturnType<typeof usePanelsContext>["panels"]) {
 
         const boundingCenterX = (minX + maxX) / 2;
         const boundingCenterY = (minY + maxY) / 2;
-        viewportX.value = width / 2 - boundingCenterX;
-        viewportY.value = height / 2 - boundingCenterY;
+        applyViewportPosition(viewportX, viewportY, width / 2 - boundingCenterX, height / 2 - boundingCenterY);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [panels]
+    [canvasWidth, canvasHeight, viewportX, viewportY, panels]
   );
 
   return { viewportX, viewportY, canvasWidth, canvasHeight, handleLayout };

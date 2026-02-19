@@ -18,6 +18,7 @@ import {
 import Animated, {
   Easing,
   FadeIn,
+  type SharedValue,
   useDerivedValue,
   useSharedValue,
   withRepeat,
@@ -66,25 +67,33 @@ interface ProcessingOverlayProps {
   imageUri: string;
 }
 
+function startAnimations(
+  iTime: SharedValue<number>,
+  shimmerX: SharedValue<number>,
+  textWidth: number,
+) {
+  iTime.value = withRepeat(
+    withTiming(15, { duration: 20000, easing: Easing.linear }),
+    -1,
+    true,
+  );
+
+  shimmerX.value = withRepeat(
+    withTiming(textWidth + SHIMMER_WIDTH, {
+      duration: 2000,
+      easing: Easing.linear,
+    }),
+    -1,
+    false,
+  );
+}
+
 function useAnimations(textWidth: number) {
   const iTime = useSharedValue(0);
   const shimmerX = useSharedValue(-SHIMMER_WIDTH);
 
   useEffect(() => {
-    iTime.value = withRepeat(
-      withTiming(15, { duration: 20000, easing: Easing.linear }),
-      -1,
-      true,
-    );
-
-    shimmerX.value = withRepeat(
-      withTiming(textWidth + SHIMMER_WIDTH, {
-        duration: 2000,
-        easing: Easing.linear,
-      }),
-      -1,
-      false,
-    );
+    startAnimations(iTime, shimmerX, textWidth);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [textWidth]);
 
