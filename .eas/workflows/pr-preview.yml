@@ -18,7 +18,14 @@ jobs:
           git fetch --unshallow 2>/dev/null || true
           git fetch origin main:main
       - name: Run React Doctor
-        run: npx react-doctor --diff main
+        run: |
+          output=$(npx react-doctor --diff main 2>&1)
+          printf '%s\n' "$output"
+          clean=$(printf '%s\n' "$output" | sed 's/\x1b\[[0-9;]*[mGKHF]//g')
+          if printf '%s\n' "$clean" | grep -qE "[1-9][0-9]* error"; then
+            echo "React Doctor found errors. Fix them before merging."
+            exit 1
+          fi
 
   deploy-preview:
     type: deploy
