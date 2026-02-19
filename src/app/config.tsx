@@ -94,9 +94,9 @@ export default function ConfigScreen() {
       try {
         const results = await searchCity(text);
         setLocationResults(results);
+        setIsSearching(false);
       } catch {
         setLocationResults([]);
-      } finally {
         setIsSearching(false);
       }
     }, 1000);

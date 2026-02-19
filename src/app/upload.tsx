@@ -40,6 +40,16 @@ export default function Upload() {
     setImage(picked);
     setError(null);
 
+    const handleAnalysisError = (message: string) => {
+      console.error("Analysis failed:", message);
+      setImage(null);
+      setError(message);
+      Alert.alert(
+        "Analysis Failed",
+        `Could not analyze the image: ${message}. Please try again.`,
+      );
+    };
+
     try {
       const resized = await resizeForAnalysis(picked.uri);
 
@@ -55,7 +65,8 @@ export default function Upload() {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body.error ?? `Server error: ${response.status}`);
+        handleAnalysisError(body.error ?? `Server error: ${response.status}`);
+        return;
       }
 
       const result = await response.json();
@@ -70,14 +81,7 @@ export default function Upload() {
       router.replace(`/custom?initialPanels=true${wizardParam}`);
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") return;
-      const message = err instanceof Error ? err.message : "Unknown error";
-      console.error("Analysis failed:", message);
-      setImage(null);
-      setError(message);
-      Alert.alert(
-        "Analysis Failed",
-        `Could not analyze the image: ${message}. Please try again.`,
-      );
+      handleAnalysisError(err instanceof Error ? err.message : "Unknown error");
     }
   }, [isWizardMode, router]);
 

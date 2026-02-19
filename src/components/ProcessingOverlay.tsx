@@ -66,24 +66,9 @@ interface ProcessingOverlayProps {
   imageUri: string;
 }
 
-export function ProcessingOverlay({ imageUri }: ProcessingOverlayProps) {
-  const { width: screenWidth } = useWindowDimensions();
-  const canvasSize = screenWidth;
-
+function useAnimations(textWidth: number) {
   const iTime = useSharedValue(0);
   const shimmerX = useSharedValue(-SHIMMER_WIDTH);
-  const font = matchFont(fontStyle);
-
-  const textWidth = font ? font.measureText(SHIMMER_TEXT).width : 250;
-  const textX = (screenWidth - textWidth) / 2;
-
-  const shaderUniforms = useDerivedValue(() => ({
-    iTime: iTime.value,
-    iResolution: vec(canvasSize, canvasSize),
-  }));
-
-  const shimmerStart = useDerivedValue(() => vec(shimmerX.value, 0));
-  const shimmerEnd = useDerivedValue(() => vec(shimmerX.value + SHIMMER_WIDTH, 0));
 
   useEffect(() => {
     iTime.value = withRepeat(
@@ -102,6 +87,28 @@ export function ProcessingOverlay({ imageUri }: ProcessingOverlayProps) {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [textWidth]);
+
+  return { iTime, shimmerX };
+}
+
+export function ProcessingOverlay({ imageUri }: ProcessingOverlayProps) {
+  const { width: screenWidth } = useWindowDimensions();
+  const canvasSize = screenWidth;
+
+  const font = matchFont(fontStyle);
+
+  const textWidth = font ? font.measureText(SHIMMER_TEXT).width : 250;
+  const textX = (screenWidth - textWidth) / 2;
+
+  const { iTime, shimmerX } = useAnimations(textWidth);
+
+  const shaderUniforms = useDerivedValue(() => ({
+    iTime: iTime.value,
+    iResolution: vec(canvasSize, canvasSize),
+  }));
+
+  const shimmerStart = useDerivedValue(() => vec(shimmerX.value, 0));
+  const shimmerEnd = useDerivedValue(() => vec(shimmerX.value + SHIMMER_WIDTH, 0));
 
   return (
     <Animated.View entering={FadeIn.duration(500)} style={styles.container}>

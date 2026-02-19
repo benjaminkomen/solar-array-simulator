@@ -5,9 +5,25 @@ on:
     types: ['opened', 'synchronize', 'reopened']
 
 jobs:
+  test:
+    name: Unit Tests & React Doctor
+    steps:
+      - uses: eas/checkout
+      - name: Install Bun
+        run: curl -fsSL https://bun.sh/install | bash
+      - name: Install dependencies
+        run: ~/.bun/bin/bun install
+      - name: Run unit tests
+        run: ~/.bun/bin/bun test
+      - name: Fetch main branch
+        run: git fetch origin main
+      - name: Run React Doctor
+        run: npx react-doctor --diff main
+
   deploy-preview:
     type: deploy
     name: Deploy Preview
+    needs: [test]
     environment: preview
     params:
       alias: pr-${{ github.pull_request.number }}

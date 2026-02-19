@@ -24,27 +24,12 @@ function formatWattage(watts: number): string {
   return `${watts}W`;
 }
 
-export default function ProductionScreen() {
-  const { panels } = usePanelsContext();
-  const { config } = useConfigStore();
-  const router = useRouter();
-  const [wattageState, setWattageState] = useState<{ map: Map<string, number>; total: number }>(
-    { map: new Map(), total: 0 }
-  );
-  const wattages = wattageState.map;
-  const totalWattage = wattageState.total;
-  const insets = useSafeAreaInsets();
-  const colors = useColors();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-
-  // Viewport shared values
+function useViewport(panels: ReturnType<typeof usePanelsContext>["panels"]) {
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
   const canvasWidth = useSharedValue(0);
   const canvasHeight = useSharedValue(0);
   const hasInitializedViewport = useRef(false);
-  const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
 
   const updateCanvasSize = (width: number, height: number) => {
     'worklet';
@@ -82,8 +67,29 @@ export default function ProductionScreen() {
         viewportY.value = height / 2 - boundingCenterY;
       }
     },
-    [panels, viewportX, viewportY]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [panels]
   );
+
+  return { viewportX, viewportY, canvasWidth, canvasHeight, handleLayout };
+}
+
+export default function ProductionScreen() {
+  const { panels } = usePanelsContext();
+  const { config } = useConfigStore();
+  const router = useRouter();
+  const [wattageState, setWattageState] = useState<{ map: Map<string, number>; total: number }>(
+    { map: new Map(), total: 0 }
+  );
+  const wattages = wattageState.map;
+  const totalWattage = wattageState.total;
+  const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
+  const { viewportX, viewportY, canvasWidth, canvasHeight, handleLayout } = useViewport(panels);
 
   // Calculate wattage for a single panel using solar position model
   const calculateWattage = useCallback(
