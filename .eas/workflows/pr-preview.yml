@@ -14,7 +14,7 @@ jobs:
       - name: Run unit tests
         run: bun test
       - name: Fetch main branch
-        run: git fetch origin main
+        run: git fetch origin main:main
       - name: Run React Doctor
         run: npx react-doctor --diff main
 
