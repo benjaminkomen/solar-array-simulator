@@ -1,14 +1,11 @@
-import { useCallback, useRef, useState } from "react";
-import { Alert, Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
+import { useCallback } from "react";
+import { Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { useImagePicker, type PickedImage } from "@/hooks/useImagePicker";
 import { PermissionModal } from "@/components/PermissionModal";
-import { ProcessingOverlay } from "@/components/ProcessingOverlay";
-import { resizeForAnalysis } from "@/utils/imageResize";
-import { setAnalysisResult } from "@/utils/analysisStore";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 
@@ -16,15 +13,9 @@ export default function Upload() {
   const router = useRouter();
   const { wizard } = useLocalSearchParams<{ wizard?: string }>();
   const isWizardMode = wizard === 'true';
-  const abortRef = useRef<AbortController | null>(null);
-  const [image, setImage] = useState<PickedImage | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
-  // Derived: processing whenever an image has been picked
-  const isProcessing = image != null;
 
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -32,72 +23,9 @@ export default function Upload() {
     router.push(`/custom${wizardParam}`);
   };
 
-  const analyzeImage = useCallback(async (picked: PickedImage) => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    setImage(picked);
-    setError(null);
-
-    const customRoute = isWizardMode
-      ? '/custom?initialPanels=true&wizard=true'
-      : '/custom?initialPanels=true';
-
-    const handleAnalysisError = (message: string) => {
-      console.error("Analysis failed:", message);
-      setImage(null);
-      setError(message);
-      Alert.alert(
-        "Analysis Failed",
-        `Could not analyze the image: ${message}. Please try again.`,
-      );
-    };
-
-    try {
-      const resized = await resizeForAnalysis(picked.uri);
-
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: resized.base64,
-          mimeType: resized.mimeType,
-        }),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        let errorMessage = `Server error: ${response.status}`;
-        try {
-          const body = await response.json();
-          if (body.error) {
-            errorMessage = body.error;
-          }
-        } catch {
-          // ignore JSON parse error
-        }
-        handleAnalysisError(errorMessage);
-        return;
-      }
-
-      const result = await response.json();
-
-      setAnalysisResult({
-        panels: result.panels,
-        imageWidth: resized.width,
-        imageHeight: resized.height,
-      });
-
-      router.replace(customRoute);
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name === "AbortError") return;
-      let message = "Unknown error";
-      if (err instanceof Error) {
-        message = err.message;
-      }
-      handleAnalysisError(message);
-    }
+  const onImageSelected = useCallback((picked: PickedImage) => {
+    const wizardParam = isWizardMode ? '&wizard=true' : '';
+    router.push(`/analyze?imageUri=${encodeURIComponent(picked.uri)}${wizardParam}`);
   }, [isWizardMode, router]);
 
   const {
@@ -106,7 +34,7 @@ export default function Upload() {
     modalState,
     handleModalAllow,
     handleModalClose,
-  } = useImagePicker(analyzeImage);
+  } = useImagePicker(onImageSelected);
 
   return (
     <>
@@ -220,10 +148,6 @@ export default function Upload() {
           onAllow={handleModalAllow}
           onClose={handleModalClose}
         />
-      )}
-
-      {isProcessing && !error && (
-        <ProcessingOverlay imageUri={image!.uri} />
       )}
     </>
   );

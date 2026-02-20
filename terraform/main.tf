@@ -33,9 +33,9 @@ resource "aws_iam_access_key" "bedrock_api" {
   user = aws_iam_user.bedrock_api.name
 }
 
-# Minimal policy: only InvokeModel on Claude models
+# Minimal policy: only InvokeModel on allowed models
 resource "aws_iam_user_policy" "bedrock_invoke" {
-  name = "bedrock-invoke-claude"
+  name = "bedrock-invoke-models"
   user = aws_iam_user.bedrock_api.name
 
   policy = jsonencode({
@@ -47,9 +47,22 @@ resource "aws_iam_user_policy" "bedrock_invoke" {
         "bedrock:InvokeModelWithResponseStream"
       ]
       Resource = [
+        # Anthropic Claude
         "arn:aws:bedrock:*::foundation-model/anthropic.claude-*",
         "arn:aws:bedrock:*::inference-profile/us.anthropic.claude-*",
-        "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-*"
+        "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-*",
+        # Amazon Nova
+        "arn:aws:bedrock:*::foundation-model/amazon.nova-*",
+        "arn:aws:bedrock:*::inference-profile/us.amazon.nova-*",
+        "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/us.amazon.nova-*",
+        # Meta Llama
+        "arn:aws:bedrock:*::foundation-model/meta.llama*",
+        "arn:aws:bedrock:*::inference-profile/us.meta.llama*",
+        "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/us.meta.llama*",
+        # Mistral
+        "arn:aws:bedrock:*::foundation-model/mistral.*",
+        "arn:aws:bedrock:*::inference-profile/us.mistral.*",
+        "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/us.mistral.*"
       ]
     }]
   })

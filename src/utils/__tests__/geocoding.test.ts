@@ -5,8 +5,7 @@ import { searchCity } from "../geocoding";
 const mockFetch = mock(() => Promise.resolve(new Response("[]")));
 
 beforeEach(() => {
-  // @ts-expect-error - replacing global fetch with mock
-  globalThis.fetch = mockFetch;
+  globalThis.fetch = mockFetch as unknown as typeof fetch;
   mockFetch.mockReset();
 });
 
@@ -53,7 +52,7 @@ describe("searchCity", () => {
     await searchCity("Berlin");
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    const url = mockFetch.mock.calls[0][0] as string;
+    const url = (mockFetch.mock.calls[0] as unknown[])[0] as string;
     expect(url).toContain("q=Berlin");
     expect(url).toContain("format=json");
     expect(url).toContain("limit=5");
@@ -66,7 +65,7 @@ describe("searchCity", () => {
 
     await searchCity("Tokyo");
 
-    const options = mockFetch.mock.calls[0][1] as RequestInit;
+    const options = (mockFetch.mock.calls[0] as unknown[])[1] as RequestInit;
     expect(options.headers).toBeDefined();
     const headers = options.headers as Record<string, string>;
     expect(headers["User-Agent"]).toBe("SolarArrayLayoutApp/1.0");

@@ -34,6 +34,12 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="analyze"
+              options={{
+                title: "",
+              }}
+            />
+            <Stack.Screen
               name="custom"
               options={{
                 title: "",

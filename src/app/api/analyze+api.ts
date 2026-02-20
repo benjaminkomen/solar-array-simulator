@@ -11,7 +11,20 @@ const bedrock = createAmazonBedrock({
 interface AnalyzeRequest {
   image: string; // base64-encoded image
   mimeType: string; // e.g. "image/jpeg"
+  model?: string; // model ID from allowlist
 }
+
+const MODEL_ALLOWLIST: Record<string, string> = {
+  "us.anthropic.claude-sonnet-4-6-v1": "Claude Sonnet 4.6",
+  "us.anthropic.claude-opus-4-6-v1": "Claude Opus 4.6",
+  "us.amazon.nova-pro-v1:0": "Amazon Nova Pro",
+  "us.amazon.nova-premier-v1:0": "Amazon Nova Premier",
+  "us.mistral.pixtral-large-2502-v1:0": "Mistral Pixtral Large",
+  "us.meta.llama4-maverick-17b-instruct-v1:0": "Meta Llama 4 Maverick 17B",
+  "us.meta.llama3-2-90b-instruct-v1:0": "Meta Llama 3.2 90B Vision",
+};
+
+const DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6-v1";
 
 interface PanelResult {
   x: number;
@@ -56,7 +69,7 @@ export async function POST(request: Request) {
   let startTime: number | undefined;
 
   try {
-    const { image, mimeType } = (await request.json()) as AnalyzeRequest;
+    const { image, mimeType, model: requestedModel } = (await request.json()) as AnalyzeRequest;
 
     if (!image || !mimeType) {
       return Response.json(
@@ -65,13 +78,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate model against allowlist, fall back to default
+    const modelId = requestedModel && requestedModel in MODEL_ALLOWLIST
+      ? requestedModel
+      : DEFAULT_MODEL;
+
     // Log payload size for debugging
     const payloadSizeKB = Math.round(image.length / 1024);
-    console.log(`[Bedrock] Starting request - payload: ${payloadSizeKB} KB`);
+    const modelName = MODEL_ALLOWLIST[modelId];
+    console.log(`[Bedrock] Starting request - model: ${modelName} (${modelId}), payload: ${payloadSizeKB} KB`);
     startTime = Date.now();
 
     const { text } = await generateText({
-      model: bedrock("us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
+      model: bedrock(modelId),
       messages: [
         {
           role: "user",
@@ -127,7 +146,11 @@ export async function POST(request: Request) {
     console.log(`[Bedrock] Found ${result.panels.length} panels`);
 
     // Return raw panels - overlap resolution happens after coordinate transformation
-    return Response.json({ panels: result.panels });
+    return Response.json({
+      panels: result.panels,
+      reasoning: result.reasoning ?? null,
+      model: modelId,
+    });
   } catch (error) {
     const elapsed = startTime
       ? ((Date.now() - startTime) / 1000).toFixed(1) + "s"
