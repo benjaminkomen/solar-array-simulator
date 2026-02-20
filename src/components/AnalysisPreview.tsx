@@ -42,6 +42,19 @@ export function AnalysisPreview({
   const displayWidth = imageWidth * scale;
   const displayHeight = imageHeight * scale;
 
+  // Use uniform (median) panel size so all boxes look consistent,
+  // even when the AI returns inaccurate per-panel dimensions.
+  const portraitWidths = panels
+    .map((p) => (p.rotation === 90 ? p.height : p.width))
+    .sort((a, b) => a - b);
+  const portraitHeights = panels
+    .map((p) => (p.rotation === 90 ? p.width : p.height))
+    .sort((a, b) => a - b);
+  const medianW =
+    panels.length > 0 ? portraitWidths[Math.floor(portraitWidths.length / 2)] : 0;
+  const medianH =
+    panels.length > 0 ? portraitHeights[Math.floor(portraitHeights.length / 2)] : 0;
+
   return (
     <Canvas style={{ width: displayWidth, height: displayHeight, alignSelf: "center" }}>
       {image && (
@@ -54,18 +67,26 @@ export function AnalysisPreview({
           fit="fill"
         />
       )}
-      {panels.map((panel, index) => (
-        <Rect
-          key={index}
-          x={panel.x * scale}
-          y={panel.y * scale}
-          width={panel.width * scale}
-          height={panel.height * scale}
-          color="red"
-          style="stroke"
-          strokeWidth={2}
-        />
-      ))}
+      {panels.map((panel, index) => {
+        // Center point from the AI's bounding box
+        const cx = (panel.x + panel.width / 2) * scale;
+        const cy = (panel.y + panel.height / 2) * scale;
+        // Apply uniform size, swapping for rotated panels
+        const w = (panel.rotation === 90 ? medianH : medianW) * scale;
+        const h = (panel.rotation === 90 ? medianW : medianH) * scale;
+        return (
+          <Rect
+            key={`${panel.x}-${panel.y}-${panel.label}`}
+            x={cx - w / 2}
+            y={cy - h / 2}
+            width={w}
+            height={h}
+            color="red"
+            style="stroke"
+            strokeWidth={2}
+          />
+        );
+      })}
     </Canvas>
   );
 }

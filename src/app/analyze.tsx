@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useReducer, useRef } from "react";
 import {
   Text,
   ScrollView,
@@ -43,6 +43,54 @@ interface ResizedImage {
 
 type Phase = "select_model" | "processing" | "results";
 
+interface AnalyzeState {
+  phase: Phase;
+  selectedModel: string;
+  error: string | null;
+  result: AnalysisResponse | null;
+  reasoningExpanded: boolean;
+  resized: ResizedImage | null;
+}
+
+type AnalyzeAction =
+  | { type: "START_PROCESSING" }
+  | { type: "SET_MODEL"; model: string }
+  | { type: "SET_ERROR"; error: string }
+  | { type: "SET_RESULT"; result: AnalysisResponse }
+  | { type: "SET_RESIZED"; resized: ResizedImage }
+  | { type: "TOGGLE_REASONING" }
+  | { type: "RESET" };
+
+const DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6";
+
+function analyzeReducer(state: AnalyzeState, action: AnalyzeAction): AnalyzeState {
+  switch (action.type) {
+    case "START_PROCESSING":
+      return { ...state, phase: "processing", error: null };
+    case "SET_MODEL":
+      return { ...state, selectedModel: action.model };
+    case "SET_ERROR":
+      return { ...state, error: action.error, phase: "select_model" };
+    case "SET_RESULT":
+      return { ...state, result: action.result, phase: "results" };
+    case "SET_RESIZED":
+      return { ...state, resized: action.resized };
+    case "TOGGLE_REASONING":
+      return { ...state, reasoningExpanded: !state.reasoningExpanded };
+    case "RESET":
+      return { ...state, result: null, reasoningExpanded: false, phase: "select_model" };
+  }
+}
+
+const initialState: AnalyzeState = {
+  phase: "select_model",
+  selectedModel: DEFAULT_MODEL,
+  error: null,
+  result: null,
+  reasoningExpanded: false,
+  resized: null,
+};
+
 const MODELS: { id: string; name: string; isDefault: boolean }[] = [
   { id: "us.anthropic.claude-sonnet-4-6", name: "Claude Sonnet 4.6", isDefault: true },
   { id: "us.anthropic.claude-opus-4-6-v1", name: "Claude Opus 4.6", isDefault: false },
@@ -62,12 +110,8 @@ export default function Analyze() {
   const isWizardMode = wizard === "true";
   const colors = useColors();
 
-  const [phase, setPhase] = useState<Phase>("select_model");
-  const [selectedModel, setSelectedModel] = useState(MODELS[0].id);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<AnalysisResponse | null>(null);
-  const [reasoningExpanded, setReasoningExpanded] = useState(false);
-  const resizedRef = useRef<ResizedImage | null>(null);
+  const [state, dispatch] = useReducer(analyzeReducer, initialState);
+  const { phase, selectedModel, error, result, reasoningExpanded, resized } = state;
   const abortRef = useRef<AbortController | null>(null);
 
   const decodedUri = decodeURIComponent(imageUri ?? "");
@@ -83,29 +127,29 @@ export default function Analyze() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setPhase("processing");
-    setError(null);
+    dispatch({ type: "START_PROCESSING" });
 
     try {
       // Resize once, cache for retries
-      if (!resizedRef.current) {
-        resizedRef.current = await resizeForAnalysis(decodedUri);
+      let img = resized;
+      if (!img) {
+        img = await resizeForAnalysis(decodedUri);
+        dispatch({ type: "SET_RESIZED", resized: img });
       }
-      const resized = resizedRef.current;
 
       console.log("[Analyze] Sending request", {
         model: selectedModel,
-        mimeType: resized.mimeType,
-        imageSize: resized.base64.length,
-        dimensions: `${resized.width}x${resized.height}`,
+        mimeType: img.mimeType,
+        imageSize: img.base64.length,
+        dimensions: `${img.width}x${img.height}`,
       });
 
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          image: resized.base64,
-          mimeType: resized.mimeType,
+          image: img.base64,
+          mimeType: img.mimeType,
           model: selectedModel,
         }),
         signal: controller.signal,
@@ -123,36 +167,33 @@ export default function Analyze() {
         } catch {
           errorMessage = `Server error: ${response.status} — ${responseText.slice(0, 200)}`;
         }
-        throw new Error(errorMessage);
+        dispatch({ type: "SET_ERROR", error: errorMessage });
+        return;
       }
 
       const data: AnalysisResponse = await response.json();
       console.log("[Analyze] Success:", { panels: data.panels.length, model: data.model });
-      setResult(data);
-      setPhase("results");
+      dispatch({ type: "SET_RESULT", result: data });
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") return;
       const message = err instanceof Error ? err.message : "Unknown error";
-      setError(message);
-      setPhase("select_model");
+      dispatch({ type: "SET_ERROR", error: message });
     }
-  }, [decodedUri, selectedModel]);
+  }, [decodedUri, selectedModel, resized]);
 
   const handleRetry = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setResult(null);
-    setReasoningExpanded(false);
-    setPhase("select_model");
+    dispatch({ type: "RESET" });
   };
 
   const handleContinue = () => {
-    if (!result || !resizedRef.current) return;
+    if (!result || !resized) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     setAnalysisResult({
       panels: result.panels,
-      imageWidth: resizedRef.current.width,
-      imageHeight: resizedRef.current.height,
+      imageWidth: resized.width,
+      imageHeight: resized.height,
     });
 
     const customRoute = isWizardMode
@@ -191,7 +232,7 @@ export default function Analyze() {
                   onSelectionChange={(value) => {
                     if (value) {
                       Haptics.selectionAsync();
-                      setSelectedModel(value);
+                      dispatch({ type: "SET_MODEL", model: value });
                     }
                   }}
                   modifiers={[pickerStyle("inline")]}
@@ -208,18 +249,18 @@ export default function Analyze() {
         </View>
       )}
 
-      {phase === "results" && result && resizedRef.current && (
+      {phase === "results" && result && resized && (
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           style={{ backgroundColor: colors.background.primary }}
           contentContainerStyle={styles.scrollContent}
         >
           <AnalysisPreview
-            imageUri={resizedRef.current.base64.startsWith("data:")
-              ? resizedRef.current.base64
-              : `data:image/jpeg;base64,${resizedRef.current.base64}`}
-            imageWidth={resizedRef.current.width}
-            imageHeight={resizedRef.current.height}
+            imageUri={resized.base64.startsWith("data:")
+              ? resized.base64
+              : `data:image/jpeg;base64,${resized.base64}`}
+            imageWidth={resized.width}
+            imageHeight={resized.height}
             panels={result.panels}
           />
 
@@ -244,7 +285,7 @@ export default function Analyze() {
               >
                 {result.reasoning}
               </Text>
-              <Pressable onPress={() => setReasoningExpanded(!reasoningExpanded)}>
+              <Pressable onPress={() => dispatch({ type: "TOGGLE_REASONING" })}>
                 <Text style={[styles.showMoreText, { color: colors.primary }]}>
                   {reasoningExpanded ? "Show less" : "Show more"}
                 </Text>

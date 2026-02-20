@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { View, StyleSheet, type LayoutChangeEvent } from "react-native";
 import { Stack, useLocalSearchParams, Link, useRouter } from "expo-router";
-import { useSharedValue, withTiming } from "react-native-reanimated";
+import { useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
 import { useConfigStore } from "@/hooks/useConfigStore";
@@ -24,86 +24,6 @@ const ROW_SPACING = PANEL_HEIGHT + MOCK_GAP;
 const GRID_TOTAL_WIDTH = (COLS - 1) * COL_SPACING + PANEL_WIDTH;
 const GRID_TOTAL_HEIGHT = ROW_SPACING + PANEL_HEIGHT;
 
-/** Minimum gap between panels for overlap resolution */
-const MIN_GAP = 8;
-
-interface PositionWithRotation {
-  x: number;
-  y: number;
-  rotation: 0 | 90;
-}
-
-/**
- * Resolve overlapping panels by iteratively nudging them apart.
- * Works with canvas coordinates (after scaling/snapping).
- */
-function resolveOverlaps(panels: PositionWithRotation[]): PositionWithRotation[] {
-  const resolved = panels.map((p) => ({ ...p }));
-  const maxIterations = 100;
-
-  for (let iteration = 0; iteration < maxIterations; iteration++) {
-    let hasOverlap = false;
-
-    for (let i = 0; i < resolved.length; i++) {
-      for (let j = i + 1; j < resolved.length; j++) {
-        const a = resolved[i];
-        const b = resolved[j];
-
-        // Get dimensions based on rotation
-        const aWidth = a.rotation === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
-        const aHeight = a.rotation === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
-        const bWidth = b.rotation === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
-        const bHeight = b.rotation === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
-
-        // Check if panels overlap (with gap)
-        const overlapX =
-          a.x < b.x + bWidth + MIN_GAP && a.x + aWidth + MIN_GAP > b.x;
-        const overlapY =
-          a.y < b.y + bHeight + MIN_GAP && a.y + aHeight + MIN_GAP > b.y;
-
-        if (overlapX && overlapY) {
-          hasOverlap = true;
-
-          // Calculate overlap amounts
-          const overlapAmountX = Math.min(
-            a.x + aWidth + MIN_GAP - b.x,
-            b.x + bWidth + MIN_GAP - a.x
-          );
-          const overlapAmountY = Math.min(
-            a.y + aHeight + MIN_GAP - b.y,
-            b.y + bHeight + MIN_GAP - a.y
-          );
-
-          // Move apart along the axis with smaller overlap, snap to grid
-          if (overlapAmountX < overlapAmountY) {
-            const shift = Math.ceil(overlapAmountX / 2 / GRID_SIZE) * GRID_SIZE + GRID_SIZE;
-            if (a.x < b.x) {
-              a.x -= shift;
-              b.x += shift;
-            } else {
-              a.x += shift;
-              b.x -= shift;
-            }
-          } else {
-            const shift = Math.ceil(overlapAmountY / 2 / GRID_SIZE) * GRID_SIZE + GRID_SIZE;
-            if (a.y < b.y) {
-              a.y -= shift;
-              b.y += shift;
-            } else {
-              a.y += shift;
-              b.y -= shift;
-            }
-          }
-        }
-      }
-    }
-
-    if (!hasOverlap) break;
-  }
-
-  return resolved;
-}
-
 function buildMockPanelGrid(canvasWidth: number, canvasHeight: number) {
   const offsetX = Math.round((canvasWidth - GRID_TOTAL_WIDTH) / 2);
   const offsetY = Math.round((canvasHeight - GRID_TOTAL_HEIGHT) / 2);
@@ -116,9 +36,9 @@ function buildMockPanelGrid(canvasWidth: number, canvasHeight: number) {
 }
 
 /**
- * Map analysis results (pixel coords from an image) to canvas positions.
- * Scales panels so they use the standard PANEL_WIDTH/PANEL_HEIGHT,
- * preserving relative layout, centered in the canvas.
+ * Map analysis results to a clean grid layout on the canvas.
+ * Clusters AI-detected panels into rows/columns by their center points,
+ * then lays them out in a neat grid with standard spacing.
  */
 function mapAnalysisToCanvasPositions(
   panels: {
@@ -128,55 +48,101 @@ function mapAnalysisToCanvasPositions(
     height: number;
     rotation: 0 | 90;
   }[],
-  imageWidth: number,
-  imageHeight: number,
+  _imageWidth: number,
+  _imageHeight: number,
   canvasWidth: number,
   canvasHeight: number,
 ) {
   if (panels.length === 0) return [];
 
-  const minX = Math.min(...panels.map((p) => p.x));
-  const minY = Math.min(...panels.map((p) => p.y));
-  const maxX = Math.max(
-    ...panels.map((p) => p.x + (p.rotation === 90 ? p.height : p.width)),
-  );
-  const maxY = Math.max(
-    ...panels.map((p) => p.y + (p.rotation === 90 ? p.width : p.height)),
-  );
+  // Compute center points for each panel
+  const withCenters = panels.map((p, i) => ({
+    index: i,
+    cx: p.x + p.width / 2,
+    cy: p.y + p.height / 2,
+    rotation: p.rotation,
+  }));
 
-  const layoutWidth = maxX - minX;
-  const layoutHeight = maxY - minY;
+  // Compute median panel height (portrait orientation) for row clustering threshold
+  const portraitHeights = panels
+    .map((p) => (p.rotation === 90 ? p.width : p.height))
+    .sort((a, b) => a - b);
+  const medianHeight = portraitHeights[Math.floor(portraitHeights.length / 2)];
 
-  const avgPanelWidth =
-    panels.reduce(
-      (sum, p) => sum + (p.rotation === 90 ? p.height : p.width),
-      0,
-    ) / panels.length;
-  const scale = PANEL_WIDTH / avgPanelWidth;
+  // Sort by Y (top to bottom), then cluster into rows
+  withCenters.sort((a, b) => a.cy - b.cy);
 
-  const scaledWidth = layoutWidth * scale;
-  const scaledHeight = layoutHeight * scale;
+  const rows: (typeof withCenters)[] = [];
+  let currentRow: typeof withCenters = [withCenters[0]];
 
-  const offsetX = Math.round((canvasWidth - scaledWidth) / 2);
-  const offsetY = Math.round((canvasHeight - scaledHeight) / 2);
+  for (let i = 1; i < withCenters.length; i++) {
+    const gap = withCenters[i].cy - withCenters[i - 1].cy;
+    if (gap > medianHeight * 0.5) {
+      rows.push(currentRow);
+      currentRow = [withCenters[i]];
+    } else {
+      currentRow.push(withCenters[i]);
+    }
+  }
+  rows.push(currentRow);
 
-  const positions = panels.map((p) => {
-    // Scale position relative to the layout bounding box
-    const rawX = offsetX + (p.x - minX) * scale;
-    const rawY = offsetY + (p.y - minY) * scale;
+  // Sort each row by X (left to right)
+  for (const row of rows) {
+    row.sort((a, b) => a.cx - b.cx);
+  }
 
-    const x = Math.round(rawX / GRID_SIZE) * GRID_SIZE;
-    const y = Math.round(rawY / GRID_SIZE) * GRID_SIZE;
+  // Determine dominant rotation to set grid cell size
+  const landscapeCount = withCenters.filter((p) => p.rotation === 90).length;
+  const dominantRotation: 0 | 90 = landscapeCount > withCenters.length / 2 ? 90 : 0;
+  const cellW = dominantRotation === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
+  const cellH = dominantRotation === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
 
-    return {
-      x,
-      y,
-      rotation: p.rotation,
-    };
-  });
+  // Build grid layout with standard spacing
+  const gap = MOCK_GAP;
+  const colSpacing = cellW + gap;
+  const rowSpacing = cellH + gap;
 
-  // Resolve any overlaps introduced by scaling/snapping
-  return resolveOverlaps(positions);
+  // Calculate total grid dimensions for centering
+  const maxCols = Math.max(...rows.map((r) => r.length));
+  const gridWidth = (maxCols - 1) * colSpacing + cellW;
+  const gridHeight = (rows.length - 1) * rowSpacing + cellH;
+  const offsetX = Math.round((canvasWidth - gridWidth) / 2);
+  const offsetY = Math.round((canvasHeight - gridHeight) / 2);
+
+  // Map each panel to its grid position, preserving original index order
+  const result: { index: number; x: number; y: number; rotation: 0 | 90 }[] = [];
+  for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+    const row = rows[rowIdx];
+    for (let colIdx = 0; colIdx < row.length; colIdx++) {
+      result.push({
+        index: row[colIdx].index,
+        x: offsetX + colIdx * colSpacing,
+        y: offsetY + rowIdx * rowSpacing,
+        rotation: row[colIdx].rotation,
+      });
+    }
+  }
+
+  // Sort back to original panel order so labels/inverter matching stays aligned
+  result.sort((a, b) => a.index - b.index);
+
+  return result.map(({ x, y, rotation }) => ({ x, y, rotation }));
+}
+
+function setCanvasSize(w: SharedValue<number>, h: SharedValue<number>, width: number, height: number) {
+  'worklet';
+  w.value = width;
+  h.value = height;
+}
+
+function animateViewport(
+  vx: SharedValue<number>,
+  vy: SharedValue<number>,
+  targetX: number,
+  targetY: number,
+) {
+  vx.value = withTiming(targetX, { duration: 300 });
+  vy.value = withTiming(targetY, { duration: 300 });
 }
 
 export default function Custom() {
@@ -208,18 +174,12 @@ export default function Custom() {
     savePanelPosition,
   } = usePanelsContext();
 
-  const updateCanvasSize = (width: number, height: number) => {
-    'worklet';
-    canvasWidth.value = width;
-    canvasHeight.value = height;
-  };
-
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
       canvasSize.current = { width, height };
 
-      scheduleOnUI(updateCanvasSize, width, height);
+      scheduleOnUI(setCanvasSize, canvasWidth, canvasHeight, width, height);
 
       // Initialize panels centered in the canvas after layout is known
       if (initialPanels && !hasInitialized.current && width > 0 && height > 0) {
@@ -252,7 +212,7 @@ export default function Custom() {
         }
       }
     },
-    [initialPanels, initializePanels, config.inverters],
+    [initialPanels, initializePanels, config.inverters, canvasWidth, canvasHeight],
   );
 
   const handleAddPanel = useCallback(() => {
@@ -282,11 +242,9 @@ export default function Custom() {
       const firstPanel = states[0];
       const panelCenterX = firstPanel.x + PANEL_WIDTH / 2;
       const panelCenterY = firstPanel.y + PANEL_HEIGHT / 2;
-      viewportX.value = withTiming(width / 2 - panelCenterX, { duration: 300 });
-      viewportY.value = withTiming(height / 2 - panelCenterY, { duration: 300 });
+      animateViewport(viewportX, viewportY, width / 2 - panelCenterX, height / 2 - panelCenterY);
     } else {
-      viewportX.value = withTiming(0, { duration: 300 });
-      viewportY.value = withTiming(0, { duration: 300 });
+      animateViewport(viewportX, viewportY, 0, 0);
     }
   }, [getPanelStates, viewportX, viewportY]);
 
