@@ -1,12 +1,17 @@
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { generateText } from "ai";
-import { fetch as nativeFetch } from "undici";
 
-// Create provider with native fetch (undici) instead of fetch-nodeshim
-// fetch-nodeshim has a hardcoded 5s timeout that's too short for vision requests
-const bedrock = createAmazonBedrock({
-  fetch: nativeFetch as unknown as typeof globalThis.fetch,
-});
+// Metro's bundled environment uses fetch-nodeshim which breaks under Bun
+// ("Cannot set headers after they are sent to the client").
+// Use Bun's native fetch when available, otherwise fall back to default.
+const bedrockFetch =
+  typeof globalThis.Bun !== "undefined"
+    ? globalThis.Bun.fetch.bind(globalThis.Bun)
+    : undefined;
+
+const bedrock = createAmazonBedrock(
+  bedrockFetch ? { fetch: bedrockFetch as typeof globalThis.fetch } : {},
+);
 
 interface AnalyzeRequest {
   image: string; // base64-encoded image
@@ -15,7 +20,7 @@ interface AnalyzeRequest {
 }
 
 const MODEL_ALLOWLIST: Record<string, string> = {
-  "us.anthropic.claude-sonnet-4-6-v1": "Claude Sonnet 4.6",
+  "us.anthropic.claude-sonnet-4-6": "Claude Sonnet 4.6",
   "us.anthropic.claude-opus-4-6-v1": "Claude Opus 4.6",
   "us.amazon.nova-pro-v1:0": "Amazon Nova Pro",
   "us.amazon.nova-premier-v1:0": "Amazon Nova Premier",
@@ -24,7 +29,7 @@ const MODEL_ALLOWLIST: Record<string, string> = {
   "us.meta.llama3-2-90b-instruct-v1:0": "Meta Llama 3.2 90B Vision",
 };
 
-const DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6-v1";
+const DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6";
 
 interface PanelResult {
   x: number;
@@ -66,10 +71,13 @@ Rules:
 - Return ONLY valid JSON, no markdown fences, no explanation outside the JSON.`;
 
 export async function POST(request: Request) {
+  console.log("[Bedrock] POST /api/analyze handler entered");
   let startTime: number | undefined;
 
   try {
-    const { image, mimeType, model: requestedModel } = (await request.json()) as AnalyzeRequest;
+    const body = await request.json();
+    console.log("[Bedrock] Parsed request body, keys:", Object.keys(body));
+    const { image, mimeType, model: requestedModel } = body as AnalyzeRequest;
 
     if (!image || !mimeType) {
       return Response.json(
@@ -155,9 +163,16 @@ export async function POST(request: Request) {
     const elapsed = startTime
       ? ((Date.now() - startTime) / 1000).toFixed(1) + "s"
       : "N/A";
-    console.error(`[Bedrock] Failed after ${elapsed}:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorName = error instanceof Error ? error.name : "unknown";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error(`[Bedrock] Failed after ${elapsed}:`, {
+      name: errorName,
+      message: errorMessage,
+      stack: errorStack,
+    });
     return Response.json(
-      { error: "Failed to analyze image" },
+      { error: `Failed to analyze image: ${errorMessage}` },
       { status: 500 },
     );
   }

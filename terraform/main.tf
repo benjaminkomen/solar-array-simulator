@@ -40,13 +40,14 @@ resource "aws_iam_user_policy" "bedrock_invoke" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "bedrock:InvokeModel",
-        "bedrock:InvokeModelWithResponseStream"
-      ]
-      Resource = [
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
+        ]
+        Resource = [
         # Anthropic Claude
         "arn:aws:bedrock:*::foundation-model/anthropic.claude-*",
         "arn:aws:bedrock:*::inference-profile/us.anthropic.claude-*",
@@ -64,6 +65,15 @@ resource "aws_iam_user_policy" "bedrock_invoke" {
         "arn:aws:bedrock:*::inference-profile/us.mistral.*",
         "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/us.mistral.*"
       ]
+    },
+    {
+      Effect = "Allow"
+      Action = [
+        "aws-marketplace:ViewSubscriptions",
+        "aws-marketplace:Subscribe",
+        "aws-marketplace:Unsubscribe"
+      ]
+      Resource = "*"
     }]
   })
 }

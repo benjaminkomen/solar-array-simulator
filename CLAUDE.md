@@ -1,135 +1,43 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository.
 
 ## Commands
 
 ```bash
-# Install dependencies
-bun install
-
-# Start Expo development server
-bun start
-
-# Run on specific platforms
-bun ios      # iOS simulator (opens dev build)
-bun android  # Android emulator (opens dev build)
-bun web      # Web browser
-
-# Unit tests
-bun test
-
-# Lint
-bun run lint
-
-# Type check
-./node_modules/.bin/tsc --noEmit
-
-# Maestro E2E tests
-bun run test:maestro
-
-# React Compiler health check
-npx react-doctor --verbose
+bun install                        # Install dependencies
+bun start                          # Start Expo dev server
+bun ios                            # iOS simulator (dev build)
+bun android                        # Android emulator (dev build)
+bun test                           # Unit tests
+bun run lint                       # Lint
+./node_modules/.bin/tsc --noEmit   # Type check
+bun run test:maestro               # Maestro E2E tests
+npx react-doctor --verbose         # React Compiler health check
 ```
 
-**⚠️ IMPORTANT - Before committing:** Always run `bun test` and ensure all unit tests pass before creating a commit. Fix any failing tests before proceeding.
+## Critical Rules
 
-**⚠️ IMPORTANT - React Compiler:** Run `npx react-doctor --verbose` after modifying React components. Fix all errors before committing. Common patterns to avoid:
-- **Mutating shared values from hooks directly** — extract mutations into module-level functions that accept `SharedValue` parameters
-- **Conditional expressions (ternary, `??`, `?.`) inside try/catch** — compute conditional values before the try block
-- **Mismatched `useCallback`/`useMemo` dependency arrays** — include all values the compiler infers as dependencies
+**Before committing:** Always run `bun test` and ensure all unit tests pass.
 
-**⚠️ IMPORTANT - E2E Tests:** When modifying screens, navigation, or interactive elements, run `bun run test:maestro` to verify the Maestro E2E tests still pass. If your changes alter navigation flow, button text, or screen structure, update the affected Maestro test files in `.maestro/` accordingly. The E2E tests are the source of truth for whether the app's user-facing flows work correctly.
+**React Compiler:** Run `npx react-doctor --verbose` after modifying React components. Fix all errors before committing. Common patterns to avoid:
+- Mutating shared values from hooks directly — extract mutations into module-level functions that accept `SharedValue` parameters
+- Conditional expressions (ternary, `??`, `?.`) inside try/catch — compute conditional values before the try block
+- Mismatched `useCallback`/`useMemo` dependency arrays — include all values the compiler infers as dependencies
 
-**⚠️ IMPORTANT - Development Build Workflow:**
+**E2E Tests:** When modifying screens, navigation, or interactive elements, run `bun run test:maestro`. If your changes alter navigation flow, button text, or screen structure, update the affected Maestro test files in `.maestro/` accordingly.
 
-This project uses **development builds** (Expo dev client), NOT bare `npx expo run:ios` builds.
+**Development builds only:** This project uses Expo dev client builds. Start dev server with `bun start`, then open the development build on the simulator. **DO NOT run** `npx expo run:ios`, `npx expo run:android`, or `eas build --local` for local development.
 
-- **Local development**: Start dev server (`bun start`), open development build on simulator
-- **DO NOT run**: `npx expo run:ios`, `npx expo run:android`, or `eas build --local` for local dev
+**Prefer Expo UI components:** For any screen with forms, selections, or structured input, use `@expo/ui/swift-ui` components (`Host`, `Form`, `Section`, `TextField`, `Picker`, `Slider`, `LabeledContent`, `List.ForEach`, `Button`) instead of custom React Native primitives. Wrap SwiftUI content in `<Host><Form>...</Form></Host>`. See `src/app/config.tsx` and `src/app/inverter-details.tsx` for reference patterns.
 
 ## Architecture
 
-This is an Expo Router v55 preview app for creating solar panel array layouts. Uses React Native New Architecture with React Compiler enabled.
+Expo Router v55 preview app for creating solar panel array layouts. React Native New Architecture with React Compiler enabled.
 
-### Key Technologies
+**Key technologies:** Expo Router v55 (`Stack.Screen`, `Stack.Toolbar`), `@expo/ui/swift-ui` (native forms), `@shopify/react-native-skia` (2D canvas), React Native Reanimated + Gesture Handler (animations/gestures), `@ai-sdk/amazon-bedrock` (image analysis API route), `react-native-wgpu` + `three` + `@react-three/fiber` (3D simulation), `expo-sqlite/kv-store` (persistent config).
 
-- **Expo Router v55 preview** - `Stack.Screen`, `Stack.Toolbar`, `Link.Trigger` with `withAppleZoom`
-- **React Native Reanimated** - SharedValues for smooth 60fps animations
-- **React Native Gesture Handler** - Pan and tap gestures for canvas interactions
-- **expo-image** - Optimized image rendering
-- **expo-haptics** - iOS haptic feedback on interactions
-- **expo-image-picker** - Camera capture and gallery selection with permission handling
-- **@shopify/react-native-skia** - High-performance 2D canvas for solar panel layout
-- **@ai-sdk/amazon-bedrock** - Claude on AWS Bedrock for image analysis (no AWS SDK dependency)
-- **expo-image-manipulator** - Client-side image resize before upload
-- **@expo/ui/swift-ui** - Native SwiftUI components (Form, Section, List, Slider, Picker)
-- **expo-sqlite/kv-store** - Synchronous key-value storage for configuration
-- **react-native-wgpu** + **three** (WebGPU) + **@react-three/fiber** - 3D simulation rendering
-
-## Wizard Flow
-
-The app guides users through a 3-step wizard with a progress indicator:
-
-```mermaid
-stateDiagram-v2
-    [*] --> Welcome: Launch (new user)
-    [*] --> Production: Launch (returning user)
-    Welcome --> Config: Get Started
-    Config --> Upload: Continue
-    Upload --> Custom: Photo analyzed
-    Upload --> Custom: Skip
-    Custom --> Production: Finish
-    Production --> Config: Edit Configuration
-    Production --> Welcome: Delete Configuration
-```
-
-### Wizard Navigation Pattern
-
-| Screen | Primary Action | Secondary Action |
-|--------|---------------|------------------|
-| Welcome | "Get Started" button | — |
-| Config | "Continue" button (toolbar) | Back button |
-| Upload | Take Photo / Gallery | "Skip" button (toolbar) |
-| Custom | "Finish" in toolbar | Back button |
-| Production | View array output | Menu: Edit / Delete Configuration |
-
-### Steps
-
-| Step | Screen | Purpose |
-|------|--------|---------|
-| 1 | Config | Configure micro-inverters (serial numbers, efficiency) |
-| 2 | Upload | Optional: AI analyzes photo to generate layout |
-| 3 | Custom | Edit layout, link panels to inverters |
-| — | Production | View-only: real-time wattage per panel (post-wizard) |
-
-### WizardProgress Component
-
-`src/components/WizardProgress.tsx` displays a 3-step indicator:
-- **Configure** → **Photo** → **Layout**
-- Current step: filled purple circle
-- Completed steps: purple circle with checkmark
-- Future steps: gray outline
-- Connected by lines (purple for completed, gray for pending)
-
-### Data Flow
-
-```mermaid
-flowchart LR
-    subgraph Storage
-        CS[(configStore)]
-        PS[(panelStore)]
-    end
-
-    subgraph Screens
-        CFG[Config] --> CS
-        UPL[Upload] --> AS[analysisStore]
-        AS --> CUS[Custom]
-        CUS --> PS
-        CS --> PROD[Production]
-        PS --> PROD
-    end
-```
+**Path alias:** `@/*` maps to `./src/*`
 
 ### Project Structure
 
@@ -137,453 +45,45 @@ flowchart LR
 src/
 ├── app/                    # Expo Router file-based routes
 │   ├── _layout.tsx         # Root layout with PanelsProvider
-│   ├── index.tsx           # Welcome screen (redirects returning users to Production)
+│   ├── index.tsx           # Welcome screen
 │   ├── config.tsx          # Step 1: Configuration (SwiftUI Form)
-│   ├── upload.tsx          # Step 2: Upload & AI analysis
-│   ├── custom.tsx          # Step 3: Canvas editor with toolbar
-│   ├── production.tsx      # Production monitor (real-time wattage, menu)
-│   ├── panel-details.tsx   # Form sheet: View/link panel to inverter
-│   ├── inverter-details.tsx # Form sheet: Add/edit micro-inverters
-│   ├── compass-help.tsx    # Form sheet: Compass usage instructions
+│   ├── upload.tsx          # Step 2: Upload photo
+│   ├── analyze.tsx         # AI model selection + analysis
+│   ├── custom.tsx          # Step 3: Canvas editor
+│   ├── production.tsx      # Production monitor
+│   ├── simulation.tsx      # 3D solar simulation
+│   ├── panel-details.tsx   # Form sheet: panel-inverter link
+│   ├── inverter-details.tsx # Form sheet: add/edit inverters
+│   ├── compass-help.tsx    # Form sheet: compass help
 │   └── api/
 │       └── analyze+api.ts  # Bedrock API route (Claude vision)
-├── components/
-│   ├── Button.tsx          # Reusable button component
-│   ├── Compass.tsx         # Interactive compass for array orientation
-│   ├── ImagePreview.tsx    # Image preview
-│   ├── PermissionModal.tsx # Camera permission UI
-│   ├── ProcessingOverlay.tsx # Fibonacci shader + shimmer text
-│   ├── ProductionCanvas.tsx # Read-only canvas for production
-│   ├── ProductionPanel.tsx # Panel with wattage display
-│   ├── SolarPanel.tsx      # Skia panel with rotation
-│   ├── SolarPanelCanvas.tsx # Main canvas + gestures
-│   ├── WizardProgress.tsx  # 3-step progress indicator
-│   └── ZoomControls.tsx    # Floating zoom +/- controls
-├── hooks/
-│   ├── useConfigStore.ts   # Config store hook (inverters, wattage, wizard)
-│   ├── useImagePicker.ts   # Camera/gallery hook
-│   └── usePanelsManager.ts # Panel state management
-└── utils/
-    ├── analysisStore.ts    # Module-level store for analysis results
-    ├── collision.ts        # AABB collision detection
-    ├── configStore.ts      # Persistent config (expo-sqlite/kv-store)
-    ├── gridSnap.ts         # Grid snap utilities
-    ├── imageResize.ts      # Client-side image resize for upload
-    ├── panelUtils.ts       # Panel helpers
-    └── zoomConstants.ts    # Zoom level definitions
+├── components/             # Reusable UI components
+├── hooks/                  # React hooks (useConfigStore, usePanelsManager, useImagePicker)
+├── lib/                    # WebGPU/R3F setup for 3D rendering
+└── utils/                  # Pure utilities (config store, collision, grid snap, etc.)
 ```
-
-Path alias: `@/*` maps to `./src/*`
-
-## Canvas System
-
-### Core Components
-
-**SolarPanelCanvas** (`src/components/SolarPanelCanvas.tsx`)
-- Skia Canvas wrapped in GestureDetector
-- Handles both panel dragging and viewport panning
-- Converts screen coordinates to world coordinates for hit testing
-- Applies viewport transform to all panel rendering
-
-**SolarPanel** (`src/components/SolarPanel.tsx`)
-- Renders a single panel with Skia primitives
-- Supports rotation (0° portrait, 90° landscape)
-- Shows amber border when selected
-
-**usePanelsManager** (`src/hooks/usePanelsManager.ts`)
-- Manages panel array state with SharedValues for x, y, rotation
-- `addPanel()` - finds free position using spiral search
-- `removePanel()` - deletes panel
-- `rotatePanel()` - toggles 0°↔90° with smart repositioning
-- `bringToFront()` - moves selected panel to top of z-order
-
-### Key Constants
-
-```typescript
-// Panel dimensions (src/utils/panelUtils.ts)
-PANEL_WIDTH = 60    // Portrait width
-PANEL_HEIGHT = 120  // Portrait height
-
-// Grid (src/utils/gridSnap.ts)
-GRID_SIZE = 30      // Snap grid in pixels
-
-// Collision (src/utils/collision.ts)
-PANEL_GAP = 8       // Minimum gap between panels
-
-// Zoom levels (src/utils/zoomConstants.ts)
-ZOOM_LEVELS = [1.0, 0.66, 0.4]  // Scale factors (most zoomed in → most zoomed out)
-```
-
-### Gesture Behavior
-
-1. **Tap on panel** → Select panel, show rotate/delete buttons
-2. **Tap on empty space** → Deselect panel
-3. **Drag panel** → Free movement (can drag over other panels), snap on release
-4. **Drag empty space** → Pan the infinite canvas viewport
-
-### Snap-on-Release Behavior
-
-When a panel drag ends, the snap system tries positions in order:
-1. **Neighbor snap** - Align to adjacent panel edges (within 90px threshold)
-2. **Grid snap** - Snap to 30px grid
-3. **Revert** - Return to original position if all snap positions collide
-
-This allows dragging panels through tight spaces to reach valid gaps.
-
-### Zoom Controls
-
-Both Custom and Production screens include a floating zoom control in the bottom-right corner:
-
-- **3 zoom levels**: 1.0× (default), 0.66×, 0.4×
-- **UI**: Plus/minus buttons with horizontal line indicators showing active level
-- **Transform**: Scale centered on canvas center for intuitive zoom behavior
-- **Coordinate conversion**: Screen→world coordinates account for scale factor
-- **Consistent feel**: Pan and drag gestures divided by scale for uniform speed at all zoom levels
-
-**ZoomControls** (`src/components/ZoomControls.tsx`)
-- Floating pill-shaped control with haptic feedback
-- Active zoom level shown as dark line, inactive as light gray
-
-### Collision Detection
-
-- AABB (Axis-Aligned Bounding Box) collision
-- 8px minimum gap enforced between panels (PANEL_GAP constant)
-- **No collision blocking during drag** - panels move freely
-- Collision checked on release (snap validation)
-- Invalid snap positions revert to original drag-start position
-- Rotation checks for valid position, moves panel if needed
-
-### Worklet Functions
-
-Functions marked with `"worklet"` run on the UI thread:
-- `rectsOverlap()` - collision check
-- `collidesWithAny()` - batch collision check
-- `snapToGrid()` - grid alignment
-- `getPanelDimensions()` - width/height based on rotation
-- `hitTestPanels()` - find panel at touch point
-
-## Navigation & Toolbar
-
-### Stack.Toolbar (Expo Router v55)
-
-```tsx
-// Bottom toolbar with conditional buttons
-<Stack.Toolbar placement="bottom">
-  <Stack.Toolbar.Button icon="plus" onPress={addPanel} />
-  {selectedId && (
-    <>
-      <Stack.Toolbar.Button icon="rotate.right" onPress={rotate} />
-      <Stack.Toolbar.Button icon="trash" onPress={delete} />
-    </>
-  )}
-</Stack.Toolbar>
-
-// Right header button
-<Stack.Toolbar placement="right">
-  <Stack.Toolbar.Button icon="location" onPress={snapToOrigin} />
-</Stack.Toolbar>
-```
-
-### SF Symbols
-
-Toolbar buttons use iOS SF Symbols for icons:
-- `plus` - Add panel
-- `rotate.right` - Rotate panel
-- `trash` - Delete panel
-- `location` - Snap to first panel
-
-## API Route — Image Analysis
-
-### `src/app/api/analyze+api.ts`
-
-Expo API route that sends an uploaded photo to Claude Sonnet 4.5 on AWS Bedrock for vision analysis.
-
-- **Model**: `us.anthropic.claude-sonnet-4-5-20250929-v1:0` (cross-region inference profile)
-- **SDK**: `@ai-sdk/amazon-bedrock` v4+ (no AWS SDK dependency, works on Cloudflare Workers)
-- **Input**: Base64-encoded JPEG image (resized client-side to max 1568px long edge)
-- **Output**: JSON with `panels[]` array containing `{ x, y, width, height, rotation, label }`
 
 ### Environment Variables
 
-Required for the API route (set in `.env` for local dev, EAS Secrets for production):
+Required for the API route (`.env` for local dev, EAS Secrets for production):
 
-| Variable | Description |
-|----------|-------------|
-| `AWS_ACCESS_KEY_ID` | IAM user access key |
-| `AWS_SECRET_ACCESS_KEY` | IAM user secret key |
-| `AWS_REGION` | AWS region (e.g. `us-east-1`) |
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION`
 
-### Local Development
+### Canvas System
 
-```bash
-# Start API routes + native app
-npx expo serve
-
-# Test API route directly
-curl -X POST http://localhost:8081/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"image":"<base64>","mimeType":"image/jpeg"}'
-```
-
-### Infrastructure
-
-Terraform config in `terraform/` creates an IAM user with minimal `bedrock:InvokeModel` permissions. See `terraform/README.md` for setup instructions.
+The Skia canvas (`SolarPanelCanvas` / `ProductionCanvas`) uses Reanimated SharedValues and worklet functions running on the UI thread. Panels snap to grid or neighbor edges on drag release. Collision detection uses AABB with 8px gap.
 
 ## Maestro E2E Tests
 
-E2E tests live in `.maestro/` directory. They validate the app's full user-facing flows on a real simulator.
+Tests in `.maestro/` validate user-facing flows on a real simulator. Shared sub-flows in `.maestro/shared/` handle app launch and wizard navigation.
 
-### Test Coverage
+Key selector notes:
+- Use `tapOn: "text"` for visible text, `tapOn: { id: "testID" }` for testID props
+- Toolbar SF Symbol icons are accessible by name (e.g., `icon="plus"` → `tapOn: "add"`)
+- Skia canvas elements are not accessible to Maestro — test via toolbar side effects
+- SwiftUI section headers may not be visible to Maestro
+- `extendedWaitUntil` with `id:` must nest under `visible:` — use `visible: { id: "myId" }`
 
-| Test | What it covers |
-|------|---------------|
-| `smoke-test.yaml` | App launch, Welcome screen, navigate to Config |
-| `wizard-happy-path.yaml` | Full wizard: Welcome → Config → Upload → Custom → Production |
-| `production-menu.yaml` | Edit Configuration and Delete Configuration menu actions |
-| `simulation-nav.yaml` | Navigate to Simulation screen, verify season picker and output |
+## Infrastructure
 
-### Shared Sub-flows
-
-Common sequences live in `.maestro/shared/` and are reused via `runFlow:`:
-
-| Sub-flow | Purpose |
-|----------|---------|
-| `shared/launch-fresh.yaml` | Clear state, connect to dev server, dismiss onboarding/dev menu |
-| `shared/wizard-to-production.yaml` | Navigate wizard from Welcome to Production |
-| `shared/wizard-resume-to-production.yaml` | Navigate wizard from Config to Production (for re-entry via Edit Configuration) |
-
-### Running Tests
-
-**IMPORTANT**: This project uses development builds. DO NOT use `npx expo run:ios` or `eas build --local` for local development.
-
-```bash
-# Install Maestro (one-time setup)
-curl -Ls "https://get.maestro.mobile.dev" | bash
-
-# For local testing:
-# 1. Start dev server
-bun start
-
-# 2. Open development build on simulator (connects to dev server)
-# 3. Run all Maestro tests
-bun run test:maestro
-
-# Run a single test
-maestro test .maestro/wizard-happy-path.yaml
-
-# Debug selectors interactively
-maestro studio
-```
-
-### Writing & Updating Tests
-
-- **Selectors**: Use `tapOn: "text"` for visible text/accessibility labels, `tapOn: { id: "testID" }` for React Native `testID` props
-- **Native toolbar buttons**: iOS exposes SF Symbol names as accessibility text (e.g., `icon="plus"` → `tapOn: "add"`)
-- **Header toolbar buttons**: `accessibilityLabel` props work as text selectors (e.g., `accessibilityLabel="Simulate"` → `tapOn: "Simulate"`)
-- **Skia canvas elements**: Not accessible to Maestro — test via toolbar side effects (e.g., add panel, verify "Finish" appears)
-- **SwiftUI components**: Section headers and form labels may not be visible to Maestro
-- **Dev client**: Tests use `clearState: true` which requires reconnecting to dev server and dismissing onboarding — this is handled by `shared/launch-fresh.yaml`
-- **`extendedWaitUntil` with `id:`**: Must nest under `visible:` — use `visible: { id: "myId" }`, not `id: "myId"` at top level
-
-### Maestro MCP
-
-A Maestro MCP server is configured in `.mcp.json` for interactive element inspection. After restarting Claude Code, Maestro tools become available for debugging selectors.
-
-## Configuration System
-
-### Config Store (`src/utils/configStore.ts`)
-
-Synchronous key-value store using `expo-sqlite/kv-store` for persistent configuration.
-
-```typescript
-interface InverterConfig {
-  id: string;
-  serialNumber: string;  // 8-digit serial number
-  efficiency: number;    // 0-100 percentage
-}
-
-interface SystemConfig {
-  defaultMaxWattage: number;
-  inverters: InverterConfig[];
-  wizardCompleted: boolean;  // Tracks if user has completed wizard
-  compassDirection: number;  // Array orientation in degrees (0-360, 0 = North)
-}
-```
-
-**Store functions:**
-- `getConfig()` - Get current configuration
-- `updateDefaultWattage(wattage)` - Update default panel wattage
-- `updateInverterEfficiency(id, efficiency)` - Update inverter efficiency
-- `updateInverterSerialNumber(id, serial)` - Update inverter serial number
-- `addInverterWithDetails(serial, efficiency)` - Add new inverter
-- `removeInverter(id)` - Delete inverter
-- `getWizardCompleted()` - Check if wizard was completed
-- `setWizardCompleted(completed)` - Mark wizard as complete
-- `updateCompassDirection(degrees)` - Update array orientation (0-360°)
-- `resetAllData()` - Reset all config to defaults (used by Delete Configuration)
-- `subscribe(listener)` - Subscribe to config changes
-
-### Config Hook (`src/hooks/useConfigStore.ts`)
-
-React hook that wraps the config store with automatic re-rendering on changes.
-
-```typescript
-const { config, updateDefaultWattage, addInverterWithDetails, removeInverter } = useConfigStore();
-```
-
-### Configuration Screen (`src/app/config.tsx`)
-
-Native iOS form using `@expo/ui/swift-ui` components:
-
-- **Form** - Native iOS grouped form container
-- **Section** - Grouped sections with titles and footers
-- **LabeledContent** - Label-value pairs
-- **List.ForEach** - Swipe-to-delete enabled list
-
-Adding/editing inverters navigates to `inverter-details.tsx` form sheet.
-
-## Production Screen
-
-The production monitor (`src/app/production.tsx`) displays real-time array output:
-
-- **Auto-centered viewport** - On load, centers viewport on panels bounding box
-- **Total output card** - Shows combined wattage of all panels at top
-- **Read-only canvas** - Same layout as editor, no editing allowed
-- **Panel wattage display** - Each panel shows current output with color coding:
-  - Green: >80% efficiency
-  - Yellow: 40-80% efficiency
-  - Red: <40% efficiency
-  - Gray: Unlinked (0W)
-- **1-second updates** - Wattage recalculates every second with ±5% fluctuation
-- **Formula**: `efficiency × maxWattage × (0.95 + Math.random() × 0.1)`
-- **Header menu** (three-dots button) with:
-  - **Edit Configuration** - Re-enter wizard flow from Config screen
-  - **Delete Configuration** - Reset all data and return to Welcome screen
-
-### ProductionCanvas vs SolarPanelCanvas
-
-| Feature | SolarPanelCanvas | ProductionCanvas |
-|---------|------------------|------------------|
-| Panel dragging | Yes | No |
-| Panel selection | Yes | No |
-| Panel tap action | Select + toolbar | Opens panel-details sheet |
-| Wattage display | No | Yes |
-| Color coding | Link status only | Output level |
-| Viewport panning | Yes | Yes |
-| Zoom controls | Yes | Yes |
-
-## Panel Details Form Sheet
-
-The `panel-details.tsx` screen is a unified form sheet for viewing and editing panel-inverter links:
-
-- **View mode** (`mode=view`): Opens at 30% height, shows serial number and efficiency (read-only)
-- **Edit mode** (default): Opens at 60% height, allows linking/unlinking inverters
-- Uses native `@expo/ui/swift-ui` components (Form, Section, LabeledContent, List.ForEach)
-- Accessed from:
-  - **Custom screen**: Tap link button in toolbar to edit panel-inverter link
-  - **Production screen**: Tap any linked panel to view its inverter details
-
-## Inverter Details Form Sheet
-
-The `inverter-details.tsx` screen is a form sheet for adding and editing micro-inverters:
-
-- **Add mode** (`mode=add`): Creates new inverter with auto-generated serial number
-- **Edit mode** (`mode=edit&inverterId=...`): Edits existing inverter
-- Opens at 60% height, expandable to 100%
-- Header toolbar: X button (cancel) on left, checkmark (save) on right
-- Form fields: Serial number (numeric), efficiency slider (0-100%)
-- Accessed from **Config screen**: Tap "+" to add, tap existing inverter to edit
-
-## Compass Component
-
-The `Compass.tsx` component displays array orientation on Custom and Production screens:
-
-**Location:** Top-right corner of canvas (absolute positioned)
-
-**Visual Design:**
-- 80×80px Skia canvas
-- 4 curved arc segments at diagonal positions (NE, SE, SW, NW)
-- N, E, S, W labels positioned between arcs on the ring
-- Arrow with triangle cutout pointing to current direction
-
-**Interaction (Custom screen):**
-- Drag arrow to rotate (follows touch position)
-- Snaps to 8 directions on release (N, NE, E, SE, S, SW, W, NW)
-- Haptic feedback on snap
-- Tap opens compass-help form sheet
-
-**Read-only mode (Production screen):**
-- Displays saved direction statically
-- No gesture interaction
-
-**State:**
-- Direction stored in `configStore.compassDirection` (0-360°)
-- Persisted via `expo-sqlite/kv-store`
-
-## 3D Simulation Screen
-
-The simulation screen (`src/app/simulation.tsx`) provides a 3D visualization of solar panels on a roof with a movable sun.
-
-### 3D Stack
-
-- **react-native-wgpu** — WebGPU canvas for React Native
-- **three** (WebGPU build via `three/webgpu`) — 3D rendering
-- **@react-three/fiber** — React bindings for Three.js
-- **metro.config.js** — Routes `three` imports to `three/webgpu`, fixes R3F resolution for native
-
-### Lib Files (`src/lib/`)
-
-| File | Purpose |
-|------|---------|
-| `make-webgpu-renderer.ts` | ReactNativeCanvas wrapper + WebGPU renderer factory |
-| `fiber-canvas.tsx` | FiberCanvas component — initializes WebGPU, extends THREE namespace, configures R3F |
-| `orbit-controls.tsx` | Touch-based orbit camera controls (single-finger rotate, pinch zoom) |
-
-### Simulation Components (`src/components/simulation/`)
-
-| Component | Purpose |
-|-----------|---------|
-| `SimulationView.tsx` | Lazy-loaded wrapper: FiberCanvas + OrbitControls |
-| `SimulationScene.tsx` | Main 3D scene: roof + panels + sun + ground |
-| `RoofModel.tsx` | 3D roof geometry for 4 roof types (flat, gable, hip, shed) |
-| `PanelMesh.tsx` | Single panel mesh with wattage-based color coding |
-| `SunLight.tsx` | Directional light + visual sun sphere driven by solar position |
-
-### Solar Calculations (`src/utils/solarCalculations.ts`)
-
-Pure math functions for realistic solar output:
-
-- `getSolarPosition(lat, lon, date)` → `{ elevation, azimuth }`
-- `getSunriseAndSunset(lat, lon, date)` → `{ sunriseHour, sunsetHour }`
-- `getSun3DPosition(elevation, azimuth, distance)` → `{ x, y, z }`
-- `calculateIrradiance(sunElevation)` → W/m² (clear-sky Kasten model)
-- `getEffectiveOutput(params)` → watts per panel
-
-**Formula:** `P = P_max × η × (G / 1000) × max(0, cos θ_i) × noise`
-
-### Geocoding (`src/utils/geocoding.ts`)
-
-City search via OpenStreetMap Nominatim API (free, no API key):
-- `searchCity(query)` → autocomplete results with lat/lon
-- Debounced to respect Nominatim 1 req/sec rate limit
-
-### Config Fields Added
-
-| Field | Type | Default | Purpose |
-|-------|------|---------|---------|
-| `latitude` | `number \| null` | `null` | User's location latitude |
-| `longitude` | `number \| null` | `null` | User's location longitude |
-| `locationName` | `string \| null` | `null` | Display name (e.g. "Amsterdam, Netherlands") |
-| `panelTiltAngle` | `number` | `30` | Panel tilt from horizontal (0-90°) |
-| `roofType` | `RoofType` | `'gable'` | Roof shape for 3D simulation |
-
-### Navigation
-
-- **Production screen** → sun icon in header toolbar → Simulation screen
-- Season dropdown (Spring/Summer/Fall/Winter) sets representative dates
-- Time slider (sunrise → sunset) controls sun position
-- Touch orbit controls for camera rotation and zoom
-
-## Planned Integrations
-
-- **EAS Hosting** - Server-side API route deployment
+Terraform config in `terraform/` creates an IAM user with minimal `bedrock:InvokeModel` permissions.

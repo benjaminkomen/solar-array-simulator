@@ -42,7 +42,7 @@ interface ResizedImage {
 type Phase = "select_model" | "processing" | "results";
 
 const MODELS: { id: string; name: string; isDefault: boolean }[] = [
-  { id: "us.anthropic.claude-sonnet-4-6-v1", name: "Claude Sonnet 4.6", isDefault: true },
+  { id: "us.anthropic.claude-sonnet-4-6", name: "Claude Sonnet 4.6", isDefault: true },
   { id: "us.anthropic.claude-opus-4-6-v1", name: "Claude Opus 4.6", isDefault: false },
   { id: "us.amazon.nova-pro-v1:0", name: "Amazon Nova Pro", isDefault: false },
   { id: "us.amazon.nova-premier-v1:0", name: "Amazon Nova Premier", isDefault: false },
@@ -91,6 +91,13 @@ export default function Analyze() {
       }
       const resized = resizedRef.current;
 
+      console.log("[Analyze] Sending request", {
+        model: selectedModel,
+        mimeType: resized.mimeType,
+        imageSize: resized.base64.length,
+        dimensions: `${resized.width}x${resized.height}`,
+      });
+
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,18 +109,23 @@ export default function Analyze() {
         signal: controller.signal,
       });
 
+      console.log("[Analyze] Response status:", response.status);
+
       if (!response.ok) {
+        const responseText = await response.text();
+        console.log("[Analyze] Error response body:", responseText);
         let errorMessage = `Server error: ${response.status}`;
         try {
-          const body = await response.json();
+          const body = JSON.parse(responseText);
           if (body.error) errorMessage = body.error;
         } catch {
-          // ignore JSON parse error
+          errorMessage = `Server error: ${response.status} — ${responseText.slice(0, 200)}`;
         }
         throw new Error(errorMessage);
       }
 
       const data: AnalysisResponse = await response.json();
+      console.log("[Analyze] Success:", { panels: data.panels.length, model: data.model });
       setResult(data);
       setPhase("results");
     } catch (err: unknown) {
