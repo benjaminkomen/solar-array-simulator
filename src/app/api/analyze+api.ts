@@ -1,17 +1,35 @@
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { generateText } from "ai";
-import { fetch as nativeFetch } from "undici";
 
-// Create provider with native fetch (undici) instead of fetch-nodeshim
-// fetch-nodeshim has a hardcoded 5s timeout that's too short for vision requests
-const bedrock = createAmazonBedrock({
-  fetch: nativeFetch as unknown as typeof globalThis.fetch,
-});
+// Metro's bundled environment uses fetch-nodeshim which breaks under Bun
+// ("Cannot set headers after they are sent to the client").
+// Use Bun's native fetch when available, otherwise fall back to default.
+const bedrockFetch =
+  typeof globalThis.Bun !== "undefined"
+    ? globalThis.Bun.fetch.bind(globalThis.Bun)
+    : undefined;
+
+const bedrock = createAmazonBedrock(
+  bedrockFetch ? { fetch: bedrockFetch as typeof globalThis.fetch } : {},
+);
 
 interface AnalyzeRequest {
   image: string; // base64-encoded image
   mimeType: string; // e.g. "image/jpeg"
+  model?: string; // model ID from allowlist
 }
+
+const MODEL_ALLOWLIST: Record<string, string> = {
+  "us.anthropic.claude-sonnet-4-6": "Claude Sonnet 4.6",
+  "us.anthropic.claude-opus-4-6-v1": "Claude Opus 4.6",
+  "us.amazon.nova-pro-v1:0": "Amazon Nova Pro",
+  "us.amazon.nova-premier-v1:0": "Amazon Nova Premier",
+  "us.mistral.pixtral-large-2502-v1:0": "Mistral Pixtral Large",
+  "us.meta.llama4-maverick-17b-instruct-v1:0": "Meta Llama 4 Maverick 17B",
+  "us.meta.llama3-2-90b-instruct-v1:0": "Meta Llama 3.2 90B Vision",
+};
+
+const DEFAULT_MODEL = "us.anthropic.claude-sonnet-4-6";
 
 interface PanelResult {
   x: number;
@@ -27,7 +45,7 @@ interface AnalyzeResponse {
   panels: PanelResult[];
 }
 
-const SYSTEM_PROMPT = `You are a solar panel array analyzer. You receive photos of solar panel installations and identify each individual panel.
+const SYSTEM_PROMPT = `You are a solar panel array layout analyzer. You receive photos of solar panel installation plans, a drawing of a roof with stickers for each solar panel/micro-inverter, and identify each individual panel/micro-inverter.
 
 Return a JSON object with this exact structure:
 {
@@ -46,17 +64,20 @@ Return a JSON object with this exact structure:
 
 Rules:
 - reasoning: Briefly describe what you see in the image and any challenges identifying panels or labels
-- x, y: position of the panel's top-left corner in pixel coordinates relative to the image
-- width, height: panel dimensions in pixels
+- x, y: CENTER point of the panel in pixel coordinates relative to the image (not the top-left corner)
+- width, height: approximate panel dimensions in pixels
 - rotation: 0 for portrait (taller than wide), 90 for landscape (wider than tall)
 - label: Look for serial numbers on micro-inverter labels attached to each panel. Serial numbers are typically alphanumeric codes like "G25309101383" (letter(s) followed by digits). If you see a label but can only read part of the serial number, include what you can read. Use "" only if no label or serial number is visible at all.
 - Return ONLY valid JSON, no markdown fences, no explanation outside the JSON.`;
 
 export async function POST(request: Request) {
+  console.log("[Bedrock] POST /api/analyze handler entered");
   let startTime: number | undefined;
 
   try {
-    const { image, mimeType } = (await request.json()) as AnalyzeRequest;
+    const body = await request.json();
+    console.log("[Bedrock] Parsed request body, keys:", Object.keys(body));
+    const { image, mimeType, model: requestedModel } = body as AnalyzeRequest;
 
     if (!image || !mimeType) {
       return Response.json(
@@ -65,13 +86,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate model against allowlist, fall back to default
+    const modelId = requestedModel && requestedModel in MODEL_ALLOWLIST
+      ? requestedModel
+      : DEFAULT_MODEL;
+
     // Log payload size for debugging
     const payloadSizeKB = Math.round(image.length / 1024);
-    console.log(`[Bedrock] Starting request - payload: ${payloadSizeKB} KB`);
+    const modelName = MODEL_ALLOWLIST[modelId];
+    console.log(`[Bedrock] Starting request - model: ${modelName} (${modelId}), payload: ${payloadSizeKB} KB`);
     startTime = Date.now();
 
     const { text } = await generateText({
-      model: bedrock("us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
+      model: bedrock(modelId),
       messages: [
         {
           role: "user",
@@ -127,14 +154,25 @@ export async function POST(request: Request) {
     console.log(`[Bedrock] Found ${result.panels.length} panels`);
 
     // Return raw panels - overlap resolution happens after coordinate transformation
-    return Response.json({ panels: result.panels });
+    return Response.json({
+      panels: result.panels,
+      reasoning: result.reasoning ?? null,
+      model: modelId,
+    });
   } catch (error) {
     const elapsed = startTime
       ? ((Date.now() - startTime) / 1000).toFixed(1) + "s"
       : "N/A";
-    console.error(`[Bedrock] Failed after ${elapsed}:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorName = error instanceof Error ? error.name : "unknown";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error(`[Bedrock] Failed after ${elapsed}:`, {
+      name: errorName,
+      message: errorMessage,
+      stack: errorStack,
+    });
     return Response.json(
-      { error: "Failed to analyze image" },
+      { error: `Failed to analyze image: ${errorMessage}` },
       { status: 500 },
     );
   }

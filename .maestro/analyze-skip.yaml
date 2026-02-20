@@ -1,0 +1,47 @@
+appId: com.bkomen.reactnativearraylayout2
+---
+# Analyze Screen: Verify model selector UI and Skip action
+# Tests: Upload → pick photo from gallery → Analyze screen (model selector) → Skip → Custom
+
+- runFlow: shared/launch-fresh.yaml
+
+# Navigate wizard to Upload screen
+- tapOn:
+    id: "get-started-button"
+- extendedWaitUntil:
+    visible: "Panel Settings"
+    timeout: 10000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Take or Select Photo"
+    timeout: 10000
+
+# Open gallery picker
+- tapOn:
+    id: "choose-gallery-button"
+
+# Wait for the system photo picker to appear
+- extendedWaitUntil:
+    visible: "Photos"
+    timeout: 10000
+
+# Tap the first photo in the grid (top-left area)
+- tapOn:
+    point: "17%,25%"
+
+# Verify we land on the Analyze screen with model selector
+- extendedWaitUntil:
+    visible: "Select AI Model"
+    timeout: 15000
+
+# Verify model list (Sonnet row includes "(Default)" in label text)
+- assertVisible: "Claude Sonnet 4.6 (Default)"
+- assertVisible: "Claude Opus 4.6"
+- assertVisible: "Amazon Nova Pro"
+
+# Skip to Custom screen instead of analyzing
+- tapOn: "Skip"
+- extendedWaitUntil:
+    visible:
+        id: "canvas-container"
+    timeout: 10000
