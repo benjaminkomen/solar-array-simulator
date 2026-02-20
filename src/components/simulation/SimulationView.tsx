@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { FiberCanvas } from "@/lib/fiber-canvas";
-import { SimulationScene } from "./SimulationScene";
+import { SimulationScene, type Panel3DInfo } from "./SimulationScene";
 import type { Season } from "@/utils/solarCalculations";
 
 interface SimulationViewProps {
@@ -8,6 +8,8 @@ interface SimulationViewProps {
   longitude: number;
   season: Season;
   currentHour: number;
+  panels: Panel3DInfo[];
+  tiltAngle: number;
 }
 
 export default function SimulationView(props: SimulationViewProps) {

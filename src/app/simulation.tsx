@@ -113,6 +113,18 @@ export default function SimulationScreen() {
     return { wattages: map, totalWattage: total };
   }, [panelInfos, config, latitude, longitude, season, currentHour]);
 
+  const panels3D = useMemo(
+    () =>
+      panelInfos.map((p) => ({
+        id: p.id,
+        x: p.x,
+        y: p.y,
+        rotation: p.rotation,
+        wattage: wattages.get(p.id) ?? 0,
+      })),
+    [panelInfos, wattages]
+  );
+
   const formatTime = useCallback((hour: number) => {
     const h = Math.floor(hour);
     const m = Math.floor((hour - h) * 60);
@@ -148,6 +160,8 @@ export default function SimulationScreen() {
               longitude={longitude}
               season={season}
               currentHour={currentHour}
+              panels={panels3D}
+              tiltAngle={config.panelTiltAngle}
             />
           </Suspense>
         </View>
