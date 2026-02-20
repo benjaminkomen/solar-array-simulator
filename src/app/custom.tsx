@@ -55,11 +55,11 @@ function mapAnalysisToCanvasPositions(
 ) {
   if (panels.length === 0) return [];
 
-  // Compute center points for each panel
+  // AI returns center points directly as x, y
   const withCenters = panels.map((p, i) => ({
     index: i,
-    cx: p.x + p.width / 2,
-    cy: p.y + p.height / 2,
+    cx: p.x,
+    cy: p.y,
     rotation: p.rotation,
   }));
 

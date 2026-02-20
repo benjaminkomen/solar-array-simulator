@@ -68,9 +68,9 @@ export function AnalysisPreview({
         />
       )}
       {panels.map((panel, index) => {
-        // Center point from the AI's bounding box
-        const cx = (panel.x + panel.width / 2) * scale;
-        const cy = (panel.y + panel.height / 2) * scale;
+        // AI returns center point directly
+        const cx = panel.x * scale;
+        const cy = panel.y * scale;
         // Apply uniform size, swapping for rotated panels
         const w = (panel.rotation === 90 ? medianH : medianW) * scale;
         const h = (panel.rotation === 90 ? medianW : medianH) * scale;

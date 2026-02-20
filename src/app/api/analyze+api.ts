@@ -64,8 +64,8 @@ Return a JSON object with this exact structure:
 
 Rules:
 - reasoning: Briefly describe what you see in the image and any challenges identifying panels or labels
-- x, y: position of the panel's top-left corner in pixel coordinates relative to the image
-- width, height: panel dimensions in pixels
+- x, y: CENTER point of the panel in pixel coordinates relative to the image (not the top-left corner)
+- width, height: approximate panel dimensions in pixels
 - rotation: 0 for portrait (taller than wide), 90 for landscape (wider than tall)
 - label: Look for serial numbers on micro-inverter labels attached to each panel. Serial numbers are typically alphanumeric codes like "G25309101383" (letter(s) followed by digits). If you see a label but can only read part of the serial number, include what you can read. Use "" only if no label or serial number is visible at all.
 - Return ONLY valid JSON, no markdown fences, no explanation outside the JSON.`;
