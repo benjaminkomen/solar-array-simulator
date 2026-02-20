@@ -105,8 +105,10 @@ export const FiberCanvas = ({
           renderingPostProcess = true;
           try {
             postProcessing.render();
-          } finally {
             renderingPostProcess = false;
+          } catch (e) {
+            renderingPostProcess = false;
+            console.error("PostProcessing render error:", e);
           }
           context?.present();
         };
