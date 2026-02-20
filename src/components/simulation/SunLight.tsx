@@ -38,7 +38,7 @@ export function SunLight({ position, intensity }: SunLightProps) {
       />
       {/* Visual sun sphere */}
       <mesh ref={sphereRef} position={[position.x, position.y, position.z]}>
-        <sphereGeometry args={[1.5, 16, 16]} />
+        <sphereGeometry args={[2.0, 16, 16]} />
         <meshBasicMaterial
           color={0xffdd44}
           transparent

@@ -87,7 +87,6 @@ export const FiberCanvas = ({
         };
       },
     });
-    root.current.render(children);
     return () => {
       if (canvas != null) {
         unmountComponentAtNode(canvas!);
@@ -95,6 +94,13 @@ export const FiberCanvas = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-render the R3F tree whenever children change
+  useEffect(() => {
+    if (root.current) {
+      root.current.render(children);
+    }
+  });
 
   return <Canvas ref={canvasRef} style={style} />;
 };

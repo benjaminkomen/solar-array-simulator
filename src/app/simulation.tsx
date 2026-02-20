@@ -144,16 +144,10 @@ export default function SimulationScreen() {
             }
           >
             <SimulationView
-              panels={panelInfos}
-              roofType={config.roofType}
-              tiltAngle={config.panelTiltAngle}
-              compassDirection={config.compassDirection}
               latitude={latitude}
               longitude={longitude}
               season={season}
               currentHour={currentHour}
-              wattages={wattages}
-              maxWattage={config.defaultMaxWattage}
             />
           </Suspense>
         </View>
@@ -181,6 +175,11 @@ export default function SimulationScreen() {
             </Text>
           </View>
 
+          {/* Current time display */}
+          <Text style={[styles.currentTime, { color: colors.text.primary }]}>
+            {formatTime(currentHour)}
+          </Text>
+
           {/* Time slider */}
           <View style={styles.sliderRow}>
             <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>
@@ -191,11 +190,7 @@ export default function SimulationScreen() {
                 value={currentHour}
                 min={sunriseHour}
                 max={sunsetHour}
-                step={0.1}
                 onValueChange={setCurrentHour}
-                label={
-                  <UIText>{formatTime(currentHour)}</UIText>
-                }
               />
             </Host>
             <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>
@@ -262,6 +257,13 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
+  },
+  currentTime: {
+    fontSize: 40,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+    textAlign: "center",
+    marginBottom: 4,
   },
   sliderRow: {
     flexDirection: "row",

@@ -1,9 +1,7 @@
 import { useEffect, useMemo } from "react";
+import * as THREE from "three/webgpu";
 import { useThree } from "@react-three/fiber";
-import { RoofModel } from "./RoofModel";
-import { PanelMesh } from "./PanelMesh";
 import { SunLight } from "./SunLight";
-import type { RoofType } from "@/utils/configStore";
 import {
   getSolarPosition,
   getSun3DPosition,
@@ -12,143 +10,89 @@ import {
   getSeasonDate,
   makeDateAtHour,
 } from "@/utils/solarCalculations";
-import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
-
-interface PanelInfo {
-  id: string;
-  x: number;
-  y: number;
-  rotation: 0 | 90;
-  inverterId: string | null;
-}
 
 interface SimulationSceneProps {
-  panels: PanelInfo[];
-  roofType: RoofType;
-  tiltAngle: number;
-  compassDirection: number;
   latitude: number;
   longitude: number;
   season: Season;
-  /** Current time as fractional UTC hour (e.g. 14.5 = 2:30 PM UTC) */
   currentHour: number;
-  /** Map of panelId -> current wattage */
-  wattages: Map<string, number>;
-  maxWattage: number;
 }
 
-// Scale factor to convert 2D pixel coordinates to 3D world units
-const SCALE = 0.05;
+const NIGHT_COLOR = new THREE.Color(0x0c1445);
+const DAWN_COLOR = new THREE.Color(0xff7b54);
+const DAY_COLOR = new THREE.Color(0x87ceeb);
+
+function getSkyColor(elevation: number): THREE.Color {
+  if (elevation < -6) {
+    return NIGHT_COLOR.clone();
+  }
+  if (elevation < 0) {
+    const t = (elevation + 6) / 6;
+    return NIGHT_COLOR.clone().lerp(DAWN_COLOR, t);
+  }
+  if (elevation < 10) {
+    const t = elevation / 10;
+    return DAWN_COLOR.clone().lerp(DAY_COLOR, t);
+  }
+  return DAY_COLOR.clone();
+}
+
+function applySceneBackground(
+  scene: THREE.Scene,
+  elevation: number,
+): void {
+  scene.background = getSkyColor(elevation);
+}
+
+function applyCameraPosition(camera: THREE.Camera): void {
+  camera.position.set(0, 3, -20);
+  camera.lookAt(0, 10, 15);
+}
 
 export function SimulationScene({
-  panels,
-  roofType,
-  tiltAngle,
-  compassDirection,
   latitude,
   longitude,
   season,
   currentHour,
-  wattages,
-  maxWattage,
 }: SimulationSceneProps) {
-  const { camera } = useThree();
+  const { camera, scene } = useThree();
 
-  // Calculate roof dimensions from panel bounding box
-  const roofDimensions = useMemo(() => {
-    if (panels.length === 0) return { width: 6, depth: 8 };
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const panel of panels) {
-      const pw = panel.rotation === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
-      const ph = panel.rotation === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
-      minX = Math.min(minX, panel.x);
-      minY = Math.min(minY, panel.y);
-      maxX = Math.max(maxX, panel.x + pw);
-      maxY = Math.max(maxY, panel.y + ph);
-    }
-
-    const w = (maxX - minX) * SCALE + 2;
-    const d = (maxY - minY) * SCALE + 2;
-    return { width: Math.max(4, w), depth: Math.max(4, d), minX, minY, maxX, maxY };
-  }, [panels]);
-
-  // Center point of panels in 2D space
-  const panelCenter = useMemo(() => {
-    if (panels.length === 0) return { x: 0, z: 0 };
-    const rd = roofDimensions as typeof roofDimensions & { minX?: number; minY?: number; maxX?: number; maxY?: number };
-    if (rd.minX === undefined) return { x: 0, z: 0 };
-    return {
-      x: ((rd.minX! + rd.maxX!) / 2) * SCALE,
-      z: ((rd.minY! + rd.maxY!) / 2) * SCALE,
-    };
-  }, [panels, roofDimensions]);
-
-  // Sun position
+  // Calculate sun position using existing solar utilities
   const sunData = useMemo(() => {
     const date = makeDateAtHour(getSeasonDate(season), currentHour);
     const pos = getSolarPosition(latitude, longitude, date);
-    const pos3D = getSun3DPosition(pos.elevation, pos.azimuth, 40);
+    const pos3D = getSun3DPosition(pos.elevation, pos.azimuth, 30);
     const irradiance = calculateIrradiance(pos.elevation);
-    return { position: pos3D, intensity: irradiance / 500, elevation: pos.elevation, azimuth: pos.azimuth };
+    return {
+      position: pos3D,
+      intensity: irradiance / 500,
+      elevation: pos.elevation,
+    };
   }, [latitude, longitude, season, currentHour]);
 
-  // Set camera position
+  // Fixed camera: north side looking south so sun arc sweeps left-to-right
   useEffect(() => {
-    camera.position.set(8, 10, 12);
-    camera.lookAt(0, 1.5, 0);
+    applyCameraPosition(camera);
   }, [camera]);
 
-  const tiltRad = (tiltAngle * Math.PI) / 180;
-  const wallHeight = 1.5;
-  const roofSurfaceY = wallHeight + 0.15; // Slightly above roof surface
+  // Dynamic sky color based on sun elevation
+  useEffect(() => {
+    applySceneBackground(scene, sunData.elevation);
+  }, [scene, sunData.elevation]);
+
+  const ambientIntensity =
+    0.3 + Math.max(0, sunData.elevation / 90) * 0.2;
 
   return (
     <>
-      {/* Ambient light — always on for visibility */}
-      <ambientLight intensity={0.3} />
-
-      {/* Sun */}
+      <ambientLight intensity={ambientIntensity} />
       <SunLight position={sunData.position} intensity={sunData.intensity} />
 
       {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <planeGeometry args={[60, 60]} />
-        <meshStandardMaterial color="#4a7c59" />
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#3a6b35" />
       </mesh>
-
-      {/* Roof */}
-      <RoofModel
-        roofType={roofType}
-        width={roofDimensions.width}
-        depth={roofDimensions.depth}
-        tiltAngle={tiltAngle}
-      />
-
-      {/* Panels on roof */}
-      {panels.map((panel) => {
-        const pw = panel.rotation === 90 ? PANEL_HEIGHT : PANEL_WIDTH;
-        const ph = panel.rotation === 90 ? PANEL_WIDTH : PANEL_HEIGHT;
-
-        // Convert 2D position to 3D roof coordinates
-        const cx = (panel.x + pw / 2) * SCALE - panelCenter.x;
-        const cz = (panel.y + ph / 2) * SCALE - panelCenter.z;
-
-        const panelW = pw * SCALE;
-        const panelH = ph * SCALE;
-
-        return (
-          <PanelMesh
-            key={panel.id}
-            position={[cx, roofSurfaceY, cz]}
-            width={panelW}
-            height={panelH}
-            tiltX={roofType === "flat" ? 0 : -tiltRad * 0.2}
-            wattage={wattages.get(panel.id) ?? 0}
-            maxWattage={maxWattage}
-          />
-        );
-      })}
     </>
   );
 }
