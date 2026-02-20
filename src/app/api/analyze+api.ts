@@ -45,7 +45,7 @@ interface AnalyzeResponse {
   panels: PanelResult[];
 }
 
-const SYSTEM_PROMPT = `You are a solar panel array analyzer. You receive photos of solar panel installations and identify each individual panel.
+const SYSTEM_PROMPT = `You are a solar panel array layout analyzer. You receive photos of solar panel installation plans, a drawing of a roof with stickers for each solar panel/micro-inverter, and identify each individual panel/micro-inverter.
 
 Return a JSON object with this exact structure:
 {
