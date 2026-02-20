@@ -4,7 +4,7 @@ const config = getDefaultConfig(__dirname);
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   // Force 'three' to webgpu build
-  if (moduleName.startsWith("three")) {
+  if (moduleName === "three") {
     moduleName = "three/webgpu";
   }
 
