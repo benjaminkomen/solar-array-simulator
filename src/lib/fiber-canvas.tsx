@@ -16,6 +16,9 @@ import {
   ReactNativeCanvas,
 } from "@/lib/make-webgpu-renderer";
 
+import { pass } from "three/tsl";
+import { bloom } from "three/addons/tsl/display/BloomNode.js";
+
 // Extend THREE namespace for R3F
 extend({
   AmbientLight: THREE.AmbientLight,
@@ -80,14 +83,37 @@ export const FiberCanvas = ({
       onCreated: async (state: RootState) => {
         // @ts-expect-error - WebGPU renderer has init method
         await state.gl.init();
-        const renderFrame = state.gl.render.bind(state.gl);
-        state.gl.render = (s: THREE.Scene, c: THREE.Camera) => {
-          renderFrame(s, c);
+
+        // Set up post-processing with bloom
+        // @ts-expect-error - state.gl is typed as WebGLRenderer by R3F but is actually a WebGPURenderer
+        const postProcessing = new THREE.PostProcessing(state.gl);
+        const scenePass = pass(state.scene, state.camera);
+        const sceneColor = scenePass.getTextureNode("output");
+        postProcessing.outputNode = sceneColor.add(
+          bloom(sceneColor, 1.5, 0.4, 0.85),
+        );
+
+        let renderingPostProcess = false;
+        const originalRender = state.gl.render.bind(state.gl);
+
+        state.gl.render = (scene: THREE.Scene, camera: THREE.Camera) => {
+          if (renderingPostProcess) {
+            // Called internally by PostProcessing — use original renderer
+            return originalRender(scene, camera);
+          }
+          // Called by R3F frame loop — use post-processing pipeline
+          renderingPostProcess = true;
+          try {
+            postProcessing.render();
+            renderingPostProcess = false;
+          } catch (e) {
+            renderingPostProcess = false;
+            console.error("PostProcessing render error:", e);
+          }
           context?.present();
         };
       },
     });
-    root.current.render(children);
     return () => {
       if (canvas != null) {
         unmountComponentAtNode(canvas!);
@@ -95,6 +121,13 @@ export const FiberCanvas = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-render the R3F tree whenever children change
+  useEffect(() => {
+    if (root.current) {
+      root.current.render(children);
+    }
+  });
 
   return <Canvas ref={canvasRef} style={style} />;
 };
