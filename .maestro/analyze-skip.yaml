@@ -34,8 +34,8 @@ appId: com.bkomen.reactnativearraylayout2
     visible: "Select AI Model"
     timeout: 15000
 
-# Verify model list (Sonnet row includes "Default" badge in accessibility text)
-- assertVisible: "Claude Sonnet 4.6, Default"
+# Verify model list (Sonnet row includes "(Default)" in label text)
+- assertVisible: "Claude Sonnet 4.6 (Default)"
 - assertVisible: "Claude Opus 4.6"
 - assertVisible: "Amazon Nova Pro"
 

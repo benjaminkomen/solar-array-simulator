@@ -9,6 +9,8 @@ import {
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
+import { Form, Host, Picker, Section, Text as UIText } from "@expo/ui/swift-ui";
+import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { AnalysisPreview } from "@/components/AnalysisPreview";
 import { WizardProgress } from "@/components/WizardProgress";
@@ -168,170 +170,117 @@ export default function Analyze() {
 
       {phase === "processing" && <ProcessingOverlay imageUri={decodedUri} />}
 
-      {phase !== "processing" && (
+      {phase === "select_model" && (
+        <View style={styles.container}>
+          <View style={[styles.imageContainer, { backgroundColor: colors.background.primary }]}>
+            <Image
+              source={{ uri: decodedUri }}
+              style={styles.imagePreview}
+              contentFit="contain"
+            />
+          </View>
+
+          <Host style={styles.form}>
+            <Form>
+              <Section
+                header={<UIText>Select AI Model</UIText>}
+                footer={error ? <UIText>{error}</UIText> : undefined}
+              >
+                <Picker
+                  selection={selectedModel}
+                  onSelectionChange={(value) => {
+                    if (value) {
+                      Haptics.selectionAsync();
+                      setSelectedModel(value);
+                    }
+                  }}
+                  modifiers={[pickerStyle("inline")]}
+                >
+                  {MODELS.map((model) => (
+                    <UIText key={model.id} modifiers={[tag(model.id)]}>
+                      {model.name}{model.isDefault ? " (Default)" : ""}
+                    </UIText>
+                  ))}
+                </Picker>
+              </Section>
+            </Form>
+          </Host>
+        </View>
+      )}
+
+      {phase === "results" && result && resizedRef.current && (
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           style={{ backgroundColor: colors.background.primary }}
           contentContainerStyle={styles.scrollContent}
         >
-          {phase === "select_model" && (
-            <>
-              {/* Image preview */}
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: decodedUri }}
-                  style={styles.imagePreview}
-                  contentFit="contain"
-                />
-              </View>
+          <AnalysisPreview
+            imageUri={resizedRef.current.base64.startsWith("data:")
+              ? resizedRef.current.base64
+              : `data:image/jpeg;base64,${resizedRef.current.base64}`}
+            imageWidth={resizedRef.current.width}
+            imageHeight={resizedRef.current.height}
+            panels={result.panels}
+          />
 
-              {/* Error banner */}
-              {error && (
-                <View style={[styles.errorBanner, { backgroundColor: "#FEE2E2" }]}>
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
-              )}
-
-              {/* Model selector */}
-              <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-                Select AI Model
+          <View style={styles.badgeRow}>
+            <View style={[styles.infoBadge, { backgroundColor: colors.primaryLight }]}>
+              <Text style={[styles.infoBadgeText, { color: colors.primary }]}>
+                {result.panels.length} panel{result.panels.length !== 1 ? "s" : ""} detected
               </Text>
+            </View>
+            <View style={[styles.infoBadge, { backgroundColor: colors.background.tertiary }]}>
+              <Text style={[styles.infoBadgeText, { color: colors.text.secondary }]}>
+                {modelName}
+              </Text>
+            </View>
+          </View>
 
-              <View style={styles.modelList}>
-                {MODELS.map((model) => {
-                  const isSelected = selectedModel === model.id;
-                  return (
-                    <Pressable
-                      key={model.id}
-                      onPress={() => {
-                        Haptics.selectionAsync();
-                        setSelectedModel(model.id);
-                      }}
-                      style={[
-                        styles.modelRow,
-                        {
-                          backgroundColor: isSelected
-                            ? colors.primaryLight
-                            : colors.background.secondary,
-                          borderColor: isSelected
-                            ? colors.primary
-                            : colors.border.light,
-                        },
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.radio,
-                          {
-                            borderColor: isSelected
-                              ? colors.primary
-                              : colors.border.medium,
-                          },
-                        ]}
-                      >
-                        {isSelected && (
-                          <View
-                            style={[
-                              styles.radioInner,
-                              { backgroundColor: colors.primary },
-                            ]}
-                          />
-                        )}
-                      </View>
-                      <Text
-                        style={[
-                          styles.modelName,
-                          {
-                            color: colors.text.primary,
-                            fontWeight: isSelected ? "600" : "400",
-                          },
-                        ]}
-                      >
-                        {model.name}
-                      </Text>
-                      {model.isDefault && (
-                        <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-                          <Text style={[styles.badgeText, { color: colors.text.inverse }]}>
-                            Default
-                          </Text>
-                        </View>
-                      )}
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              <Button
-                title="Analyze"
-                onPress={handleAnalyze}
-                style={{ width: "100%" }}
-              />
-            </>
+          {result.reasoning && (
+            <View style={styles.reasoningContainer}>
+              <Text
+                style={[styles.reasoningText, { color: colors.text.secondary }]}
+                numberOfLines={reasoningExpanded ? undefined : 3}
+              >
+                {result.reasoning}
+              </Text>
+              <Pressable onPress={() => setReasoningExpanded(!reasoningExpanded)}>
+                <Text style={[styles.showMoreText, { color: colors.primary }]}>
+                  {reasoningExpanded ? "Show less" : "Show more"}
+                </Text>
+              </Pressable>
+            </View>
           )}
 
-          {phase === "results" && result && resizedRef.current && (
-            <>
-              {/* Analysis preview with red boxes */}
-              <AnalysisPreview
-                imageUri={resizedRef.current.base64.startsWith("data:")
-                  ? resizedRef.current.base64
-                  : `data:image/jpeg;base64,${resizedRef.current.base64}`}
-                imageWidth={resizedRef.current.width}
-                imageHeight={resizedRef.current.height}
-                panels={result.panels}
-              />
-
-              {/* Info badges */}
-              <View style={styles.badgeRow}>
-                <View style={[styles.infoBadge, { backgroundColor: colors.primaryLight }]}>
-                  <Text style={[styles.infoBadgeText, { color: colors.primary }]}>
-                    {result.panels.length} panel{result.panels.length !== 1 ? "s" : ""} detected
-                  </Text>
-                </View>
-                <View style={[styles.infoBadge, { backgroundColor: colors.background.tertiary }]}>
-                  <Text style={[styles.infoBadgeText, { color: colors.text.secondary }]}>
-                    {modelName}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Reasoning */}
-              {result.reasoning && (
-                <View style={styles.reasoningContainer}>
-                  <Text
-                    style={[styles.reasoningText, { color: colors.text.secondary }]}
-                    numberOfLines={reasoningExpanded ? undefined : 3}
-                  >
-                    {result.reasoning}
-                  </Text>
-                  <Pressable onPress={() => setReasoningExpanded(!reasoningExpanded)}>
-                    <Text style={[styles.showMoreText, { color: colors.primary }]}>
-                      {reasoningExpanded ? "Show less" : "Show more"}
-                    </Text>
-                  </Pressable>
-                </View>
-              )}
-
-              {/* Action buttons */}
-              <View style={styles.buttonRow}>
-                <Button
-                  title="Retry"
-                  variant="outlined"
-                  onPress={handleRetry}
-                  style={{ flex: 1 }}
-                />
-                <Button
-                  title="Continue"
-                  onPress={handleContinue}
-                  style={{ flex: 1 }}
-                />
-              </View>
-            </>
-          )}
+          <View style={styles.buttonRow}>
+            <Button
+              title="Retry"
+              variant="outlined"
+              onPress={handleRetry}
+              style={{ flex: 1 }}
+            />
+            <Button
+              title="Continue"
+              onPress={handleContinue}
+              style={{ flex: 1 }}
+            />
+          </View>
         </ScrollView>
       )}
 
-      {isWizardMode && phase !== "processing" && (
+      {phase === "select_model" && (
+        <Stack.Toolbar placement="bottom">
+          {isWizardMode && (
+            <Stack.Toolbar.Button onPress={handleSkip}>
+              Skip
+            </Stack.Toolbar.Button>
+          )}
+          <Stack.Toolbar.Button onPress={handleAnalyze}>
+            Analyze
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      )}
+      {isWizardMode && phase === "results" && (
         <Stack.Toolbar placement="bottom">
           <Stack.Toolbar.Button onPress={handleSkip}>
             Skip
@@ -343,6 +292,12 @@ export default function Analyze() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  form: {
+    flex: 1,
+  },
   scrollContent: {
     alignItems: "stretch",
     gap: 16,
@@ -350,66 +305,14 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   imageContainer: {
-    borderRadius: 12,
-    overflow: "hidden",
+    overflow: "visible",
     alignSelf: "center",
     width: "100%",
-    maxHeight: 200,
+    maxHeight: 250,
   },
   imagePreview: {
     width: "100%",
-    height: 200,
-  },
-  errorBanner: {
-    padding: 12,
-    borderRadius: 8,
-  },
-  errorText: {
-    color: "#DC2626",
-    fontSize: 14,
-    textAlign: "center",
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    marginTop: 8,
-  },
-  modelList: {
-    gap: 8,
-  },
-  modelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    borderRadius: 10,
-    borderWidth: 1,
-    gap: 12,
-  },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  modelName: {
-    fontSize: 16,
-    flex: 1,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "600",
+    height: 250,
   },
   badgeRow: {
     flexDirection: "row",
