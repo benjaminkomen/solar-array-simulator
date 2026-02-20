@@ -44,7 +44,7 @@ export default function SimulationScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const [season, setSeason] = useState<Season>(getCurrentSeason());
+  const [season, setSeason] = useState<Season>(() => getCurrentSeason());
   const latitude = config.latitude ?? 52.37; // Default: Amsterdam
   const longitude = config.longitude ?? 4.9;
 

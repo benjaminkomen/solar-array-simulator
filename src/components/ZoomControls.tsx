@@ -50,9 +50,9 @@ export function ZoomControls({
         />
       </Pressable>
       <View style={styles.indicator}>
-        {ZOOM_LEVELS.map((_, index) => (
+        {ZOOM_LEVELS.map((level, index) => (
           <View
-            key={index}
+            key={level}
             style={[
               styles.line,
               { backgroundColor: index === currentIndex ? colors.text.primary : colors.border.medium },

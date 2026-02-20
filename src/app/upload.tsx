@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Alert, Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { useImagePicker } from "@/hooks/useImagePicker";
+import { useImagePicker, type PickedImage } from "@/hooks/useImagePicker";
 import { PermissionModal } from "@/components/PermissionModal";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { resizeForAnalysis } from "@/utils/imageResize";
@@ -17,19 +17,11 @@ export default function Upload() {
   const { wizard } = useLocalSearchParams<{ wizard?: string }>();
   const isWizardMode = wizard === 'true';
   const abortRef = useRef<AbortController | null>(null);
+  const [image, setImage] = useState<PickedImage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-
-  const {
-    image,
-    pickFromCamera,
-    pickFromGallery,
-    modalState,
-    handleModalAllow,
-    handleModalClose,
-  } = useImagePicker();
 
   // Derived: processing whenever an image has been picked
   const isProcessing = image != null;
@@ -40,66 +32,81 @@ export default function Upload() {
     router.push(`/custom${wizardParam}`);
   };
 
-  // Call the analysis API when an image is picked.
-  useEffect(() => {
-    if (!isProcessing) return;
-
+  const analyzeImage = useCallback(async (picked: PickedImage) => {
+    abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
-    async function analyzeImage() {
-      try {
-        setError(null);
+    setImage(picked);
+    setError(null);
 
-        const resized = await resizeForAnalysis(image!.uri);
+    const customRoute = isWizardMode
+      ? '/custom?initialPanels=true&wizard=true'
+      : '/custom?initialPanels=true';
 
-        const response = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            image: resized.base64,
-            mimeType: resized.mimeType,
-          }),
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          const body = await response.json().catch(() => ({}));
-          throw new Error(
-            body.error ?? `Server error: ${response.status}`,
-          );
-        }
-
-        const result = await response.json();
-
-        setAnalysisResult({
-          panels: result.panels,
-          imageWidth: resized.width,
-          imageHeight: resized.height,
-        });
-
-        const wizardParam = isWizardMode ? '&wizard=true' : '';
-        router.replace(`/custom?initialPanels=true${wizardParam}`);
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === "AbortError") return;
-        const message =
-          err instanceof Error ? err.message : "Unknown error";
-        console.error("Analysis failed:", message);
-        setError(message);
-        Alert.alert(
-          "Analysis Failed",
-          `Could not analyze the image: ${message}. Please try again.`,
-        );
-      }
-    }
-
-    analyzeImage();
-
-    return () => {
-      controller.abort();
+    const handleAnalysisError = (message: string) => {
+      console.error("Analysis failed:", message);
+      setImage(null);
+      setError(message);
+      Alert.alert(
+        "Analysis Failed",
+        `Could not analyze the image: ${message}. Please try again.`,
+      );
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isProcessing]);
+
+    try {
+      const resized = await resizeForAnalysis(picked.uri);
+
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: resized.base64,
+          mimeType: resized.mimeType,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        let errorMessage = `Server error: ${response.status}`;
+        try {
+          const body = await response.json();
+          if (body.error) {
+            errorMessage = body.error;
+          }
+        } catch {
+          // ignore JSON parse error
+        }
+        handleAnalysisError(errorMessage);
+        return;
+      }
+
+      const result = await response.json();
+
+      setAnalysisResult({
+        panels: result.panels,
+        imageWidth: resized.width,
+        imageHeight: resized.height,
+      });
+
+      router.replace(customRoute);
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      let message = "Unknown error";
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      handleAnalysisError(message);
+    }
+  }, [isWizardMode, router]);
+
+  const {
+    pickFromCamera,
+    pickFromGallery,
+    modalState,
+    handleModalAllow,
+    handleModalClose,
+  } = useImagePicker(analyzeImage);
 
   return (
     <>

@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, type LayoutChangeEvent, useColorScheme } from "
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Stack, useRouter } from "expo-router";
-import { useSharedValue } from "react-native-reanimated";
+import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
 import { usePanelsContext } from "@/contexts/PanelsContext";
@@ -24,36 +24,39 @@ function formatWattage(watts: number): string {
   return `${watts}W`;
 }
 
-export default function ProductionScreen() {
-  const { panels } = usePanelsContext();
-  const { config } = useConfigStore();
-  const router = useRouter();
-  const [wattages, setWattages] = useState<Map<string, number>>(new Map());
-  const [totalWattage, setTotalWattage] = useState(0);
-  const insets = useSafeAreaInsets();
-  const colors = useColors();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+function applyCanvasSize(
+  canvasWidth: SharedValue<number>,
+  canvasHeight: SharedValue<number>,
+  width: number,
+  height: number,
+) {
+  'worklet';
+  canvasWidth.value = width;
+  canvasHeight.value = height;
+}
 
-  // Viewport shared values
+function applyViewportPosition(
+  viewportX: SharedValue<number>,
+  viewportY: SharedValue<number>,
+  x: number,
+  y: number,
+) {
+  viewportX.value = x;
+  viewportY.value = y;
+}
+
+function useViewport(panels: ReturnType<typeof usePanelsContext>["panels"]) {
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
   const canvasWidth = useSharedValue(0);
   const canvasHeight = useSharedValue(0);
   const hasInitializedViewport = useRef(false);
-  const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
-
-  const updateCanvasSize = (width: number, height: number) => {
-    'worklet';
-    canvasWidth.value = width;
-    canvasHeight.value = height;
-  };
 
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
 
-      scheduleOnUI(updateCanvasSize, width, height);
+      scheduleOnUI(applyCanvasSize, canvasWidth, canvasHeight, width, height);
 
       // Center viewport on panels bounding box (once, on first layout)
       if (!hasInitializedViewport.current && panels.length > 0 && width > 0 && height > 0) {
@@ -75,12 +78,31 @@ export default function ProductionScreen() {
 
         const boundingCenterX = (minX + maxX) / 2;
         const boundingCenterY = (minY + maxY) / 2;
-        viewportX.value = width / 2 - boundingCenterX;
-        viewportY.value = height / 2 - boundingCenterY;
+        applyViewportPosition(viewportX, viewportY, width / 2 - boundingCenterX, height / 2 - boundingCenterY);
       }
     },
-    [panels, viewportX, viewportY]
+    [canvasWidth, canvasHeight, viewportX, viewportY, panels]
   );
+
+  return { viewportX, viewportY, canvasWidth, canvasHeight, handleLayout };
+}
+
+export default function ProductionScreen() {
+  const { panels } = usePanelsContext();
+  const { config } = useConfigStore();
+  const router = useRouter();
+  const [wattageState, setWattageState] = useState<{ map: Map<string, number>; total: number }>(
+    { map: new Map(), total: 0 }
+  );
+  const wattages = wattageState.map;
+  const totalWattage = wattageState.total;
+  const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
+  const { viewportX, viewportY, canvasWidth, canvasHeight, handleLayout } = useViewport(panels);
 
   // Calculate wattage for a single panel using solar position model
   const calculateWattage = useCallback(
@@ -121,8 +143,7 @@ export default function ProductionScreen() {
         total += wattage;
       }
 
-      setWattages(newWattages);
-      setTotalWattage(total);
+      setWattageState({ map: newWattages, total });
     };
 
     updateWattages();

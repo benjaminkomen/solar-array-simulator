@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { Image } from "expo-image";
 import {
@@ -18,6 +18,7 @@ import {
 import Animated, {
   Easing,
   FadeIn,
+  type SharedValue,
   useDerivedValue,
   useSharedValue,
   withRepeat,
@@ -66,19 +67,49 @@ interface ProcessingOverlayProps {
   imageUri: string;
 }
 
+function startAnimations(
+  iTime: SharedValue<number>,
+  shimmerX: SharedValue<number>,
+  textWidth: number,
+) {
+  iTime.value = withRepeat(
+    withTiming(15, { duration: 20000, easing: Easing.linear }),
+    -1,
+    true,
+  );
+
+  shimmerX.value = withRepeat(
+    withTiming(textWidth + SHIMMER_WIDTH, {
+      duration: 2000,
+      easing: Easing.linear,
+    }),
+    -1,
+    false,
+  );
+}
+
+function useAnimations(textWidth: number) {
+  const iTime = useSharedValue(0);
+  const shimmerX = useSharedValue(-SHIMMER_WIDTH);
+
+  useEffect(() => {
+    startAnimations(iTime, shimmerX, textWidth);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [textWidth]);
+
+  return { iTime, shimmerX };
+}
+
 export function ProcessingOverlay({ imageUri }: ProcessingOverlayProps) {
   const { width: screenWidth } = useWindowDimensions();
   const canvasSize = screenWidth;
 
-  const iTime = useSharedValue(0);
-  const shimmerX = useSharedValue(-SHIMMER_WIDTH);
   const font = matchFont(fontStyle);
 
-  const textWidth = useMemo(
-    () => (font ? font.measureText(SHIMMER_TEXT).width : 250),
-    [font],
-  );
+  const textWidth = font ? font.measureText(SHIMMER_TEXT).width : 250;
   const textX = (screenWidth - textWidth) / 2;
+
+  const { iTime, shimmerX } = useAnimations(textWidth);
 
   const shaderUniforms = useDerivedValue(() => ({
     iTime: iTime.value,
@@ -87,24 +118,6 @@ export function ProcessingOverlay({ imageUri }: ProcessingOverlayProps) {
 
   const shimmerStart = useDerivedValue(() => vec(shimmerX.value, 0));
   const shimmerEnd = useDerivedValue(() => vec(shimmerX.value + SHIMMER_WIDTH, 0));
-
-  useEffect(() => {
-    iTime.value = withRepeat(
-      withTiming(15, { duration: 20000, easing: Easing.linear }),
-      -1,
-      true,
-    );
-
-    shimmerX.value = withRepeat(
-      withTiming(textWidth + SHIMMER_WIDTH, {
-        duration: 2000,
-        easing: Easing.linear,
-      }),
-      -1,
-      false,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [textWidth]);
 
   return (
     <Animated.View entering={FadeIn.duration(500)} style={styles.container}>

@@ -14,7 +14,7 @@ type ModalState = {
   isDenied: boolean;
 } | null;
 
-export function useImagePicker() {
+export function useImagePicker(onImageSelected?: (image: PickedImage) => void) {
   const [image, setImage] = useState<PickedImage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [modalState, setModalState] = useState<ModalState>(null);
@@ -46,11 +46,13 @@ export function useImagePicker() {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        setImage({
+        const picked: PickedImage = {
           uri: asset.uri,
           width: asset.width,
           height: asset.height,
-        });
+        };
+        setImage(picked);
+        onImageSelected?.(picked);
       }
     } catch (error) {
       const message =
@@ -68,7 +70,7 @@ export function useImagePicker() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [onImageSelected]);
 
   const launchGallery = useCallback(async () => {
     setIsLoading(true);
@@ -88,11 +90,13 @@ export function useImagePicker() {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        setImage({
+        const picked: PickedImage = {
           uri: asset.uri,
           width: asset.width,
           height: asset.height,
-        });
+        };
+        setImage(picked);
+        onImageSelected?.(picked);
       }
     } catch (error) {
       const message =
@@ -101,7 +105,7 @@ export function useImagePicker() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [onImageSelected]);
 
   const requestCamera = useCallback(async () => {
     const status = await checkCameraPermission();

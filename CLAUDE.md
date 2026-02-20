@@ -27,9 +27,17 @@ bun run lint
 
 # Maestro E2E tests
 bun run test:maestro
+
+# React Compiler health check
+npx react-doctor --verbose
 ```
 
 **⚠️ IMPORTANT - Before committing:** Always run `bun test` and ensure all unit tests pass before creating a commit. Fix any failing tests before proceeding.
+
+**⚠️ IMPORTANT - React Compiler:** Run `npx react-doctor --verbose` after modifying React components. Fix all errors before committing. Common patterns to avoid:
+- **Mutating shared values from hooks directly** — extract mutations into module-level functions that accept `SharedValue` parameters
+- **Conditional expressions (ternary, `??`, `?.`) inside try/catch** — compute conditional values before the try block
+- **Mismatched `useCallback`/`useMemo` dependency arrays** — include all values the compiler infers as dependencies
 
 **⚠️ IMPORTANT - E2E Tests:** When modifying screens, navigation, or interactive elements, run `bun run test:maestro` to verify the Maestro E2E tests still pass. If your changes alter navigation flow, button text, or screen structure, update the affected Maestro test files in `.maestro/` accordingly. The E2E tests are the source of truth for whether the app's user-facing flows work correctly.
 

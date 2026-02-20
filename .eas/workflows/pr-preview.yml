@@ -5,9 +5,32 @@ on:
     types: ['opened', 'synchronize', 'reopened']
 
 jobs:
+  test:
+    name: Unit Tests & React Doctor
+    steps:
+      - uses: eas/checkout
+      - name: Install dependencies
+        run: bun install
+      - name: Run unit tests
+        run: bun test
+      - name: Fetch main branch
+        run: |
+          git fetch --unshallow 2>/dev/null || true
+          git fetch origin main:main
+      - name: Run React Doctor
+        run: |
+          output=$(npx react-doctor --diff main 2>&1)
+          printf '%s\n' "$output"
+          clean=$(printf '%s\n' "$output" | sed 's/\x1b\[[0-9;]*[mGKHF]//g')
+          if printf '%s\n' "$clean" | grep -qE "[1-9][0-9]* error"; then
+            echo "React Doctor found errors. Fix them before merging."
+            exit 1
+          fi
+
   deploy-preview:
     type: deploy
     name: Deploy Preview
+    needs: [test]
     environment: preview
     params:
       alias: pr-${{ github.pull_request.number }}

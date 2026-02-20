@@ -94,9 +94,9 @@ export default function ConfigScreen() {
       try {
         const results = await searchCity(text);
         setLocationResults(results);
+        setIsSearching(false);
       } catch {
         setLocationResults([]);
-      } finally {
         setIsSearching(false);
       }
     }, 1000);
@@ -169,7 +169,7 @@ export default function ConfigScreen() {
                 )}
                 {locationResults.map((result, index) => (
                   <Button
-                    key={`${result.latitude}-${result.longitude}-${index}`}
+                    key={`${result.latitude}-${result.longitude}`}
                     onPress={() => handleSelectLocation(result)}
                     modifiers={[buttonStyle('plain')]}
                   >
