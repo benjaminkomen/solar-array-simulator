@@ -103,8 +103,11 @@ export const FiberCanvas = ({
           }
           // Called by R3F frame loop — use post-processing pipeline
           renderingPostProcess = true;
-          postProcessing.render();
-          renderingPostProcess = false;
+          try {
+            postProcessing.render();
+          } finally {
+            renderingPostProcess = false;
+          }
           context?.present();
         };
       },
