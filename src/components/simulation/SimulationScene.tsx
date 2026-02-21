@@ -114,6 +114,8 @@ function applyCameraAndScene(
   }
   // Clear flat background — SkyDome renders the sky
   scene.background = null;
+  // Exponential fog blends ground into sky at horizon — seamless transition
+  scene.fog = new THREE.FogExp2(0x9ab8a8, 0.012);
 }
 
 export function SimulationScene({
@@ -208,7 +210,7 @@ export function SimulationScene({
       {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.0, 0]}>
         <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#5a8b55" />
+        <meshStandardMaterial color="#7a9e78" metalness={0.05} roughness={0.9} />
       </mesh>
 
       {/* Solar panels — tilt like a roof slope, near edge stays, far edge rises */}

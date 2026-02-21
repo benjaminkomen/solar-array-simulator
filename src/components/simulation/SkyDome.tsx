@@ -18,7 +18,7 @@ const TWILIGHT_HORIZON = new THREE.Color(0x4a3a5e);
 const TWILIGHT_ZENITH = new THREE.Color(0x1a1a3e);
 const DAWN_HORIZON = new THREE.Color(0xc4856b);
 const DAWN_ZENITH = new THREE.Color(0x4a6a8e);
-const DAY_HORIZON = new THREE.Color(0x87ceeb);
+const DAY_HORIZON = new THREE.Color(0x9ec5d6);
 const DAY_ZENITH = new THREE.Color(0x4488cc);
 
 // Scratch colors to avoid allocations in the update loop
@@ -126,6 +126,7 @@ export function SkyDome({ elevation }: SkyDomeProps) {
         vertexColors: true,
         side: THREE.BackSide,
         depthWrite: false,
+        fog: false,
       }),
     [],
   );
@@ -180,6 +181,7 @@ export function SkyDome({ elevation }: SkyDomeProps) {
           side={THREE.BackSide}
           depthWrite={false}
           opacity={0.7}
+          fog={false}
         />
       </mesh>
     </>

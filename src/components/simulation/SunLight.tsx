@@ -90,6 +90,7 @@ export function SunLight({ position, intensity, elevation }: SunLightProps) {
           toneMapped={false}
           transparent
           depthWrite={true}
+          fog={false}
         />
       </mesh>
     </>
