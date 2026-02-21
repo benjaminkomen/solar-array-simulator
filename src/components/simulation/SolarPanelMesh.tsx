@@ -1,3 +1,5 @@
+import { DoubleSide } from "three";
+
 interface SolarPanelMeshProps {
   position: [number, number, number];
   width: number;
@@ -10,7 +12,7 @@ export function SolarPanelMesh({ position, width, height }: SolarPanelMeshProps)
   return (
     <mesh position={position}>
       <boxGeometry args={[width, PANEL_THICKNESS, height]} />
-      <meshStandardMaterial color="#3b82f6" metalness={0.2} roughness={0.7} />
+      <meshStandardMaterial color="#3b82f6" emissive="#1a4080" emissiveIntensity={0.4} metalness={0.2} roughness={0.7} side={DoubleSide} />
     </mesh>
   );
 }

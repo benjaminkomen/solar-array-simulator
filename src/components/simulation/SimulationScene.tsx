@@ -192,6 +192,22 @@ export function SimulationScene({
   }, [panelLayout]);
   const tiltRad = (tiltAngle * Math.PI) / 180;
 
+  // Bounding box of all panels for the roof surface
+  const roofBounds = useMemo(() => {
+    if (panelLayout.length === 0) return null;
+    const PADDING = 0.3;
+    const minX = Math.min(...panelLayout.map((p) => p.position[0] - p.width / 2));
+    const maxX = Math.max(...panelLayout.map((p) => p.position[0] + p.width / 2));
+    const minZ = Math.min(...panelLayout.map((p) => p.position[2] - p.height / 2));
+    const maxZ = Math.max(...panelLayout.map((p) => p.position[2] + p.height / 2));
+    return {
+      centerX: (minX + maxX) / 2,
+      centerZ: (minZ + maxZ) / 2,
+      width: maxX - minX + PADDING * 2,
+      depth: maxZ - minZ + PADDING * 2,
+    };
+  }, [panelLayout]);
+
   useEffect(() => {
     applyCameraPosition(camera, panels.length > 0);
   }, [camera, panels.length]);
@@ -225,6 +241,13 @@ export function SimulationScene({
           <group position={[0, 0, nearEdgeZ]}>
             <group rotation={[-tiltRad, -0.5, 0.5]}>
               <group position={[0, 3, -nearEdgeZ]}>
+                {/* Black roof surface behind panels */}
+                {roofBounds && (
+                  <mesh position={[roofBounds.centerX, -0.06, roofBounds.centerZ]}>
+                    <boxGeometry args={[roofBounds.width, 0.04, roofBounds.depth]} />
+                    <meshStandardMaterial color="#555555" metalness={0} roughness={1} side={THREE.DoubleSide} />
+                  </mesh>
+                )}
                 {panelLayout.map((p, i) => (
                   <SolarPanelMesh
                     key={panels[i].id}
