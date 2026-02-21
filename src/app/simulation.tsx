@@ -113,13 +113,27 @@ export default function SimulationScreen() {
     return { wattages: map, totalWattage: total };
   }, [panelInfos, config, latitude, longitude, season, currentHour]);
 
-  const formatTime = useCallback((hour: number) => {
-    const h = Math.floor(hour);
-    const m = Math.floor((hour - h) * 60);
+  const panels3D = useMemo(
+    () =>
+      panelInfos.map((p) => ({
+        id: p.id,
+        x: p.x,
+        y: p.y,
+        rotation: p.rotation,
+        wattage: wattages.get(p.id) ?? 0,
+      })),
+    [panelInfos, wattages]
+  );
+
+  const formatTime = useCallback((utcHour: number) => {
+    // Convert UTC solar time to local solar time for display
+    const localHour = (((utcHour + longitude / 15) % 24) + 24) % 24;
+    const h = Math.floor(localHour);
+    const m = Math.floor((localHour - h) * 60);
     const period = h >= 12 ? "PM" : "AM";
     const h12 = h % 12 || 12;
     return `${h12}:${m.toString().padStart(2, "0")} ${period}`;
-  }, []);
+  }, [longitude]);
 
   const formatWattage = (watts: number): string => {
     if (watts >= 1000) return `${(watts / 1000).toFixed(1)}kW`;
@@ -148,6 +162,8 @@ export default function SimulationScreen() {
               longitude={longitude}
               season={season}
               currentHour={currentHour}
+              panels={panels3D}
+              tiltAngle={config.panelTiltAngle}
             />
           </Suspense>
         </View>
