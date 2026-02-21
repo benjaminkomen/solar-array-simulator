@@ -185,10 +185,10 @@ export function SimulationScene({
 
   const panelLayout = useMemo(() => computePanelLayout(panels), [panels]);
 
-  // Pivot around right edge so left side tilts up
-  const rightEdgeX = useMemo(() => {
+  // Pivot around near edge (min Z, closest to camera) so far edge tilts up
+  const nearEdgeZ = useMemo(() => {
     if (panelLayout.length === 0) return 0;
-    return Math.max(...panelLayout.map((p) => p.position[0] + p.width / 2));
+    return Math.min(...panelLayout.map((p) => p.position[2] - p.height / 2));
   }, [panelLayout]);
   const tiltRad = (tiltAngle * Math.PI) / 180;
 
@@ -214,17 +214,17 @@ export function SimulationScene({
       />
 
       {/* Ground plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.0, 0]}>
         <planeGeometry args={[200, 200]} />
         <meshStandardMaterial color="#5a8b55" />
       </mesh>
 
-      {/* Solar panels — pivot around right edge so left tilts up */}
+      {/* Solar panels — tilt like a roof slope, near edge stays, far edge rises */}
       {panelLayout.length > 0 && (
-        <group position={[0, 1, 20]}>
-          <group position={[rightEdgeX, 0, 0]}>
-            <group rotation={[0, 0, -tiltRad]}>
-              <group position={[-rightEdgeX, 0, 0]}>
+        <group position={[5, 2, 20]}>
+          <group position={[0, 0, nearEdgeZ]}>
+            <group rotation={[-tiltRad, -0.5, 0.5]}>
+              <group position={[0, 3, -nearEdgeZ]}>
                 {panelLayout.map((p, i) => (
                   <SolarPanelMesh
                     key={panels[i].id}
