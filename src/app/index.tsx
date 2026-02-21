@@ -75,7 +75,7 @@ export default function Index() {
                 textAlign: "center",
               }}
             >
-              Array Builder
+              Solar Array Simulator
             </Text>
             <Text
               style={{

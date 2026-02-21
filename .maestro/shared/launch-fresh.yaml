@@ -1,7 +1,7 @@
 appId: com.bkomen.reactnativearraylayout2
 ---
 # Shared: Launch app with clear state, reconnect to dev server
-# Ends on the Welcome screen with "Array Builder" visible
+# Ends on the Welcome screen with "Solar Array Simulator" visible
 
 - launchApp:
     clearState: true
@@ -21,5 +21,5 @@ appId: com.bkomen.reactnativearraylayout2
 - tapOn:
     point: "50%,15%"
 - extendedWaitUntil:
-    visible: "Array Builder"
+    visible: "Solar Array Simulator"
     timeout: 30000
