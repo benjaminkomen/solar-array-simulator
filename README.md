@@ -7,6 +7,7 @@ Download the app from TestFlight here: @todo add link
 
 ## Demo
 
+<p>
 <img src="./docs/screenshots/welcome_screen.png" width="200" alt="welcome screen" />
 <img src="./docs/screenshots/config.png" width="200" alt="config screen" />
 <img src="./docs/screenshots/config_edit_micro.png" width="200" alt="config screen, edit micro-inverter" />
@@ -21,6 +22,7 @@ Download the app from TestFlight here: @todo add link
 <img src="./docs/screenshots/production_panel_details.png" width="200" alt="production screen, panel details" />
 <img src="./docs/screenshots/simulation_day.png" width="200" alt="simulation screen, day time" />
 <img src="./docs/screenshots/simulation_night.png" width="200" alt="simulation screen, night time" />
+</p>
 
 ## References / credits
 
