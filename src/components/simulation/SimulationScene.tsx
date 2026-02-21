@@ -3,6 +3,7 @@ import * as THREE from "three/webgpu";
 import { useThree } from "@react-three/fiber";
 import { SunLight } from "./SunLight";
 import { SolarPanelMesh } from "./SolarPanelMesh";
+import { SkyDome } from "./SkyDome";
 import {
   getSolarPosition,
   calculateIrradiance,
@@ -27,30 +28,6 @@ interface SimulationSceneProps {
   currentHour: number;
   panels: Panel3DInfo[];
   tiltAngle: number;
-}
-
-const NIGHT_COLOR = new THREE.Color(0x1a1a2e);
-const HORIZON_COLOR = new THREE.Color(0x4a3a5e);
-const DAWN_COLOR = new THREE.Color(0xc4856b);
-const DAY_COLOR = new THREE.Color(0x87ceeb);
-
-function getSkyColor(elevation: number): THREE.Color {
-  if (elevation < -6) {
-    return NIGHT_COLOR.clone();
-  }
-  if (elevation < 0) {
-    const t = (elevation + 6) / 6;
-    return NIGHT_COLOR.clone().lerp(HORIZON_COLOR, t);
-  }
-  if (elevation < 8) {
-    const t = elevation / 8;
-    return HORIZON_COLOR.clone().lerp(DAWN_COLOR, t);
-  }
-  if (elevation < 20) {
-    const t = (elevation - 8) / 12;
-    return DAWN_COLOR.clone().lerp(DAY_COLOR, t);
-  }
-  return DAY_COLOR.clone();
 }
 
 /**
@@ -79,10 +56,6 @@ function getVisualSunPosition(
     y: Math.max(0.5, maxHeight * Math.sin(angle)),
     z: 25,
   };
-}
-
-function applySceneBackground(scene: THREE.Scene, elevation: number): void {
-  scene.background = getSkyColor(elevation);
 }
 
 // 2D canvas panel dimensions (px)
@@ -127,7 +100,11 @@ function computePanelLayout(
   }));
 }
 
-function applyCameraPosition(camera: THREE.Camera, hasPanels: boolean): void {
+function applyCameraAndScene(
+  camera: THREE.Camera,
+  scene: THREE.Scene,
+  hasPanels: boolean,
+): void {
   if (hasPanels) {
     camera.position.set(0, 8, -8);
     camera.lookAt(0, 4, 20);
@@ -135,6 +112,8 @@ function applyCameraPosition(camera: THREE.Camera, hasPanels: boolean): void {
     camera.position.set(0, 2, -5);
     camera.lookAt(0, 10, 25);
   }
+  // Clear flat background — SkyDome renders the sky
+  scene.background = null;
 }
 
 export function SimulationScene({
@@ -209,12 +188,8 @@ export function SimulationScene({
   }, [panelLayout]);
 
   useEffect(() => {
-    applyCameraPosition(camera, panels.length > 0);
-  }, [camera, panels.length]);
-
-  useEffect(() => {
-    applySceneBackground(scene, solarData.elevation);
-  }, [scene, solarData.elevation]);
+    applyCameraAndScene(camera, scene, panels.length > 0);
+  }, [camera, scene, panels.length]);
 
   // Low ambient so directional light creates visible contrast on ground
   const ambientIntensity =
@@ -222,6 +197,7 @@ export function SimulationScene({
 
   return (
     <>
+      <SkyDome elevation={solarData.elevation} />
       <ambientLight intensity={ambientIntensity} />
       <SunLight
         position={sunPosition}
