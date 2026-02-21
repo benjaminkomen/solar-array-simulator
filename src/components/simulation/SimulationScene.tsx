@@ -219,11 +219,25 @@ export function SimulationScene({
           <group position={[0, 0, nearEdgeZ]}>
             <group rotation={[-tiltRad, -0.5, 0.5]}>
               <group position={[0, 3, -nearEdgeZ]}>
-                {/* Black roof surface behind panels */}
+                {/* Roof surface behind panels */}
                 {roofBounds && (
                   <mesh position={[roofBounds.centerX, -0.06, roofBounds.centerZ]}>
                     <boxGeometry args={[roofBounds.width, 0.04, roofBounds.depth]} />
                     <meshStandardMaterial color="#555555" metalness={0} roughness={1} side={THREE.DoubleSide} />
+                  </mesh>
+                )}
+                {/* Vertical wall on the left slope of the roof */}
+                {roofBounds && (
+                  <mesh position={[roofBounds.centerX + roofBounds.width / 2, -0.06 - 1, roofBounds.centerZ]}>
+                    <boxGeometry args={[0.08, 2, roofBounds.depth]} />
+                    <meshStandardMaterial color="#666666" metalness={0} roughness={1} side={THREE.DoubleSide} />
+                  </mesh>
+                )}
+                {/* Vertical wall on the right slope of the roof */}
+                {roofBounds && (
+                  <mesh position={[roofBounds.centerX - roofBounds.width / 2, -0.06 - 1, roofBounds.centerZ]}>
+                    <boxGeometry args={[0.08, 2, roofBounds.depth]} />
+                    <meshStandardMaterial color="#666666" metalness={0} roughness={1} side={THREE.DoubleSide} />
                   </mesh>
                 )}
                 {panelLayout.map((p, i) => (
