@@ -226,20 +226,6 @@ export function SimulationScene({
                     <meshStandardMaterial color="#555555" metalness={0} roughness={1} side={THREE.DoubleSide} />
                   </mesh>
                 )}
-                {/* Vertical wall on the left slope of the roof */}
-                {roofBounds && (
-                  <mesh position={[roofBounds.centerX + roofBounds.width / 2, -0.06 - 1, roofBounds.centerZ]}>
-                    <boxGeometry args={[0.08, 2, roofBounds.depth]} />
-                    <meshStandardMaterial color="#666666" metalness={0} roughness={1} side={THREE.DoubleSide} />
-                  </mesh>
-                )}
-                {/* Vertical wall on the right slope of the roof */}
-                {roofBounds && (
-                  <mesh position={[roofBounds.centerX - roofBounds.width / 2, -0.06 - 1, roofBounds.centerZ]}>
-                    <boxGeometry args={[0.08, 2, roofBounds.depth]} />
-                    <meshStandardMaterial color="#666666" metalness={0} roughness={1} side={THREE.DoubleSide} />
-                  </mesh>
-                )}
                 {panelLayout.map((p, i) => (
                   <SolarPanelMesh
                     key={panels[i].id}
