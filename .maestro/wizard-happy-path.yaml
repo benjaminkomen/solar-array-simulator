@@ -1,4 +1,4 @@
-appId: com.bkomen.reactnativearraylayout2
+appId: com.bkomen.solararraysimulator
 ---
 # Wizard Happy Path: Welcome → Config → Upload → Custom → Production
 # Tests the primary user flow through the entire wizard with assertions at each step

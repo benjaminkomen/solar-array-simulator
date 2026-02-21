@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "react-native-array-layout-2",
-    "slug": "react-native-array-layout-2",
+    "name": "solar-array-simulator",
+    "slug": "solar-array-simulator",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "reactnativearraylayout2",
+    "scheme": "solararraysimulator",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bkomen.reactnativearraylayout2",
+      "bundleIdentifier": "com.bkomen.solararraysimulator",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
