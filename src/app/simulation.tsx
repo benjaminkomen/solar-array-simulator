@@ -125,13 +125,15 @@ export default function SimulationScreen() {
     [panelInfos, wattages]
   );
 
-  const formatTime = useCallback((hour: number) => {
-    const h = Math.floor(hour);
-    const m = Math.floor((hour - h) * 60);
+  const formatTime = useCallback((utcHour: number) => {
+    // Convert UTC solar time to local solar time for display
+    const localHour = (((utcHour + longitude / 15) % 24) + 24) % 24;
+    const h = Math.floor(localHour);
+    const m = Math.floor((localHour - h) * 60);
     const period = h >= 12 ? "PM" : "AM";
     const h12 = h % 12 || 12;
     return `${h12}:${m.toString().padStart(2, "0")} ${period}`;
-  }, []);
+  }, [longitude]);
 
   const formatWattage = (watts: number): string => {
     if (watts >= 1000) return `${(watts / 1000).toFixed(1)}kW`;
