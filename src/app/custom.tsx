@@ -326,8 +326,8 @@ export default function Custom() {
           </>
         )}
         {isWizardMode && panels.length > 0 && (
-          <Stack.Toolbar.Button onPress={handleFinish}>
-            Finish
+          <Stack.Toolbar.Button onPress={handleFinish} accessibilityLabel="Finish wizard">
+            <Stack.Toolbar.Label>Finish</Stack.Toolbar.Label>
           </Stack.Toolbar.Button>
         )}
       </Stack.Toolbar>
