@@ -1,5 +1,5 @@
 {
-  "name": "react-native-array-layout-2",
+  "name": "solar-array-simulator",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -61,11 +61,6 @@
   "private": true,
   "overrides": {
     "@expo/log-box": "55.0.5"
-  },
-  "reanimated": {
-    "staticFeatureFlags": {
-      "ENABLE_SHARED_ELEMENT_TRANSITIONS": false
-    }
   },
   "trustedDependencies": [
     "@shopify/react-native-skia"

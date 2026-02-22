@@ -55,10 +55,9 @@ export default function Index() {
             }}
           >
             <Image
-              source="sf:sun.max.fill"
-              style={{ width: 70, height: 70 }}
-              contentFit="contain"
-              tintColor={colors.primary}
+              source={require("../../assets/images/icon.png")}
+              style={{ width: 140, height: 140, borderRadius: 32 }}
+              contentFit="cover"
             />
           </Animated.View>
 
@@ -75,7 +74,7 @@ export default function Index() {
                 textAlign: "center",
               }}
             >
-              Array Builder
+              Solar Array Simulator
             </Text>
             <Text
               style={{

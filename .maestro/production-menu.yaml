@@ -1,4 +1,4 @@
-appId: com.bkomen.reactnativearraylayout2
+appId: com.bkomen.solararraysimulator
 ---
 # Production Screen: Menu actions (Edit Config, Delete Config)
 
@@ -31,7 +31,7 @@ appId: com.bkomen.reactnativearraylayout2
 
 # Verify we're back on Welcome screen
 - extendedWaitUntil:
-    visible: "Array Builder"
+    visible: "Solar Array Simulator"
     timeout: 10000
 - assertVisible:
     id: "get-started-button"

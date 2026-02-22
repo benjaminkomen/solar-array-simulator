@@ -1,28 +1,28 @@
 {
   "expo": {
-    "name": "react-native-array-layout-2",
+    "name": "solar-array-simulator",
     "slug": "react-native-array-layout-2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "reactnativearraylayout2",
+    "scheme": "solararraysimulator",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bkomen.reactnativearraylayout2",
+      "bundleIdentifier": "com.bkomen.solararraysimulator",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#334155",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.bkomen.solararraysimulator"
     },
     "web": {
       "output": "server",

@@ -1,4 +1,4 @@
-appId: com.bkomen.reactnativearraylayout2
+appId: com.bkomen.solararraysimulator
 ---
 # Analyze Screen: Verify model selector UI and Skip action
 # Tests: Upload → pick photo from gallery → Analyze screen (model selector) → Skip → Custom

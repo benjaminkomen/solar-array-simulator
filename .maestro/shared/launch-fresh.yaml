@@ -1,14 +1,22 @@
-appId: com.bkomen.reactnativearraylayout2
+appId: com.bkomen.solararraysimulator
 ---
 # Shared: Launch app with clear state, reconnect to dev server
-# Ends on the Welcome screen with "Array Builder" visible
+# Ends on the Welcome screen with "Solar Array Simulator" visible
 
 - launchApp:
     clearState: true
+# Dismiss any lingering "Open in app?" dialog
+- runFlow:
+    when:
+      visible: "Cancel"
+    commands:
+      - tapOn: "Cancel"
+# Wait for dev server list and tap the first entry
 - extendedWaitUntil:
-    visible: "http://localhost:8081"
+    visible: "DEVELOPMENT SERVERS"
     timeout: 10000
-- tapOn: "http://localhost:8081"
+- tapOn:
+    point: "50%,22%"
 # Dismiss dev client onboarding dialog
 - extendedWaitUntil:
     visible: "Continue"
@@ -21,5 +29,5 @@ appId: com.bkomen.reactnativearraylayout2
 - tapOn:
     point: "50%,15%"
 - extendedWaitUntil:
-    visible: "Array Builder"
-    timeout: 30000
+    visible: "Solar Array Simulator"
+    timeout: 90000
