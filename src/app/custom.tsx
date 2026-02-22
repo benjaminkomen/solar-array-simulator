@@ -10,6 +10,7 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
+import { GRID_SIZE } from "@/utils/gridSnap";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useZoom } from "@/hooks/useZoom";
@@ -326,8 +327,8 @@ export default function Custom() {
           </>
         )}
         {isWizardMode && panels.length > 0 && (
-          <Stack.Toolbar.Button onPress={handleFinish} accessibilityLabel="Finish wizard">
-            <Stack.Toolbar.Label>Finish</Stack.Toolbar.Label>
+          <Stack.Toolbar.Button onPress={handleFinish}>
+            Finish
           </Stack.Toolbar.Button>
         )}
       </Stack.Toolbar>
