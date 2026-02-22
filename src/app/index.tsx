@@ -43,22 +43,15 @@ export default function Index() {
           <Animated.View
             entering={FadeIn.duration(400)}
             style={{
-              width: 140,
-              height: 140,
-              borderRadius: 32,
-              backgroundColor: colors.primaryLight,
-              justifyContent: "center",
-              alignItems: "center",
               boxShadow: isDark
                 ? "0 8px 24px rgba(96, 165, 250, 0.4)"
                 : "0 8px 24px rgba(59, 130, 246, 0.15)",
             }}
           >
             <Image
-              source="sf:sun.max.fill"
-              style={{ width: 70, height: 70 }}
-              contentFit="contain"
-              tintColor={colors.primary}
+              source={require("../../assets/images/icon.png")}
+              style={{ width: 140, height: 140, borderRadius: 32 }}
+              contentFit="cover"
             />
           </Animated.View>
 
