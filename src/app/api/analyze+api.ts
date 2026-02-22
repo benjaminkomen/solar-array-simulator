@@ -71,6 +71,11 @@ Rules:
 - Return ONLY valid JSON, no markdown fences, no explanation outside the JSON.`;
 
 export async function POST(request: Request) {
+  const token = request.headers.get("X-API-Token");
+  if (token !== process.env.API_TOKEN) {
+    return Response.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
   console.log("[Bedrock] POST /api/analyze handler entered");
   let startTime: number | undefined;
 

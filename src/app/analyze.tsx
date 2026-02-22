@@ -146,7 +146,10 @@ export default function Analyze() {
 
       const response = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Token": process.env.EXPO_PUBLIC_API_TOKEN!,
+        },
         body: JSON.stringify({
           image: img.base64,
           mimeType: img.mimeType,
