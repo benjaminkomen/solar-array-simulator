@@ -43,6 +43,12 @@ export default function Index() {
           <Animated.View
             entering={FadeIn.duration(400)}
             style={{
+              width: 140,
+              height: 140,
+              borderRadius: 32,
+              backgroundColor: colors.primaryLight,
+              justifyContent: "center",
+              alignItems: "center",
               boxShadow: isDark
                 ? "0 8px 24px rgba(96, 165, 250, 0.4)"
                 : "0 8px 24px rgba(59, 130, 246, 0.15)",
