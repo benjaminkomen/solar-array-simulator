@@ -71,8 +71,9 @@ Rules:
 - Return ONLY valid JSON, no markdown fences, no explanation outside the JSON.`;
 
 export async function POST(request: Request) {
+  const expectedToken = process.env.API_TOKEN;
   const token = request.headers.get("X-API-Token");
-  if (token !== process.env.API_TOKEN) {
+  if (!expectedToken || token !== expectedToken) {
     return Response.json({ error: "Unauthorized" }, { status: 403 });
   }
 
