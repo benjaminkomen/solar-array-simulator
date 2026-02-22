@@ -10,7 +10,6 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
-import { GRID_SIZE } from "@/utils/gridSnap";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useZoom } from "@/hooks/useZoom";
