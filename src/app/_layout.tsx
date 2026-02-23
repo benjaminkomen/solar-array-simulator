@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
@@ -48,29 +49,50 @@ export default function RootLayout() {
             <Stack.Screen
               name="panel-details"
               options={{
-                presentation: "formSheet",
-                sheetGrabberVisible: true,
+                ...Platform.select({
+                  ios: {
+                    presentation: "formSheet",
+                    sheetGrabberVisible: true,
+                    contentStyle: {backgroundColor: "transparent"},
+                  },
+                  android: {
+                    presentation: "modal",
+                  },
+                }),
                 title: "Panel Details",
-                contentStyle: {backgroundColor: "transparent"},
               }}
             />
             <Stack.Screen
               name="inverter-details"
               options={{
-                presentation: "formSheet",
-                sheetGrabberVisible: true,
+                ...Platform.select({
+                  ios: {
+                    presentation: "formSheet",
+                    sheetGrabberVisible: true,
+                    contentStyle: {backgroundColor: "transparent"},
+                  },
+                  android: {
+                    presentation: "modal",
+                  },
+                }),
                 title: "Inverter Details",
-                contentStyle: {backgroundColor: "transparent"},
               }}
             />
             <Stack.Screen
               name="compass-help"
               options={{
-                presentation: "formSheet",
-                sheetGrabberVisible: true,
+                ...Platform.select({
+                  ios: {
+                    presentation: "formSheet",
+                    sheetGrabberVisible: true,
+                    contentStyle: {backgroundColor: "transparent"},
+                  },
+                  android: {
+                    presentation: "modal",
+                  },
+                }),
                 title: "",
                 headerShown: false,
-                contentStyle: {backgroundColor: "transparent"},
               }}
             />
             <Stack.Screen
