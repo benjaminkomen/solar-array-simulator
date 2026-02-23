@@ -1,6 +1,6 @@
 import {
-  Host, ModalBottomSheet, Slider, TextInput,
-  Card, Text as UIText, Column, Row, TextButton,
+  Button, Host, ModalBottomSheet, Slider, TextInput,
+  Card, Text as UIText, Column, Row,
 } from '@expo/ui/jetpack-compose';
 import { paddingAll, fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { useColors } from '@/utils/theme';
@@ -21,20 +21,20 @@ export default function InverterDetailsScreen() {
   return (
     <Host matchContents>
       <ModalBottomSheet onDismissRequest={handleCancel}>
-        <Column modifiers={[paddingAll(16)]} verticalArrangement={{ spacedBy: 16 }}>
+        <Column modifiers={[fillMaxWidth(), paddingAll(16)]} verticalArrangement={{ spacedBy: 16 }}>
 
           {/* Header: Cancel | Title | Save */}
           <Row horizontalArrangement="spaceBetween" modifiers={[fillMaxWidth()]}>
-            <TextButton onPress={handleCancel}>Cancel</TextButton>
+            <Button leadingIcon="filled.Close" variant="borderless" onPress={handleCancel} />
             <UIText style={{ typography: 'titleMedium', fontWeight: '700' }} color={colors.text.primary}>
               {isAddMode ? 'New Micro-inverter' : 'Edit Micro-inverter'}
             </UIText>
-            <TextButton onPress={handleSave}>Save</TextButton>
+            <Button leadingIcon="filled.Check" variant="borderless" onPress={handleSave} />
           </Row>
 
           {/* Details */}
           <Card variant="outlined">
-            <Column modifiers={[paddingAll(16)]}>
+            <Column modifiers={[paddingAll(16), fillMaxWidth()]}>
               <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
                 DETAILS
               </UIText>
