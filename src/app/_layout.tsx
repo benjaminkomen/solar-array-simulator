@@ -14,12 +14,19 @@ export default function RootLayout() {
         <PanelsProvider>
           <Stack
             screenOptions={{
-              headerTransparent: true,
-              headerTintColor: colors.text.primary,
+              headerTransparent: Platform.OS === "ios",
+              ...(Platform.OS === "android" && {
+                headerStyle: { backgroundColor: colors.background.primary },
+                headerTintColor: colors.primary,
+              }),
+              ...(Platform.OS === "ios" && {
+                headerTintColor: colors.text.primary,
+              }),
             }}
           >
             <Stack.Screen name="index" options={{
               title: "",
+              headerTransparent: true,
             }}/>
             <Stack.Screen
               name="config"
@@ -44,6 +51,7 @@ export default function RootLayout() {
               name="custom"
               options={{
                 title: "",
+                headerTransparent: true,
               }}
             />
             <Stack.Screen
