@@ -1,10 +1,8 @@
-import { StyleSheet, ScrollView, Text, Pressable } from 'react-native';
-import { Stack } from 'expo-router';
 import {
-  Host, Slider, TextInput,
-  Card, Text as UIText, Column,
+  Host, ModalBottomSheet, Slider, TextInput,
+  Card, Text as UIText, Column, Row, TextButton,
 } from '@expo/ui/jetpack-compose';
-import { paddingAll } from '@expo/ui/jetpack-compose/modifiers';
+import { paddingAll, fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { useColors } from '@/utils/theme';
 import { useInverterForm } from '@/hooks/useInverterForm';
 
@@ -21,30 +19,20 @@ export default function InverterDetailsScreen() {
   } = useInverterForm();
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: isAddMode ? 'New Micro-inverter' : 'Edit Micro-inverter',
-          sheetAllowedDetents: [0.6, 1.0],
-          headerLeft: () => (
-            <Pressable onPress={handleCancel} style={styles.headerButton} accessibilityLabel="Cancel">
-              <Text style={[styles.headerButtonText, { color: colors.text.primary }]}>Cancel</Text>
-            </Pressable>
-          ),
-          headerRight: () => (
-            <Pressable onPress={handleSave} style={styles.headerButton} accessibilityLabel="Save">
-              <Text style={[styles.headerButtonText, { color: colors.primary }]}>Save</Text>
-            </Pressable>
-          ),
-        }}
-      />
-      <ScrollView
-        style={[styles.container, { backgroundColor: colors.background.secondary }]}
-        contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
-      >
-        {/* Details */}
-        <Host matchContents>
+    <Host matchContents>
+      <ModalBottomSheet onDismissRequest={handleCancel}>
+        <Column modifiers={[paddingAll(16)]} verticalArrangement={{ spacedBy: 16 }}>
+
+          {/* Header: Cancel | Title | Save */}
+          <Row horizontalArrangement="spaceBetween" modifiers={[fillMaxWidth()]}>
+            <TextButton onPress={handleCancel}>Cancel</TextButton>
+            <UIText style={{ typography: 'titleMedium', fontWeight: '700' }} color={colors.text.primary}>
+              {isAddMode ? 'New Micro-inverter' : 'Edit Micro-inverter'}
+            </UIText>
+            <TextButton onPress={handleSave}>Save</TextButton>
+          </Row>
+
+          {/* Details */}
           <Card variant="outlined">
             <Column modifiers={[paddingAll(16)]}>
               <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
@@ -60,10 +48,8 @@ export default function InverterDetailsScreen() {
               />
             </Column>
           </Card>
-        </Host>
 
-        {/* Efficiency */}
-        <Host matchContents>
+          {/* Efficiency */}
           <Card variant="outlined">
             <Column modifiers={[paddingAll(16)]}>
               <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
@@ -85,25 +71,9 @@ export default function InverterDetailsScreen() {
               </UIText>
             </Column>
           </Card>
-        </Host>
-      </ScrollView>
-    </>
+
+        </Column>
+      </ModalBottomSheet>
+    </Host>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    gap: 16,
-  },
-  headerButton: {
-    padding: 8,
-  },
-  headerButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});

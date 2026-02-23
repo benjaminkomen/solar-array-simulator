@@ -1,8 +1,7 @@
 import { Fragment } from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import {
-  Host, Card, ListItem, Divider, Button,
+  Host, ModalBottomSheet, Card, ListItem, Divider, Button,
   Text as UIText, Column,
 } from '@expo/ui/jetpack-compose';
 import { paddingAll } from '@expo/ui/jetpack-compose/modifiers';
@@ -21,15 +20,11 @@ export default function PanelDetailsScreen() {
   } = usePanelDetails();
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          sheetAllowedDetents: isViewMode ? [0.3] : [0.6, 1.0],
-        }}
-      />
-      <ScrollView style={[styles.container, { backgroundColor: colors.background.secondary }]} contentContainerStyle={styles.scrollContent}>
-        {currentInverter ? (
-          <Host matchContents>
+    <Host matchContents>
+      <ModalBottomSheet onDismissRequest={() => router.back()}>
+        <Column modifiers={[paddingAll(16)]} verticalArrangement={{ spacedBy: 16 }}>
+
+          {currentInverter ? (
             <Card variant="outlined">
               <Column modifiers={[paddingAll(16)]}>
                 <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
@@ -53,9 +48,7 @@ export default function PanelDetailsScreen() {
                 )}
               </Column>
             </Card>
-          </Host>
-        ) : !isViewMode && availableInverters.length > 0 ? (
-          <Host matchContents>
+          ) : !isViewMode && availableInverters.length > 0 ? (
             <Card variant="outlined">
               <Column modifiers={[paddingAll(16)]}>
                 <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
@@ -76,9 +69,7 @@ export default function PanelDetailsScreen() {
                 </UIText>
               </Column>
             </Card>
-          </Host>
-        ) : !isViewMode ? (
-          <Host matchContents>
+          ) : !isViewMode ? (
             <Card variant="outlined">
               <Column modifiers={[paddingAll(16)]} horizontalAlignment="center">
                 <UIText style={{ typography: 'headlineSmall', fontWeight: '700' }} color={colors.text.primary}>
@@ -92,18 +83,10 @@ export default function PanelDetailsScreen() {
                 </Button>
               </Column>
             </Card>
-          </Host>
-        ) : null}
-      </ScrollView>
-    </>
+          ) : null}
+
+        </Column>
+      </ModalBottomSheet>
+    </Host>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-});
