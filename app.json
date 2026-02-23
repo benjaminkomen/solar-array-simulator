@@ -29,16 +29,16 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
+      ["expo-router", { "origin": "https://react-native-array-layout-2.expo.app" }],
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#334155",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#334155"
           }
         }
       ],

@@ -3,7 +3,7 @@
 A React Native (Expo) mobile application, used as a playground to design a solar panel array and simulate energy
 production.
 
-Download the app from TestFlight here: @todo add link
+Download the app from TestFlight [here](https://testflight.apple.com/v1/invite/f50db98176584841a5b59ac9559ba81b563948aa1efb42a6b3b33fe463afb51c192e63e1f?ct=24L96WG9A8&advp=10000&platform=ios)
 
 ## Demo
 
