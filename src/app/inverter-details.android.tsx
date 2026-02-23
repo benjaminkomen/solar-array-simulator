@@ -1,5 +1,5 @@
 import {
-  Button, Host, ModalBottomSheet, Slider, TextInput,
+  Host, Icon, IconButton, ModalBottomSheet, Slider, TextInput,
   Card, Text as UIText, Column, Row,
 } from '@expo/ui/jetpack-compose';
 import { paddingAll, fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
@@ -25,11 +25,15 @@ export default function InverterDetailsScreen() {
 
           {/* Header: Cancel | Title | Save */}
           <Row horizontalArrangement="spaceBetween" modifiers={[fillMaxWidth()]}>
-            <Button leadingIcon="filled.Close" variant="borderless" onPress={handleCancel} />
+            <IconButton onPress={handleCancel}>
+              <Icon source={require('@/assets/symbols/close.xml')} tintColor={colors.text.secondary} />
+            </IconButton>
             <UIText style={{ typography: 'titleMedium', fontWeight: '700' }} color={colors.text.primary}>
               {isAddMode ? 'New Micro-inverter' : 'Edit Micro-inverter'}
             </UIText>
-            <Button leadingIcon="filled.Check" variant="borderless" onPress={handleSave} />
+            <IconButton onPress={handleSave}>
+              <Icon source={require('@/assets/symbols/check.xml')} tintColor={colors.primary} />
+            </IconButton>
           </Row>
 
           {/* Details */}

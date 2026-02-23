@@ -1,7 +1,6 @@
-import {Fragment} from 'react';
+import {Fragment, useState} from 'react';
 import {ScrollView, StyleSheet, Text, useWindowDimensions, View} from 'react-native';
 import {
-  Button,
   Card,
   Column,
   Divider,
@@ -10,7 +9,6 @@ import {
   Icon,
   ListItem,
   Picker,
-  Row,
   Slider,
   Text as UIText, TextButton,
   TextInput,
@@ -25,6 +23,7 @@ export default function ConfigScreen() {
   const colors = useColors();
   const {width: screenWidth} = useWindowDimensions();
   const cardWidth = screenWidth - 32; // 16dp padding on each side
+  const [locationSelectCount, setLocationSelectCount] = useState(0);
   const {
     isWizardMode,
     config,
@@ -39,8 +38,12 @@ export default function ConfigScreen() {
     handleContinue,
     handleLocationSearch,
     handleSelectLocation,
-    handleDeleteInverter,
   } = useConfigForm();
+
+  const handleSelectLocationAndReset = (result: Parameters<typeof handleSelectLocation>[0]) => {
+    handleSelectLocation(result);
+    setLocationSelectCount(c => c + 1);
+  };
 
   return (
     <>
@@ -86,8 +89,8 @@ export default function ConfigScreen() {
                 </UIText>
                 {/* @ts-ignore - placeholder not in TextInput types but passed to native component */}
                 <TextInput
-                  key={config.locationName || 'no-location'}
-                  defaultValue={locationQuery || config.locationName || ''}
+                  key={locationSelectCount}
+                  defaultValue={locationQuery}
                   onChangeText={handleLocationSearch}
                   placeholder="e.g. Amsterdam, Netherlands"
                   modifiers={[fillMaxWidth()]}
@@ -102,7 +105,7 @@ export default function ConfigScreen() {
                     key={`${result.latitude}-${result.longitude}`}
                     headline={result.displayName.split(', ').slice(0, 2).join(', ')}
                     supportingText={result.displayName}
-                    modifiers={[clickable(() => handleSelectLocation(result))]}
+                    modifiers={[clickable(() => handleSelectLocationAndReset(result))]}
                   />
                 ))}
               </Column>
@@ -162,17 +165,10 @@ export default function ConfigScreen() {
                       modifiers={[clickable(() => handleOpenEditSheet(inverter))]}
                     >
                       <ListItem.Trailing>
-                        <Row>
-                          <Icon
-                            source={require('@/assets/symbols/chevron_right.xml')}
-                            tintColor={colors.text.tertiary}
-                          />
-                          <Button
-                            leadingIcon="filled.Delete"
-                            variant="borderless"
-                            onPress={() => handleDeleteInverter(inverter)}
-                          />
-                        </Row>
+                        <Icon
+                          source={require('@/assets/symbols/chevron_right.xml')}
+                          tintColor={colors.text.tertiary}
+                        />
                       </ListItem.Trailing>
                     </ListItem>
                   </Fragment>
