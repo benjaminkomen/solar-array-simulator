@@ -24,6 +24,10 @@ export default function PanelDetailsScreen() {
       <ModalBottomSheet onDismissRequest={() => router.back()}>
         <Column modifiers={[paddingAll(16), fillMaxWidth()]} verticalArrangement={{ spacedBy: 16 }}>
 
+          <UIText style={{ typography: 'titleMedium', fontWeight: '700', textAlign: 'center' }} color={colors.text.primary} modifiers={[fillMaxWidth()]}>
+            Panel Details
+          </UIText>
+
           {currentInverter ? (
             <Card variant="elevated" color={colors.background.primary}>
               <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
@@ -48,14 +52,15 @@ export default function PanelDetailsScreen() {
                 {!isViewMode && (
                   <>
                     <Divider />
-                    <Button
-                      leadingIcon="filled.Delete"
-                      variant="borderless"
-                      onPress={handleUnlink}
-                      elementColors={{ contentColor: colors.system.red }}
+                    <ListItem
+                      headline="Unlink Inverter"
+                      modifiers={[clickable(handleUnlink)]}
+                      colors={{ headlineColor: colors.system.red }}
                     >
-                      Unlink Inverter
-                    </Button>
+                      <ListItem.Leading>
+                        <Icon source={require('@/assets/symbols/link_off.xml')} tintColor={colors.system.red} />
+                      </ListItem.Leading>
+                    </ListItem>
                   </>
                 )}
               </Column>
