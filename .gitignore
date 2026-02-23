@@ -50,3 +50,10 @@ terraform/backend.hcl
 
 # Claude
 settings.local.json
+
+# Local app builds
+*.apk
+*.aab
+*.ipa
+*.app
+*.tar.gz

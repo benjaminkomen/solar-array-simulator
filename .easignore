@@ -1,0 +1,11 @@
+# Local app builds
+*.apk
+*.aab
+*.ipa
+*.app
+*.tar.gz
+
+# Unnecessary files
+/docs
+/node_modules
+/terraform
