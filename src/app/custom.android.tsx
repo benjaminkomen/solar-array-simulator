@@ -1,4 +1,4 @@
-import { View, StyleSheet, Pressable, Text } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
@@ -7,8 +7,8 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
 import {
-  Host, Button as JCButton, Chip,
-  Text as UIText,
+  Host, Button as JCButton, IconButton, Icon, Row,
+  Text as UIText, TextButton,
   HorizontalFloatingToolbar,
 } from "@expo/ui/jetpack-compose";
 
@@ -32,7 +32,6 @@ export default function Custom() {
     handleZoomOut,
     compassVisible,
     updateCompassDirection,
-    unlinkedCount,
     handleLayout,
     handleAddPanel,
     handleRotatePanel,
@@ -51,14 +50,19 @@ export default function Custom() {
           title: "",
           headerTitleAlign: 'center',
           headerRight: () => (
-            <View style={styles.headerActions}>
-              <Pressable onPress={handleCompassToggle} style={styles.headerButton} accessibilityLabel="Toggle compass">
-                <Text style={[styles.headerButtonText, { color: colors.text.primary }]}>Compass</Text>
-              </Pressable>
-              <Pressable onPress={handleSnapToOrigin} style={styles.headerButton} accessibilityLabel="Center view">
-                <Text style={[styles.headerButtonText, { color: colors.text.primary }]}>Center</Text>
-              </Pressable>
-            </View>
+            <Host matchContents>
+              <Row>
+                <IconButton variant="default" onPress={handleCompassToggle}>
+                  <Icon source={require('@/assets/symbols/navigation.xml')} tintColor={colors.text.primary} />
+                </IconButton>
+                <IconButton variant="default" onPress={handleSnapToOrigin}>
+                  <Icon source={require('@/assets/symbols/gps_fixed.xml')} tintColor={colors.text.primary} />
+                </IconButton>
+                <IconButton variant="default" onPress={handleLinkInverter}>
+                  <Icon source={require('@/assets/symbols/link.xml')} tintColor={colors.text.primary} />
+                </IconButton>
+              </Row>
+            </Host>
           ),
         }}
       />
@@ -91,28 +95,29 @@ export default function Custom() {
           onZoomOut={handleZoomOut}
         />
 
-        <View style={styles.floatingToolbarContainer}>
-          <Host matchContents>
-            <HorizontalFloatingToolbar variant="vibrant">
-              <JCButton leadingIcon="filled.Add" variant="borderless" onPress={handleAddPanel} />
-              {selectedId && (
-                <>
-                  <JCButton leadingIcon="filled.Edit" variant="borderless" onPress={handleLinkInverter} />
-                  <JCButton leadingIcon="filled.Refresh" variant="borderless" onPress={handleRotatePanel} />
-                  <JCButton leadingIcon="filled.Delete" variant="borderless" onPress={handleDeletePanel} />
-                </>
-              )}
-              {unlinkedCount > 0 && (
-                <Chip variant="assist" label={`${unlinkedCount} unpaired`} leadingIcon="filled.Warning" />
-              )}
-              {isWizardMode && panels.length > 0 && (
-                <HorizontalFloatingToolbar.FloatingActionButton onPress={handleFinish}>
-                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }}>Finish</UIText>
+        {selectedId ? (
+          <View style={styles.floatingToolbarContainer}>
+            <Host matchContents>
+              <HorizontalFloatingToolbar variant="vibrant">
+                <JCButton leadingIcon="filled.Add" variant="borderless" onPress={handleAddPanel} />
+                <JCButton leadingIcon="filled.Share" variant="borderless" onPress={handleLinkInverter} />
+                <JCButton leadingIcon="filled.Refresh" variant="borderless" onPress={handleRotatePanel} />
+                <JCButton leadingIcon="filled.Delete" variant="borderless" onPress={handleDeletePanel} />
+              </HorizontalFloatingToolbar>
+            </Host>
+          </View>
+        ) : (
+          <View style={styles.floatingToolbarContainer}>
+            <Host matchContents>
+              <HorizontalFloatingToolbar variant="vibrant">
+                {isWizardMode && panels.length > 0 && <TextButton onPress={handleFinish}>Finish</TextButton>}
+                <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAddPanel}>
+                  <UIText style={{ typography: 'headlineMedium', fontWeight: '300' }}>+</UIText>
                 </HorizontalFloatingToolbar.FloatingActionButton>
-              )}
-            </HorizontalFloatingToolbar>
-          </Host>
-        </View>
+              </HorizontalFloatingToolbar>
+            </Host>
+          </View>
+        )}
       </View>
     </>
   );
@@ -127,19 +132,6 @@ const styles = StyleSheet.create({
     top: 16,
     right: 48,
     zIndex: 10,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  headerButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-  },
-  headerButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
   },
   floatingToolbarContainer: {
     position: "absolute",

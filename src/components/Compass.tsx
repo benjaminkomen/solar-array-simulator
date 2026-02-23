@@ -1,5 +1,5 @@
 import {useCallback, useEffect} from "react";
-import {StyleSheet, View} from "react-native";
+import {Platform, StyleSheet, View} from "react-native";
 import {Canvas, Group, matchFont, Path, Skia, Text as SkiaText,} from "@shopify/react-native-skia";
 import {Gesture, GestureDetector} from "react-native-gesture-handler";
 import {useDerivedValue, useSharedValue, withTiming,} from "react-native-reanimated";
@@ -44,7 +44,7 @@ export function Compass({
   }, [direction, angle]);
 
   const font = matchFont({
-    fontFamily: "System",
+    fontFamily: Platform.select({ ios: "System", default: "sans-serif" }),
     fontSize: 12,
     fontWeight: "800",
   });
