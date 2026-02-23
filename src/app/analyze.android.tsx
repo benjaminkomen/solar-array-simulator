@@ -7,11 +7,10 @@ import {
 } from "react-native";
 import { Stack } from "expo-router";
 import { Image } from "expo-image";
-import * as Haptics from "expo-haptics";
 import {
   Host, Picker, Card,
   Text as UIText, Column,
-  HorizontalFloatingToolbar,
+  HorizontalFloatingToolbar, TextButton,
 } from "@expo/ui/jetpack-compose";
 import { paddingAll } from "@expo/ui/jetpack-compose/modifiers";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
@@ -47,15 +46,6 @@ export default function Analyze() {
       <Stack.Screen
         options={{
           title: "",
-          headerRight: () => (
-            <View style={styles.headerActions}>
-              {isWizardMode && (
-                <Pressable onPress={handleSkip} style={styles.headerButton}>
-                  <Text style={[styles.headerButtonText, { color: colors.primary }]}>Skip</Text>
-                </Pressable>
-              )}
-            </View>
-          ),
         }}
       />
       {isWizardMode && <WizardProgress currentStep={2} />}
@@ -101,6 +91,7 @@ export default function Analyze() {
           <View style={styles.floatingToolbarContainer}>
             <Host matchContents>
               <HorizontalFloatingToolbar variant="vibrant">
+                {isWizardMode && <TextButton onPress={handleSkip}>Skip</TextButton>}
                 <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAnalyze}>
                   <UIText style={{ typography: 'labelLarge', fontWeight: '600' }}>Analyze</UIText>
                 </HorizontalFloatingToolbar.FloatingActionButton>
@@ -254,18 +245,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   skipButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  headerButtonText: {
     fontSize: 16,
     fontWeight: "600",
   },

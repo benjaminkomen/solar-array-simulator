@@ -1,7 +1,7 @@
 import { Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { Stack } from "expo-router";
-import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { PermissionModal } from "@/components/PermissionModal";
 import { WizardProgress } from "@/components/WizardProgress";
@@ -55,12 +55,7 @@ export default function Upload() {
             },
           ]}
         >
-          <Image
-            source="sf:photo.on.rectangle"
-            style={styles.icon}
-            contentFit="contain"
-            tintColor={colors.primary}
-          />
+          <MaterialIcons name="photo-library" size={80} color={colors.primary} />
         </Animated.View>
 
         <Animated.Text
@@ -87,12 +82,7 @@ export default function Upload() {
               }}
               style={[styles.button, { backgroundColor: colors.primary }]}
             >
-              <Image
-                source="sf:camera"
-                style={styles.buttonIcon}
-                contentFit="contain"
-                tintColor={colors.text.inverse}
-              />
+              <MaterialIcons name="camera-alt" size={22} color={colors.text.inverse} />
               <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
                 Take Photo
               </Text>
@@ -115,12 +105,7 @@ export default function Upload() {
                 },
               ]}
             >
-              <Image
-                source="sf:photo.on.rectangle"
-                style={styles.buttonIcon}
-                contentFit="contain"
-                tintColor={colors.primary}
-              />
+              <MaterialIcons name="photo-library" size={22} color={colors.primary} />
               <Text style={[styles.buttonText, { color: colors.primary }]}>
                 Choose from Gallery
               </Text>
@@ -158,10 +143,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  icon: {
-    width: 80,
-    height: 80,
-  },
   title: {
     fontSize: 28,
     fontWeight: "700",
@@ -190,10 +171,6 @@ const styles = StyleSheet.create({
   },
   buttonOutline: {
     borderWidth: 2,
-  },
-  buttonIcon: {
-    width: 22,
-    height: 22,
   },
   buttonText: {
     fontSize: 17,

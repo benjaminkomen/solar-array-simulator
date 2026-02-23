@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import { Stack } from "expo-router";
-import { Image } from "expo-image";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Host, Text as UIText, Column } from "@expo/ui/jetpack-compose";
 import { useColors } from "@/utils/theme";
 
@@ -16,12 +16,7 @@ export default function CompassHelpScreen() {
       />
       <View style={styles.container}>
         <View style={styles.content}>
-          <Image
-            source="sf:location.north.fill"
-            style={styles.icon}
-            contentFit="contain"
-            tintColor={colors.primary}
-          />
+          <MaterialIcons name="explore" size={40} color={colors.primary} />
           <Host matchContents>
             <Column horizontalAlignment="center">
               <UIText style={{ typography: 'titleMedium', fontWeight: '700' }} color={colors.text.primary}>
@@ -48,9 +43,5 @@ const styles = StyleSheet.create({
   content: {
     alignItems: "center",
     gap: 12,
-  },
-  icon: {
-    width: 40,
-    height: 40,
   },
 });

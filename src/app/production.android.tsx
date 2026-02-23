@@ -8,6 +8,8 @@ import { useColors } from "@/utils/theme";
 import { useProductionMonitor } from "@/hooks/useProductionMonitor";
 import { Host, Button, ContextMenu } from "@expo/ui/jetpack-compose";
 
+const ANDROID_APPBAR_HEIGHT = 56;
+
 export default function ProductionScreen() {
   const insets = useSafeAreaInsets();
   const colors = useColors();
@@ -44,16 +46,29 @@ export default function ProductionScreen() {
           headerBackVisible: false,
           headerTransparent: true,
           headerRight: () => (
-            <Pressable onPress={handleSimulate} style={styles.headerButton} accessibilityLabel="Simulate">
-              <Text style={[styles.headerButtonText, { color: colors.text.primary }]}>Simulate</Text>
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Pressable onPress={handleSimulate} style={styles.headerButton} accessibilityLabel="Simulate">
+                <Text style={[styles.headerButtonText, { color: colors.text.primary }]}>Simulate</Text>
+              </Pressable>
+              <Host matchContents>
+                <ContextMenu>
+                  <ContextMenu.Trigger>
+                    <Button leadingIcon="filled.MoreVert" variant="borderless" />
+                  </ContextMenu.Trigger>
+                  <ContextMenu.Items>
+                    <Button leadingIcon="filled.Edit" onPress={handleEditConfiguration}>Edit Configuration</Button>
+                    <Button leadingIcon="filled.Delete" onPress={handleDeleteConfiguration}>Delete Configuration</Button>
+                  </ContextMenu.Items>
+                </ContextMenu>
+              </Host>
+            </View>
           ),
         }}
       />
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]}>
         <View style={[cardStyle, {
           backgroundColor: colors.background.primary,
-          marginTop: insets.top + 30,
+          marginTop: insets.top + ANDROID_APPBAR_HEIGHT + 16,
           boxShadow: isDark
             ? "0 2px 8px rgba(255, 255, 255, 0.2)"
             : "0 2px 8px rgba(0, 0, 0, 0.08)",
@@ -88,20 +103,6 @@ export default function ProductionScreen() {
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
           />
-        </View>
-
-        <View style={[styles.menuAnchor, { top: insets.top + 8 }]}>
-          <Host matchContents>
-            <ContextMenu>
-              <ContextMenu.Trigger>
-                <Button leadingIcon="filled.MoreVert" variant="borderless" />
-              </ContextMenu.Trigger>
-              <ContextMenu.Items>
-                <Button leadingIcon="filled.Edit" onPress={handleEditConfiguration}>Edit Configuration</Button>
-                <Button leadingIcon="filled.Delete" onPress={handleDeleteConfiguration}>Delete Configuration</Button>
-              </ContextMenu.Items>
-            </ContextMenu>
-          </Host>
         </View>
       </View>
     </>
@@ -141,10 +142,5 @@ const styles = StyleSheet.create({
   headerButtonText: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  menuAnchor: {
-    position: "absolute",
-    right: 16,
-    zIndex: 100,
   },
 });

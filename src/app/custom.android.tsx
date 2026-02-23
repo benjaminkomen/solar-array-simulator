@@ -49,6 +49,7 @@ export default function Custom() {
       <Stack.Screen
         options={{
           title: "",
+          headerTitleAlign: 'center',
           headerRight: () => (
             <View style={styles.headerActions}>
               <Pressable onPress={handleCompassToggle} style={styles.headerButton} accessibilityLabel="Toggle compass">
