@@ -1,0 +1,223 @@
+import { useCallback } from "react";
+import { Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { Image } from "expo-image";
+import Animated, { FadeIn } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import { useImagePicker, type PickedImage } from "@/hooks/useImagePicker";
+import { PermissionModal } from "@/components/PermissionModal";
+import { WizardProgress } from "@/components/WizardProgress";
+import { useColors } from "@/utils/theme";
+
+export default function Upload() {
+  const router = useRouter();
+  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
+  const isWizardMode = wizard === 'true';
+  const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const wizardParam = isWizardMode ? '?wizard=true' : '';
+    router.push(`/custom${wizardParam}`);
+  };
+
+  const onImageSelected = useCallback((picked: PickedImage) => {
+    const wizardParam = isWizardMode ? '&wizard=true' : '';
+    router.push(`/analyze?imageUri=${encodeURIComponent(picked.uri)}${wizardParam}`);
+  }, [isWizardMode, router]);
+
+  const {
+    pickFromCamera,
+    pickFromGallery,
+    modalState,
+    handleModalAllow,
+    handleModalClose,
+  } = useImagePicker(onImageSelected);
+
+  return (
+    <>
+      <Stack.Screen
+        options={{
+          title: "",
+          headerRight: isWizardMode
+            ? () => (
+                <Pressable onPress={handleSkip} style={styles.headerButton}>
+                  <Text style={[styles.headerButtonText, { color: colors.primary }]}>Skip</Text>
+                </Pressable>
+              )
+            : undefined,
+        }}
+      />
+      {isWizardMode && <WizardProgress currentStep={2} />}
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        style={{ backgroundColor: colors.background.primary }}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: colors.background.secondary,
+              boxShadow: isDark
+                ? "0 8px 24px rgba(255, 255, 255, 0.2)"
+                : "0 8px 24px rgba(0, 0, 0, 0.12)",
+            },
+          ]}
+        >
+          <Image
+            source="sf:photo.on.rectangle"
+            style={styles.icon}
+            contentFit="contain"
+            tintColor={colors.primary}
+          />
+        </Animated.View>
+
+        <Animated.Text
+          entering={FadeIn.duration(300).delay(100)}
+          style={[styles.title, { color: colors.text.primary }]}
+        >
+          Take or Select Photo
+        </Animated.Text>
+
+        <Animated.Text
+          entering={FadeIn.duration(300).delay(150)}
+          style={[styles.subtitle, { color: colors.text.secondary }]}
+        >
+          Photograph your solar panel array with visible serial numbers
+        </Animated.Text>
+
+        <View style={styles.buttonsContainer}>
+          <Animated.View entering={FadeIn.duration(300).delay(200)}>
+            <Pressable
+              testID="take-photo-button"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                pickFromCamera();
+              }}
+              style={[styles.button, { backgroundColor: colors.primary }]}
+            >
+              <Image
+                source="sf:camera"
+                style={styles.buttonIcon}
+                contentFit="contain"
+                tintColor={colors.text.inverse}
+              />
+              <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
+                Take Photo
+              </Text>
+            </Pressable>
+          </Animated.View>
+
+          <Animated.View entering={FadeIn.duration(300).delay(300)}>
+            <Pressable
+              testID="choose-gallery-button"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                pickFromGallery();
+              }}
+              style={[
+                styles.button,
+                styles.buttonOutline,
+                {
+                  backgroundColor: colors.background.primary,
+                  borderColor: colors.border.light,
+                },
+              ]}
+            >
+              <Image
+                source="sf:photo.on.rectangle"
+                style={styles.buttonIcon}
+                contentFit="contain"
+                tintColor={colors.primary}
+              />
+              <Text style={[styles.buttonText, { color: colors.primary }]}>
+                Choose from Gallery
+              </Text>
+            </Pressable>
+          </Animated.View>
+
+        </View>
+      </ScrollView>
+
+      {modalState && (
+        <PermissionModal
+          visible={modalState.visible}
+          type={modalState.type}
+          isDenied={modalState.isDenied}
+          onAllow={handleModalAllow}
+          onClose={handleModalClose}
+        />
+      )}
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    alignItems: "center",
+    gap: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
+  iconContainer: {
+    width: 200,
+    height: 200,
+    borderRadius: 32,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  icon: {
+    width: 80,
+    height: 80,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 16,
+  },
+  buttonsContainer: {
+    gap: 12,
+    width: "100%",
+    marginTop: 16,
+  },
+  button: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 14,
+    borderCurve: "continuous",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  buttonOutline: {
+    borderWidth: 2,
+  },
+  buttonIcon: {
+    width: 22,
+    height: 22,
+  },
+  buttonText: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  headerButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  headerButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
