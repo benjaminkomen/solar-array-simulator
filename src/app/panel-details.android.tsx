@@ -1,10 +1,10 @@
 import { Fragment } from 'react';
 import { useRouter } from 'expo-router';
 import {
-  Host, ModalBottomSheet, Card, ListItem, Divider, Button,
+  Host, ModalBottomSheet, Card, ListItem, Divider, Button, Icon,
   Text as UIText, Column,
 } from '@expo/ui/jetpack-compose';
-import { paddingAll } from '@expo/ui/jetpack-compose/modifiers';
+import { paddingAll, fillMaxWidth, clickable } from '@expo/ui/jetpack-compose/modifiers';
 import { useColors } from '@/utils/theme';
 import { usePanelDetails } from '@/hooks/usePanelDetails';
 
@@ -22,17 +22,29 @@ export default function PanelDetailsScreen() {
   return (
     <Host matchContents>
       <ModalBottomSheet onDismissRequest={() => router.back()}>
-        <Column modifiers={[paddingAll(16)]} verticalArrangement={{ spacedBy: 16 }}>
+        <Column modifiers={[paddingAll(16), fillMaxWidth()]} verticalArrangement={{ spacedBy: 16 }}>
 
           {currentInverter ? (
-            <Card variant="outlined">
-              <Column modifiers={[paddingAll(16)]}>
-                <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
+            <Card variant="elevated" color={colors.background.primary}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
+                <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary} modifiers={[paddingAll(8)]}>
                   LINKED INVERTER
                 </UIText>
-                <ListItem headline="Serial Number" supportingText={currentInverter.serialNumber} />
+                <ListItem headline="Serial Number">
+                  <ListItem.Trailing>
+                    <UIText style={{ typography: 'bodyMedium' }} color={colors.text.secondary}>
+                      {currentInverter.serialNumber}
+                    </UIText>
+                  </ListItem.Trailing>
+                </ListItem>
                 <Divider />
-                <ListItem headline="Efficiency" supportingText={`${Math.round(currentInverter.efficiency)}%`} />
+                <ListItem headline="Efficiency">
+                  <ListItem.Trailing>
+                    <UIText style={{ typography: 'bodyMedium' }} color={colors.text.secondary}>
+                      {`${Math.round(currentInverter.efficiency)}%`}
+                    </UIText>
+                  </ListItem.Trailing>
+                </ListItem>
                 {!isViewMode && (
                   <>
                     <Divider />
@@ -49,8 +61,8 @@ export default function PanelDetailsScreen() {
               </Column>
             </Card>
           ) : !isViewMode && availableInverters.length > 0 ? (
-            <Card variant="outlined">
-              <Column modifiers={[paddingAll(16)]}>
+            <Card variant="elevated" color={colors.background.primary}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
                 <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
                   AVAILABLE INVERTERS
                 </UIText>
@@ -60,8 +72,15 @@ export default function PanelDetailsScreen() {
                     <ListItem
                       headline={inv.serialNumber}
                       supportingText={`${Math.round(inv.efficiency)}% efficiency`}
-                      onPress={() => handleLink(inv.id)}
-                    />
+                      modifiers={[clickable(() => handleLink(inv.id))]}
+                    >
+                      <ListItem.Trailing>
+                        <Icon
+                          source={require('@/assets/symbols/chevron_right.xml')}
+                          tintColor={colors.text.tertiary}
+                        />
+                      </ListItem.Trailing>
+                    </ListItem>
                   </Fragment>
                 ))}
                 <UIText style={{ typography: 'bodySmall' }} color={colors.text.secondary}>
@@ -70,8 +89,8 @@ export default function PanelDetailsScreen() {
               </Column>
             </Card>
           ) : !isViewMode ? (
-            <Card variant="outlined">
-              <Column modifiers={[paddingAll(16)]} horizontalAlignment="center">
+            <Card variant="elevated" color={colors.background.primary}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(16)]} horizontalAlignment="center">
                 <UIText style={{ typography: 'headlineSmall', fontWeight: '700' }} color={colors.text.primary}>
                   No Available Inverters
                 </UIText>

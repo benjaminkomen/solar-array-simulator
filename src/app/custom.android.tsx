@@ -10,7 +10,7 @@ import { useCanvasEditor } from "@/hooks/useCanvasEditor";
 import {
   Host, IconButton, Icon, Row,
   Text as UIText,
-  HorizontalFloatingToolbar,
+  HorizontalFloatingToolbar, TextButton,
   ModalBottomSheet,
   ListItem,
   Column,
@@ -93,45 +93,45 @@ export default function Custom() {
         }}
       />
       {isWizardMode && <WizardProgress currentStep={3} />}
-      <View style={[styles.container, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
-        {compassVisible && (
-          <View style={styles.compassContainer}>
-            <Compass
-              direction={config.compassDirection}
-              onDirectionChange={updateCompassDirection}
-              onTap={handleCompassTap}
-            />
-          </View>
-        )}
-        <SolarPanelCanvas
-          panels={panels}
-          selectedId={selectedId}
-          onSelectPanel={handleSelectPanel}
-          onBringToFront={bringToFront}
-          onSavePanelPosition={savePanelPosition}
-          viewportX={viewportX}
-          viewportY={viewportY}
-          scale={scale}
-          canvasWidth={canvasWidth}
-          canvasHeight={canvasHeight}
-        />
-        <ZoomControls
-          currentIndex={zoomIndex}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-        />
+      <View style={styles.outerContainer}>
+        <View style={[styles.canvasContainer, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
+          {compassVisible && (
+            <View style={styles.compassContainer}>
+              <Compass
+                direction={config.compassDirection}
+                onDirectionChange={updateCompassDirection}
+                onTap={handleCompassTap}
+              />
+            </View>
+          )}
+          <SolarPanelCanvas
+            panels={panels}
+            selectedId={selectedId}
+            onSelectPanel={handleSelectPanel}
+            onBringToFront={bringToFront}
+            onSavePanelPosition={savePanelPosition}
+            viewportX={viewportX}
+            viewportY={viewportY}
+            scale={scale}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+          />
+          <ZoomControls
+            currentIndex={zoomIndex}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+          />
+        </View>
 
         <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
           <Host matchContents>
             <HorizontalFloatingToolbar variant="standard">
-              <IconButton onPress={handleAddPanel}>
-                <Icon source={require('@/assets/symbols/add.xml')} tintColor={colors.text.primary} />
-              </IconButton>
               {isWizardMode && panels.length > 0 && (
-                <HorizontalFloatingToolbar.FloatingActionButton onPress={handleFinish}>
-                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }}>Finish</UIText>
-                </HorizontalFloatingToolbar.FloatingActionButton>
+                <TextButton onPress={handleFinish}>Finish</TextButton>
               )}
+              <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAddPanel}>
+                <Icon source={require('@/assets/symbols/add.xml')} tintColor={colors.text.inverse} />
+              </HorizontalFloatingToolbar.FloatingActionButton>
             </HorizontalFloatingToolbar>
           </Host>
         </View>
@@ -174,7 +174,10 @@ export default function Custom() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  outerContainer: {
+    flex: 1,
+  },
+  canvasContainer: {
     flex: 1,
   },
   compassContainer: {
