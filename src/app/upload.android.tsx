@@ -3,10 +3,12 @@ import { Stack } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Button, Host } from "@expo/ui/jetpack-compose";
 import { PermissionModal } from "@/components/PermissionModal";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useUpload } from "@/hooks/useUpload";
+import {paddingAll} from "@expo/ui/jetpack-compose/modifiers";
 
 export default function Upload() {
   const colors = useColors();
@@ -25,23 +27,13 @@ export default function Upload() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: "",
-          headerRight: isWizardMode
-            ? () => (
-                <Pressable onPress={handleSkip} style={styles.headerButton}>
-                  <Text style={[styles.headerButtonText, { color: colors.primary }]}>Skip</Text>
-                </Pressable>
-              )
-            : undefined,
-        }}
-      />
+      <Stack.Screen options={{ title: "" }} />
       {isWizardMode && <WizardProgress currentStep={2} />}
+      <View style={styles.outerContainer}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={{ backgroundColor: colors.background.primary }}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, isWizardMode && styles.scrollContentWithToolbar]}
       >
         <Animated.View
           entering={FadeIn.duration(300)}
@@ -115,6 +107,15 @@ export default function Upload() {
         </View>
       </ScrollView>
 
+        {isWizardMode && (
+          <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
+            <Host matchContents>
+              <Button variant="elevated" onPress={handleSkip} modifiers={[paddingAll(8)]}>Skip</Button>
+            </Host>
+          </View>
+        )}
+      </View>
+
       {modalState && (
         <PermissionModal
           visible={modalState.visible}
@@ -129,11 +130,17 @@ export default function Upload() {
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+  },
   scrollContent: {
     alignItems: "center",
     gap: 24,
     paddingHorizontal: 24,
     paddingVertical: 32,
+  },
+  scrollContentWithToolbar: {
+    paddingBottom: 96,
   },
   iconContainer: {
     width: 200,
@@ -176,12 +183,12 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
   },
-  headerButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  headerButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
+  floatingToolbarContainer: {
+    position: "absolute",
+    bottom: 30,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 20,
   },
 });

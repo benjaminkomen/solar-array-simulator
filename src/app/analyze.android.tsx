@@ -4,6 +4,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { Stack } from "expo-router";
 import { Image } from "expo-image";
@@ -12,16 +13,19 @@ import {
   Text as UIText, Column,
   HorizontalFloatingToolbar, TextButton,
 } from "@expo/ui/jetpack-compose";
-import { paddingAll } from "@expo/ui/jetpack-compose/modifiers";
+import { fillMaxWidth, paddingAll, width as widthModifier } from "@expo/ui/jetpack-compose/modifiers";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { AnalysisPreview } from "@/components/AnalysisPreview";
 import { WizardProgress } from "@/components/WizardProgress";
 import { Button } from "@/components/Button";
 import { useColors } from "@/utils/theme";
 import { useAnalyzeFlow, MODELS } from "@/hooks/useAnalyzeFlow";
+import {padding} from "@expo/ui/swift-ui/modifiers";
 
 export default function Analyze() {
   const colors = useColors();
+  const {width: screenWidth} = useWindowDimensions();
+  const cardWidth = screenWidth - 32;
 
   const {
     isWizardMode,
@@ -63,8 +67,8 @@ export default function Analyze() {
           </View>
 
           <Host matchContents style={styles.pickerCardHost}>
-            <Card variant="outlined">
-              <Column modifiers={[paddingAll(16)]}>
+            <Card variant="outlined" modifiers={[widthModifier(cardWidth)]}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
                 <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
                   SELECT AI MODEL
                 </UIText>
@@ -90,10 +94,10 @@ export default function Analyze() {
 
           <View style={styles.floatingToolbarContainer}>
             <Host matchContents>
-              <HorizontalFloatingToolbar variant="vibrant">
+              <HorizontalFloatingToolbar variant="standard">
                 {isWizardMode && <TextButton onPress={handleSkip}>Skip</TextButton>}
                 <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAnalyze}>
-                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }}>Analyze</UIText>
+                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }} modifiers={[padding({ horizontal: 4})]}>Analyze</UIText>
                 </HorizontalFloatingToolbar.FloatingActionButton>
               </HorizontalFloatingToolbar>
             </Host>
@@ -102,11 +106,11 @@ export default function Analyze() {
       )}
 
       {phase === "results" && result && resized && (
-        <>
+        <View style={styles.outerContainer}>
           <ScrollView
             contentInsetAdjustmentBehavior="automatic"
             style={{ backgroundColor: colors.background.primary }}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, isWizardMode && styles.scrollContentWithToolbar]}
           >
             <AnalysisPreview
               imageUri={resized.base64.startsWith("data:")
@@ -162,13 +166,15 @@ export default function Analyze() {
           </ScrollView>
 
           {isWizardMode && (
-            <View style={[styles.skipBar, { backgroundColor: colors.background.primary, borderTopColor: colors.border.light }]}>
-              <Pressable onPress={handleSkip} style={styles.skipButton}>
-                <Text style={[styles.skipButtonText, { color: colors.primary }]}>Skip</Text>
-              </Pressable>
+            <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
+              <Host matchContents>
+                <HorizontalFloatingToolbar variant="standard">
+                  <TextButton onPress={handleSkip}>Skip</TextButton>
+                </HorizontalFloatingToolbar>
+              </Host>
             </View>
           )}
-        </>
+        </View>
       )}
     </>
   );
@@ -195,8 +201,10 @@ const styles = StyleSheet.create({
     height: 250,
   },
   pickerCardHost: {
-    flex: 1,
     margin: 16,
+  },
+  scrollContentWithToolbar: {
+    paddingBottom: 96,
   },
   floatingToolbarContainer: {
     position: "absolute",
@@ -204,6 +212,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
+    zIndex: 20,
   },
   badgeRow: {
     flexDirection: "row",
@@ -234,18 +243,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 8,
-  },
-  skipBar: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-  },
-  skipButton: {
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  skipButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
