@@ -1,5 +1,5 @@
 import {Fragment} from 'react';
-import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {ScrollView, StyleSheet, Text, useWindowDimensions, View} from 'react-native';
 import {
   Button,
   Card,
@@ -7,13 +7,15 @@ import {
   Divider,
   HorizontalFloatingToolbar,
   Host,
+  Icon,
   ListItem,
   Picker,
+  Row,
   Slider,
   Text as UIText, TextButton,
   TextInput,
 } from '@expo/ui/jetpack-compose';
-import {paddingAll} from '@expo/ui/jetpack-compose/modifiers';
+import {fillMaxWidth, paddingAll, width as widthModifier} from '@expo/ui/jetpack-compose/modifiers';
 import {Stack} from "expo-router";
 import {WizardProgress} from "@/components/WizardProgress";
 import {useColors} from "@/utils/theme";
@@ -21,6 +23,8 @@ import {ROOF_TYPES, useConfigForm} from "@/hooks/useConfigForm";
 
 export default function ConfigScreen() {
   const colors = useColors();
+  const {width: screenWidth} = useWindowDimensions();
+  const cardWidth = screenWidth - 32; // 16dp padding on each side
   const {
     isWizardMode,
     config,
@@ -53,12 +57,10 @@ export default function ConfigScreen() {
           contentContainerStyle={[styles.scrollContent, isWizardMode && styles.scrollContentWithToolbar]}
           keyboardDismissMode="on-drag"
         >
+          <Text style={[styles.sectionHeader, {color: colors.text.secondary}]}>Panel Settings</Text>
           <Host matchContents>
-            <Card variant="outlined">
-              <Column modifiers={[paddingAll(16)]}>
-                <UIText style={{typography: 'labelMedium', letterSpacing: 0.5}} color={colors.text.secondary}>
-                  PANEL SETTINGS
-                </UIText>
+            <Card variant="elevated" color={colors.background.primary} modifiers={[widthModifier(cardWidth)]}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
                 <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary}>
                   Default Production
                 </UIText>
@@ -66,26 +68,28 @@ export default function ConfigScreen() {
                   defaultValue={config.defaultMaxWattage.toString()}
                   onChangeText={handleWattageChange}
                   keyboardType="numeric"
+                  modifiers={[fillMaxWidth()]}
                 />
-                <UIText style={{typography: 'bodySmall'}} color={colors.text.secondary}>
-                  Configure the default wattage each micro-inverter and solar panel will produce at maximum production.
-                </UIText>
               </Column>
             </Card>
           </Host>
+          <Text style={[styles.sectionFooter, {color: colors.text.secondary}]}>
+            Configure the default wattage each micro-inverter and solar panel will produce at maximum production.
+          </Text>
 
+          <Text style={[styles.sectionHeader, {color: colors.text.secondary}]}>Location</Text>
           <Host matchContents>
-            <Card variant="outlined">
-              <Column modifiers={[paddingAll(16)]}>
-                <UIText style={{typography: 'labelMedium', letterSpacing: 0.5}} color={colors.text.secondary}>
-                  LOCATION
-                </UIText>
+            <Card variant="elevated" color={colors.background.primary} modifiers={[widthModifier(cardWidth)]}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
                 <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary}>
                   City
                 </UIText>
+                {/* @ts-ignore - placeholder not in TextInput types but passed to native component */}
                 <TextInput
                   defaultValue={locationQuery || config.locationName || ''}
                   onChangeText={handleLocationSearch}
+                  placeholder="e.g. Amsterdam, Netherlands"
+                  modifiers={[fillMaxWidth()]}
                 />
                 {isSearching && (
                   <UIText style={{typography: 'bodySmall'}} color={colors.text.secondary}>
@@ -100,21 +104,19 @@ export default function ConfigScreen() {
                     onPress={() => handleSelectLocation(result)}
                   />
                 ))}
-                <UIText style={{typography: 'bodySmall'}} color={colors.text.secondary}>
-                  {config.locationName
-                    ? `Current: ${config.locationName} (${config.latitude?.toFixed(2)}\u00B0, ${config.longitude?.toFixed(2)}\u00B0)`
-                    : 'Search for your city to enable realistic solar simulation.'}
-                </UIText>
               </Column>
             </Card>
           </Host>
+          <Text style={[styles.sectionFooter, {color: colors.text.secondary}]}>
+            {config.locationName
+              ? `Current: ${config.locationName} (${config.latitude?.toFixed(2)}\u00B0, ${config.longitude?.toFixed(2)}\u00B0)`
+              : 'Search for your city to enable realistic solar simulation.'}
+          </Text>
 
+          <Text style={[styles.sectionHeader, {color: colors.text.secondary}]}>Roof</Text>
           <Host matchContents>
-            <Card variant="outlined">
-              <Column modifiers={[paddingAll(16)]}>
-                <UIText style={{typography: 'labelMedium', letterSpacing: 0.5}} color={colors.text.secondary}>
-                  ROOF
-                </UIText>
+            <Card variant="elevated" color={colors.background.primary} modifiers={[widthModifier(cardWidth)]}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
                 <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary}>
                   Roof Type
                 </UIText>
@@ -137,19 +139,19 @@ export default function ConfigScreen() {
                   steps={18}
                   onValueChange={updatePanelTiltAngle}
                 />
-                <UIText style={{typography: 'bodySmall'}} color={colors.text.secondary}>
-                  Select your roof shape for the 3D simulation view.
-                </UIText>
               </Column>
             </Card>
           </Host>
+          <Text style={[styles.sectionFooter, {color: colors.text.secondary}]}>
+            Select your roof shape for the 3D simulation view.
+          </Text>
 
+          <Text style={[styles.sectionHeader, {color: colors.text.secondary}]}>
+            {`Micro-inverters (${config.inverters.length})`}
+          </Text>
           <Host matchContents>
-            <Card variant="outlined">
-              <Column modifiers={[paddingAll(16)]}>
-                <UIText style={{typography: 'labelMedium', letterSpacing: 0.5}} color={colors.text.secondary}>
-                  {`MICRO-INVERTERS (${config.inverters.length})`}
-                </UIText>
+            <Card variant="elevated" color={colors.background.primary} modifiers={[widthModifier(cardWidth)]}>
+              <Column modifiers={[fillMaxWidth()]}>
                 {config.inverters.map((inverter, idx) => (
                   <Fragment key={inverter.id}>
                     {idx > 0 && <Divider/>}
@@ -159,24 +161,31 @@ export default function ConfigScreen() {
                       onPress={() => handleOpenEditSheet(inverter)}
                     >
                       <ListItem.Trailing>
-                        <Button
-                          leadingIcon="filled.Delete"
-                          variant="borderless"
-                          onPress={() => handleDeleteInverter(inverter)}
-                        />
+                        <Row>
+                          <Icon
+                            source={require('@/assets/symbols/chevron_right.xml')}
+                            tintColor={colors.text.tertiary}
+                          />
+                          <Button
+                            leadingIcon="filled.Delete"
+                            variant="borderless"
+                            onPress={() => handleDeleteInverter(inverter)}
+                          />
+                        </Row>
                       </ListItem.Trailing>
                     </ListItem>
                   </Fragment>
                 ))}
-                <UIText style={{typography: 'bodySmall'}} color={colors.text.secondary}>
-                  Tap to edit efficiency.
-                </UIText>
               </Column>
             </Card>
           </Host>
+          <Text style={[styles.sectionFooter, {color: colors.text.secondary}]}>
+            Tap to edit efficiency.
+          </Text>
         </ScrollView>
 
         {isWizardMode && (
+          <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
             <Host matchContents>
               <HorizontalFloatingToolbar variant="standard">
                 <TextButton onPress={handleContinue}>Continue</TextButton>
@@ -185,6 +194,7 @@ export default function ConfigScreen() {
                 </HorizontalFloatingToolbar.FloatingActionButton>
               </HorizontalFloatingToolbar>
             </Host>
+          </View>
         )}
       </View>
     </>
@@ -206,11 +216,21 @@ const styles = StyleSheet.create({
   scrollContentWithToolbar: {
     paddingBottom: 96,
   },
-  headerButton: {
-    padding: 8,
+  sectionHeader: {
+    fontSize: 15,
+    fontWeight: '600',
   },
-  headerButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
+  sectionFooter: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: -8,
+  },
+  floatingToolbarContainer: {
+    position: "absolute",
+    bottom: 24,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 20,
   },
 });

@@ -110,7 +110,7 @@ export default function Custom() {
 
         <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
           <Host matchContents>
-            <HorizontalFloatingToolbar variant="vibrant">
+            <HorizontalFloatingToolbar variant="standard">
               <JCButton leadingIcon="filled.Add" variant="borderless" onPress={handleAddPanel} />
               {selectedId && <JCButton leadingIcon="filled.Share" variant="borderless" onPress={handleLinkInverter} />}
               {selectedId && <JCButton leadingIcon="filled.Refresh" variant="borderless" onPress={handleRotatePanel} />}
