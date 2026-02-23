@@ -9,8 +9,8 @@ import {
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
-import { Host, Picker } from "@expo/ui/jetpack-compose";
-import { paddingAll } from "@expo/ui/jetpack-compose/modifiers";
+import { Host, Box, Picker, HorizontalFloatingToolbar, TextButton } from "@expo/ui/jetpack-compose";
+import { paddingAll, fillMaxSize, align, offset } from "@expo/ui/jetpack-compose/modifiers";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { AnalysisPreview } from "@/components/AnalysisPreview";
 import { WizardProgress } from "@/components/WizardProgress";
@@ -230,6 +230,7 @@ export default function Analyze() {
               SELECT AI MODEL
             </Text>
             <Host style={styles.pickerHost}>
+              <Box modifiers={[fillMaxSize()]} floatingToolbarExitAlwaysScrollBehavior="bottom">
               <Picker
                 options={MODELS.map((m) => m.name + (m.isDefault ? " (Default)" : ""))}
                 selectedIndex={selectedModelIndex}
@@ -243,6 +244,16 @@ export default function Analyze() {
                 variant="radio"
                 modifiers={[paddingAll(8)]}
               />
+              <HorizontalFloatingToolbar
+                variant="vibrant"
+                modifiers={[align('bottomCenter'), offset(0, -16)]}
+              >
+                {isWizardMode && (
+                  <TextButton onPress={handleSkip}>Skip</TextButton>
+                )}
+                <TextButton onPress={handleAnalyze}>Analyze</TextButton>
+              </HorizontalFloatingToolbar>
+              </Box>
             </Host>
             {error && (
               <Text style={[styles.errorText, { color: "#FF3B30" }]}>{error}</Text>
@@ -311,24 +322,12 @@ export default function Analyze() {
         </ScrollView>
       )}
 
-      {phase === "select_model" && (
-        <Stack.Toolbar placement="bottom">
-          {isWizardMode && (
-            <Stack.Toolbar.Button onPress={handleSkip}>
-              Skip
-            </Stack.Toolbar.Button>
-          )}
-          <Stack.Toolbar.Button onPress={handleAnalyze}>
-            Analyze
-          </Stack.Toolbar.Button>
-        </Stack.Toolbar>
-      )}
       {isWizardMode && phase === "results" && (
-        <Stack.Toolbar placement="bottom">
-          <Stack.Toolbar.Button onPress={handleSkip}>
-            Skip
-          </Stack.Toolbar.Button>
-        </Stack.Toolbar>
+        <View style={styles.skipRow}>
+          <Pressable onPress={handleSkip} style={styles.skipButton}>
+            <Text style={[styles.skipText, { color: colors.text.secondary }]}>Skip</Text>
+          </Pressable>
+        </View>
       )}
     </>
   );
@@ -402,5 +401,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 8,
+  },
+  skipRow: {
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  skipButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  skipText: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

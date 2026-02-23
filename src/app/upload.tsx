@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
+import { Text, ScrollView, Pressable, StyleSheet, View, useColorScheme, Platform } from "react-native";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -57,12 +57,16 @@ export default function Upload() {
             },
           ]}
         >
-          <Image
-            source="sf:photo.on.rectangle"
-            style={styles.icon}
-            contentFit="contain"
-            tintColor={colors.primary}
-          />
+          {Platform.OS === "ios" ? (
+            <Image
+              source="sf:photo.on.rectangle"
+              style={styles.icon}
+              contentFit="contain"
+              tintColor={colors.primary}
+            />
+          ) : (
+            <Text style={{ fontSize: 64 }}>{"\uD83D\uDCF7"}</Text>
+          )}
         </Animated.View>
 
         <Animated.Text
@@ -89,12 +93,14 @@ export default function Upload() {
               }}
               style={[styles.button, { backgroundColor: colors.primary }]}
             >
-              <Image
-                source="sf:camera"
-                style={styles.buttonIcon}
-                contentFit="contain"
-                tintColor={colors.text.inverse}
-              />
+              {Platform.OS === "ios" && (
+                <Image
+                  source="sf:camera"
+                  style={styles.buttonIcon}
+                  contentFit="contain"
+                  tintColor={colors.text.inverse}
+                />
+              )}
               <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
                 Take Photo
               </Text>
@@ -117,22 +123,33 @@ export default function Upload() {
                 },
               ]}
             >
-              <Image
-                source="sf:photo.on.rectangle"
-                style={styles.buttonIcon}
-                contentFit="contain"
-                tintColor={colors.primary}
-              />
+              {Platform.OS === "ios" && (
+                <Image
+                  source="sf:photo.on.rectangle"
+                  style={styles.buttonIcon}
+                  contentFit="contain"
+                  tintColor={colors.primary}
+                />
+              )}
               <Text style={[styles.buttonText, { color: colors.primary }]}>
                 Choose from Gallery
               </Text>
             </Pressable>
           </Animated.View>
 
+          {isWizardMode && Platform.OS === "android" && (
+            <Animated.View entering={FadeIn.duration(300).delay(400)}>
+              <Pressable onPress={handleSkip} style={styles.skipButton}>
+                <Text style={[styles.skipText, { color: colors.text.secondary }]}>
+                  Skip
+                </Text>
+              </Pressable>
+            </Animated.View>
+          )}
         </View>
       </ScrollView>
 
-      {isWizardMode && (
+      {isWizardMode && Platform.OS === "ios" && (
         <Stack.Toolbar placement="bottom">
           <Stack.Toolbar.Button onPress={handleSkip}>
             Skip
@@ -208,5 +225,13 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 17,
     fontWeight: "600",
+  },
+  skipButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  skipText: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

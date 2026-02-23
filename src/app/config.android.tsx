@@ -2,6 +2,7 @@ import {StyleSheet, View} from 'react-native';
 import {useState, useCallback, useRef} from 'react';
 import {
   Host,
+  Box,
   Column,
   Row,
   Text,
@@ -13,8 +14,9 @@ import {
   Card,
   ListItem,
   LazyColumn,
+  HorizontalFloatingToolbar,
 } from '@expo/ui/jetpack-compose';
-import {paddingAll, weight} from '@expo/ui/jetpack-compose/modifiers';
+import {paddingAll, weight, fillMaxSize, align, offset} from '@expo/ui/jetpack-compose/modifiers';
 import {useConfigStore} from '@/hooks/useConfigStore';
 import type {InverterConfig, RoofType} from '@/utils/configStore';
 import {Stack, useLocalSearchParams, useRouter} from "expo-router";
@@ -105,9 +107,10 @@ export default function ConfigScreen() {
       {isWizardMode && <WizardProgress currentStep={1}/>}
       <View style={styles.container}>
         <Host style={styles.form}>
+          <Box modifiers={[fillMaxSize()]} floatingToolbarExitAlwaysScrollBehavior="bottom">
           <LazyColumn
             verticalArrangement={{spacedBy: 16}}
-            contentPadding={{start: 16, top: 16, end: 16, bottom: 16}}
+            contentPadding={{start: 16, top: 16, end: 16, bottom: 80}}
           >
             {/* Panel Settings Section */}
             <Card variant="outlined">
@@ -203,7 +206,7 @@ export default function ConfigScreen() {
                 <Text style={{fontSize: 12, fontWeight: "600", letterSpacing: 0.5}} color="#999999">
                   MICRO-INVERTERS ({config.inverters.length})
                 </Text>
-                <LazyColumn verticalArrangement={{spacedBy: 4}}>
+                <Column verticalArrangement={{spacedBy: 4}}>
                   {config.inverters.map((inverter) => (
                     <ListItem
                       key={inverter.id}
@@ -221,23 +224,25 @@ export default function ConfigScreen() {
                       </ListItem.Trailing>
                     </ListItem>
                   ))}
-                </LazyColumn>
+                </Column>
                 <Text color="#999999" style={{fontSize: 13}}>
                   Tap to edit efficiency. Use Delete to remove.
                 </Text>
               </Column>
             </Card>
           </LazyColumn>
+          <HorizontalFloatingToolbar
+            variant="vibrant"
+            modifiers={[align('bottomCenter'), offset(0, -16)]}
+          >
+            {isWizardMode && (
+              <TextButton onPress={handleContinue}>Continue</TextButton>
+            )}
+            <TextButton onPress={handleOpenAddSheet}>Add Inverter</TextButton>
+          </HorizontalFloatingToolbar>
+          </Box>
         </Host>
       </View>
-      <Stack.Toolbar placement="bottom">
-        {isWizardMode && (
-          <Stack.Toolbar.Button onPress={handleContinue}>
-            Continue
-          </Stack.Toolbar.Button>
-        )}
-        <Stack.Toolbar.Button icon="plus" onPress={handleOpenAddSheet} accessibilityLabel="Add inverter" />
-      </Stack.Toolbar>
     </>
   );
 }

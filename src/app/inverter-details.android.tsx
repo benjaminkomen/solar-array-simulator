@@ -1,5 +1,5 @@
 import {useState, useCallback} from 'react';
-import {StyleSheet, View} from 'react-native';
+import {StyleSheet, View, Pressable, Text as RNText} from 'react-native';
 import {Stack, useLocalSearchParams, useRouter} from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {useConfigStore} from '@/hooks/useConfigStore';
@@ -79,14 +79,18 @@ export default function InverterDetailsScreen() {
       <Stack.Screen
         options={{
           title: isAddMode ? 'New Micro-inverter' : 'Edit Micro-inverter',
+          headerLeft: () => (
+            <Pressable onPress={handleCancel} accessibilityLabel="Cancel" style={{padding: 8}}>
+              <RNText style={{fontSize: 16, color: '#007AFF'}}>Cancel</RNText>
+            </Pressable>
+          ),
+          headerRight: () => (
+            <Pressable onPress={handleSave} accessibilityLabel="Save" style={{padding: 8}}>
+              <RNText style={{fontSize: 16, fontWeight: '600', color: '#007AFF'}}>Save</RNText>
+            </Pressable>
+          ),
         }}
       />
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="xmark" onPress={handleCancel} accessibilityLabel="Cancel" />
-      </Stack.Toolbar>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="checkmark" onPress={handleSave} accessibilityLabel="Save" />
-      </Stack.Toolbar>
       <View style={styles.container}>
         <Host style={styles.host}>
           <Column

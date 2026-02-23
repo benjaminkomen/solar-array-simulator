@@ -15,7 +15,6 @@ import {
   Card,
   Spacer,
   Button,
-  LazyColumn,
 } from '@expo/ui/jetpack-compose';
 import {paddingAll, weight, alpha} from '@expo/ui/jetpack-compose/modifiers';
 
@@ -120,7 +119,7 @@ export default function PanelDetailsScreen() {
                   <Text style={{fontSize: 12, fontWeight: "600", letterSpacing: 0.5}} color="#999999">
                     AVAILABLE INVERTERS
                   </Text>
-                  <LazyColumn verticalArrangement={{spacedBy: 4}}>
+                  <Column verticalArrangement={{spacedBy: 4}}>
                     {availableInverters.map((inv) => (
                       <ListItem
                         key={inv.id}
@@ -129,7 +128,7 @@ export default function PanelDetailsScreen() {
                         onPress={() => handleLink(inv.id)}
                       />
                     ))}
-                  </LazyColumn>
+                  </Column>
                   <Text color="#999999" style={{fontSize: 13}}>
                     Select a micro-inverter to link to this panel.
                   </Text>
