@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { View, StyleSheet, type LayoutChangeEvent, Pressable, Text } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { Image } from "expo-image";
 import { useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
@@ -11,11 +10,15 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
-import { GRID_SIZE } from "@/utils/gridSnap";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useZoom } from "@/hooks/useZoom";
 import { useColors } from "@/utils/theme";
+import {
+  Host, Button as JCButton, Chip,
+  Text as UIText,
+  HorizontalFloatingToolbar,
+} from "@expo/ui/jetpack-compose";
 
 // Fallback: 2 rows x 5 columns mock grid
 const COLS = 5;
@@ -267,19 +270,11 @@ export default function Custom() {
           title: "",
           headerRight: () => (
             <View style={styles.headerActions}>
-              <Pressable onPress={handleCompassToggle} style={styles.headerIconButton} accessibilityLabel="Toggle compass">
-                <Image source="sf:location.north.circle" style={styles.headerIcon} tintColor={colors.text.primary} />
+              <Pressable onPress={handleCompassToggle} style={styles.headerButton} accessibilityLabel="Toggle compass">
+                <Text style={[styles.headerButtonText, { color: colors.text.primary }]}>Compass</Text>
               </Pressable>
-              <Pressable onPress={() => {}} style={styles.headerIconButton}>
-                <Image source="sf:link" style={styles.headerIcon} tintColor={colors.text.primary} />
-                {unlinkedCount > 0 && (
-                  <View style={[styles.badge, { backgroundColor: colors.system.red }]}>
-                    <Text style={styles.badgeText}>{unlinkedCount}</Text>
-                  </View>
-                )}
-              </Pressable>
-              <Pressable onPress={handleSnapToOrigin} style={styles.headerIconButton} accessibilityLabel="Snap to origin">
-                <Image source="sf:scope" style={styles.headerIcon} tintColor={colors.text.primary} />
+              <Pressable onPress={handleSnapToOrigin} style={styles.headerButton} accessibilityLabel="Center view">
+                <Text style={[styles.headerButtonText, { color: colors.text.primary }]}>Center</Text>
               </Pressable>
             </View>
           ),
@@ -313,31 +308,30 @@ export default function Custom() {
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
         />
-      </View>
 
-      {/* Bottom toolbar replacing Stack.Toolbar */}
-      <View style={[styles.bottomBar, { backgroundColor: colors.background.primary, borderTopColor: colors.border.light }]}>
-        <Pressable onPress={handleAddPanel} style={styles.toolbarButton} accessibilityLabel="Add panel">
-          <Image source="sf:plus" style={styles.toolbarIcon} tintColor={colors.primary} />
-        </Pressable>
-        {selectedId && (
-          <>
-            <Pressable onPress={handleLinkInverter} style={styles.toolbarButton} accessibilityLabel="Link inverter">
-              <Image source="sf:link" style={styles.toolbarIcon} tintColor={colors.primary} />
-            </Pressable>
-            <Pressable onPress={handleRotatePanel} style={styles.toolbarButton} accessibilityLabel="Rotate panel">
-              <Image source="sf:rotate.right" style={styles.toolbarIcon} tintColor={colors.primary} />
-            </Pressable>
-            <Pressable onPress={handleDeletePanel} style={styles.toolbarButton} accessibilityLabel="Delete panel">
-              <Image source="sf:trash" style={styles.toolbarIcon} tintColor={colors.system.red} />
-            </Pressable>
-          </>
-        )}
-        {isWizardMode && panels.length > 0 && (
-          <Pressable onPress={handleFinish} style={[styles.finishButton, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.finishText, { color: colors.text.inverse }]}>Finish</Text>
-          </Pressable>
-        )}
+        {/* Floating toolbar */}
+        <View style={styles.floatingToolbarContainer}>
+          <Host matchContents>
+            <HorizontalFloatingToolbar variant="vibrant">
+              <JCButton leadingIcon="filled.Add" variant="borderless" onPress={handleAddPanel} />
+              {selectedId && (
+                <>
+                  <JCButton leadingIcon="filled.Edit" variant="borderless" onPress={handleLinkInverter} />
+                  <JCButton leadingIcon="filled.Refresh" variant="borderless" onPress={handleRotatePanel} />
+                  <JCButton leadingIcon="filled.Delete" variant="borderless" onPress={handleDeletePanel} />
+                </>
+              )}
+              {unlinkedCount > 0 && (
+                <Chip variant="assist" label={`${unlinkedCount} unpaired`} leadingIcon="filled.Warning" />
+              )}
+              {isWizardMode && panels.length > 0 && (
+                <HorizontalFloatingToolbar.FloatingActionButton onPress={handleFinish}>
+                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }}>Finish</UIText>
+                </HorizontalFloatingToolbar.FloatingActionButton>
+              )}
+            </HorizontalFloatingToolbar>
+          </Host>
+        </View>
       </View>
     </>
   );
@@ -358,54 +352,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
   },
-  headerIconButton: {
-    padding: 8,
-    position: "relative",
+  headerButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
   },
-  headerIcon: {
-    width: 22,
-    height: 22,
-  },
-  badge: {
-    position: "absolute",
-    top: 2,
-    right: 2,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  bottomBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-    borderTopWidth: 1,
-  },
-  toolbarButton: {
-    padding: 10,
-    borderRadius: 10,
-  },
-  toolbarIcon: {
-    width: 22,
-    height: 22,
-  },
-  finishButton: {
-    marginLeft: "auto",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  finishText: {
-    fontSize: 16,
+  headerButtonText: {
+    fontSize: 14,
     fontWeight: "600",
+  },
+  floatingToolbarContainer: {
+    position: "absolute",
+    bottom: 24,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 20,
   },
 });

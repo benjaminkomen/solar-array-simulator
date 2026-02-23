@@ -5,7 +5,6 @@ import { Stack, useRouter } from "expo-router";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
-import { Image } from "expo-image";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { ProductionCanvas } from "@/components/ProductionCanvas";
@@ -17,6 +16,7 @@ import { useColors } from "@/utils/theme";
 import { resetAllData } from "@/utils/configStore";
 import { clearPanels } from "@/utils/panelStore";
 import { getEffectiveOutput } from "@/utils/solarCalculations";
+import { Host, Button, ContextMenu } from "@expo/ui/jetpack-compose";
 
 function formatWattage(watts: number): string {
   if (watts >= 1000) {
@@ -100,7 +100,6 @@ export default function ProductionScreen() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [menuVisible, setMenuVisible] = useState(false);
 
   const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
   const { viewportX, viewportY, canvasWidth, canvasHeight, handleLayout } = useViewport(panels);
@@ -163,13 +162,11 @@ export default function ProductionScreen() {
   );
 
   const handleEditConfiguration = useCallback(() => {
-    setMenuVisible(false);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push("/config?wizard=true");
   }, [router]);
 
   const handleDeleteConfiguration = useCallback(() => {
-    setMenuVisible(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     resetAllData();
     clearPanels();
@@ -204,18 +201,9 @@ export default function ProductionScreen() {
           headerBackVisible: false,
           headerTransparent: true,
           headerRight: () => (
-            <View style={styles.headerActions}>
-              <Pressable onPress={handleSimulate} style={styles.headerIconButton} accessibilityLabel="Simulate">
-                <Image source="sf:sun.max" style={styles.headerIcon} tintColor={colors.text.primary} />
-              </Pressable>
-              <Pressable
-                onPress={() => setMenuVisible((v) => !v)}
-                style={styles.headerIconButton}
-                accessibilityLabel="More options"
-              >
-                <Image source="sf:ellipsis.circle" style={styles.headerIcon} tintColor={colors.text.primary} />
-              </Pressable>
-            </View>
+            <Pressable onPress={handleSimulate} style={styles.headerButton} accessibilityLabel="Simulate">
+              <Text style={[styles.headerButtonText, { color: colors.text.primary }]}>Simulate</Text>
+            </Pressable>
           ),
         }}
       />
@@ -252,29 +240,20 @@ export default function ProductionScreen() {
           />
         </View>
 
-        {/* Overflow menu dropdown */}
-        {menuVisible && (
-          <View
-            style={[
-              styles.menuOverlay,
-              {
-                backgroundColor: colors.background.primary,
-                borderColor: colors.border.light,
-                top: insets.top + 50,
-              },
-            ]}
-          >
-            <Pressable onPress={handleEditConfiguration} style={styles.menuItem}>
-              <Image source="sf:pencil" style={styles.menuIcon} tintColor={colors.text.primary} />
-              <Text style={[styles.menuText, { color: colors.text.primary }]}>Edit Configuration</Text>
-            </Pressable>
-            <View style={[styles.menuDivider, { backgroundColor: colors.border.light }]} />
-            <Pressable onPress={handleDeleteConfiguration} style={styles.menuItem}>
-              <Image source="sf:trash" style={styles.menuIcon} tintColor={colors.system.red} />
-              <Text style={[styles.menuText, { color: colors.system.red }]}>Delete Configuration</Text>
-            </Pressable>
-          </View>
-        )}
+        {/* Floating context menu */}
+        <View style={[styles.menuAnchor, { top: insets.top + 8 }]}>
+          <Host matchContents>
+            <ContextMenu>
+              <ContextMenu.Trigger>
+                <Button leadingIcon="filled.MoreVert" variant="borderless" />
+              </ContextMenu.Trigger>
+              <ContextMenu.Items>
+                <Button leadingIcon="filled.Edit" onPress={handleEditConfiguration}>Edit Configuration</Button>
+                <Button leadingIcon="filled.Delete" onPress={handleDeleteConfiguration}>Delete Configuration</Button>
+              </ContextMenu.Items>
+            </ContextMenu>
+          </Host>
+        </View>
       </View>
     </>
   );
@@ -306,44 +285,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
   },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
+  headerButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  headerIconButton: {
-    padding: 8,
+  headerButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
-  headerIcon: {
-    width: 22,
-    height: 22,
-  },
-  menuOverlay: {
+  menuAnchor: {
     position: "absolute",
     right: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingVertical: 4,
-    minWidth: 200,
-    elevation: 8,
     zIndex: 100,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  menuIcon: {
-    width: 18,
-    height: 18,
-  },
-  menuText: {
-    fontSize: 16,
-  },
-  menuDivider: {
-    height: 1,
-    marginHorizontal: 16,
   },
 });

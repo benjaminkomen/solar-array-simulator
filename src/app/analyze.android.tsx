@@ -9,7 +9,12 @@ import {
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
-import { Host, Picker } from "@expo/ui/jetpack-compose";
+import {
+  Host, Picker, Card,
+  Text as UIText, Column,
+  HorizontalFloatingToolbar,
+} from "@expo/ui/jetpack-compose";
+import { paddingAll } from "@expo/ui/jetpack-compose/modifiers";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { AnalysisPreview } from "@/components/AnalysisPreview";
 import { WizardProgress } from "@/components/WizardProgress";
@@ -226,7 +231,7 @@ export default function Analyze() {
       {phase === "processing" && <ProcessingOverlay imageUri={decodedUri} />}
 
       {phase === "select_model" && (
-        <View style={styles.container}>
+        <View style={styles.outerContainer}>
           <View style={[styles.imageContainer, { backgroundColor: colors.background.primary }]}>
             <Image
               source={{ uri: decodedUri }}
@@ -235,32 +240,42 @@ export default function Analyze() {
             />
           </View>
 
-          <View style={[styles.pickerCard, { backgroundColor: colors.background.primary, borderColor: colors.border.light }]}>
-            <Text style={[styles.sectionHeader, { color: colors.text.secondary }]}>Select AI Model</Text>
-            <Host style={styles.pickerHost}>
-              <Picker
-                options={MODELS.map(m => m.name + (m.isDefault ? " (Default)" : ""))}
-                selectedIndex={MODELS.findIndex(m => m.id === selectedModel)}
-                onOptionSelected={({ nativeEvent: { index } }) => {
-                  const selected = MODELS[index];
-                  if (selected) {
-                    Haptics.selectionAsync();
-                    dispatch({ type: "SET_MODEL", model: selected.id });
-                  }
-                }}
-                variant="radio"
-              />
-            </Host>
-            {error && (
-              <Text style={[styles.errorText, { color: colors.system.red }]}>{error}</Text>
-            )}
-          </View>
+          <Host matchContents style={styles.pickerCardHost}>
+            <Card variant="outlined">
+              <Column modifiers={[paddingAll(16)]}>
+                <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
+                  SELECT AI MODEL
+                </UIText>
+                <Picker
+                  options={MODELS.map(m => m.name + (m.isDefault ? " (Default)" : ""))}
+                  selectedIndex={MODELS.findIndex(m => m.id === selectedModel)}
+                  onOptionSelected={({ nativeEvent: { index } }) => {
+                    const selected = MODELS[index];
+                    if (selected) {
+                      Haptics.selectionAsync();
+                      dispatch({ type: "SET_MODEL", model: selected.id });
+                    }
+                  }}
+                  variant="radio"
+                />
+                {error && (
+                  <UIText style={{ typography: 'bodySmall' }} color={colors.system.red}>
+                    {error}
+                  </UIText>
+                )}
+              </Column>
+            </Card>
+          </Host>
 
-          {/* Bottom action bar */}
-          <View style={[styles.bottomBar, { backgroundColor: colors.background.primary, borderTopColor: colors.border.light }]}>
-            <Pressable onPress={handleAnalyze} style={[styles.analyzeButton, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.analyzeButtonText, { color: colors.text.inverse }]}>Analyze</Text>
-            </Pressable>
+          {/* Floating toolbar */}
+          <View style={styles.floatingToolbarContainer}>
+            <Host matchContents>
+              <HorizontalFloatingToolbar variant="vibrant">
+                <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAnalyze}>
+                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }}>Analyze</UIText>
+                </HorizontalFloatingToolbar.FloatingActionButton>
+              </HorizontalFloatingToolbar>
+            </Host>
           </View>
         </View>
       )}
@@ -326,7 +341,7 @@ export default function Analyze() {
           </ScrollView>
 
           {isWizardMode && (
-            <View style={[styles.bottomBar, { backgroundColor: colors.background.primary, borderTopColor: colors.border.light }]}>
+            <View style={[styles.skipBar, { backgroundColor: colors.background.primary, borderTopColor: colors.border.light }]}>
               <Pressable onPress={handleSkip} style={styles.skipButton}>
                 <Text style={[styles.skipButtonText, { color: colors.primary }]}>Skip</Text>
               </Pressable>
@@ -339,7 +354,7 @@ export default function Analyze() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  outerContainer: {
     flex: 1,
   },
   scrollContent: {
@@ -358,26 +373,16 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 250,
   },
-  pickerCard: {
+  pickerCardHost: {
     flex: 1,
     margin: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 16,
   },
-  sectionHeader: {
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
-    marginBottom: 12,
-  },
-  pickerHost: {
-    minHeight: 300,
-  },
-  errorText: {
-    fontSize: 14,
-    marginTop: 8,
+  floatingToolbarContainer: {
+    position: "absolute",
+    bottom: 24,
+    left: 0,
+    right: 0,
+    alignItems: "center",
   },
   badgeRow: {
     flexDirection: "row",
@@ -409,19 +414,10 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 8,
   },
-  bottomBar: {
+  skipBar: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-  },
-  analyzeButton: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  analyzeButtonText: {
-    fontSize: 17,
-    fontWeight: "600",
   },
   skipButton: {
     paddingVertical: 14,
