@@ -1,70 +1,24 @@
-import { useState, useCallback } from 'react';
 import { StyleSheet, ScrollView, Text, Pressable } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import { useConfigStore } from '@/hooks/useConfigStore';
+import { Stack } from 'expo-router';
 import {
   Host, Slider, TextInput,
   Card, Text as UIText, Column,
 } from '@expo/ui/jetpack-compose';
 import { paddingAll } from '@expo/ui/jetpack-compose/modifiers';
 import { useColors } from '@/utils/theme';
-
-function generateSerialNumber(): string {
-  return Math.floor(10000000 + Math.random() * 90000000).toString();
-}
+import { useInverterForm } from '@/hooks/useInverterForm';
 
 export default function InverterDetailsScreen() {
-  const { mode, inverterId } = useLocalSearchParams<{
-    mode: 'add' | 'edit';
-    inverterId?: string;
-  }>();
-  const isAddMode = mode === 'add';
-  const router = useRouter();
   const colors = useColors();
-
   const {
-    config,
-    addInverterWithDetails,
-    updateInverterSerialNumber,
-    updateInverterEfficiency,
-  } = useConfigStore();
-
-  const existingInverter =
-    !isAddMode && inverterId
-      ? config.inverters.find((inv) => inv.id === inverterId)
-      : null;
-
-  const [serial, setSerial] = useState(() =>
-    isAddMode ? generateSerialNumber() : existingInverter?.serialNumber ?? ''
-  );
-  const [efficiency, setEfficiency] = useState(() =>
-    isAddMode ? 95 : existingInverter?.efficiency ?? 95
-  );
-
-  const handleSave = useCallback(() => {
-    if (isAddMode) {
-      addInverterWithDetails(serial, efficiency);
-    } else if (inverterId) {
-      updateInverterSerialNumber(inverterId, serial);
-      updateInverterEfficiency(inverterId, efficiency);
-    }
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    router.back();
-  }, [
     isAddMode,
     serial,
+    setSerial,
     efficiency,
-    inverterId,
-    addInverterWithDetails,
-    updateInverterSerialNumber,
-    updateInverterEfficiency,
-    router,
-  ]);
-
-  const handleCancel = useCallback(() => {
-    router.back();
-  }, [router]);
+    setEfficiency,
+    handleSave,
+    handleCancel,
+  } = useInverterForm();
 
   return (
     <>

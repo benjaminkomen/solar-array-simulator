@@ -1,10 +1,5 @@
-import {useCallback, useState, useEffect} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {Link, Stack, useLocalSearchParams, useRouter} from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import {useConfigStore} from '@/hooks/useConfigStore';
-import {usePanelsContext} from '@/contexts/PanelsContext';
-import {getPanelStore, subscribe} from '@/utils/panelStore';
+import {Link, Stack} from 'expo-router';
 import {
   Button,
   Form,
@@ -25,63 +20,16 @@ import {
   foregroundStyle,
   opacity,
 } from '@expo/ui/swift-ui/modifiers';
+import { usePanelDetails } from '@/hooks/usePanelDetails';
 
 export default function PanelDetailsScreen() {
-  const { panelId, mode } = useLocalSearchParams<{
-    panelId: string;
-    mode?: 'edit' | 'view';
-  }>();
-  const isViewMode = mode === 'view';
-
-  const { config } = useConfigStore();
-  const { linkInverter } = usePanelsContext();
-  const router = useRouter();
-
-  // Read from store instead of SharedValues
-  const [storeData, setStoreData] = useState(() => getPanelStore());
-
-  // Subscribe to store updates
-  useEffect(() => {
-    const unsubscribe = subscribe((data) => {
-      setStoreData(data);
-    });
-    return unsubscribe;
-  }, []);
-
-  // Get current panel and its linked inverter
-  const selectedPanel = storeData.panels.find(p => p.id === panelId);
-  const currentInverterId = selectedPanel?.inverterId ?? null;
-  const currentInverter = config.inverters.find(
-    inv => inv.id === currentInverterId
-  );
-
-  // Get list of available (unassigned) inverters (only needed in edit mode)
-  const assignedInverterIds = new Set(
-    storeData.panels.map(p => p.inverterId).filter(Boolean)
-  );
-  const availableInverters = config.inverters.filter(
-    inv => !assignedInverterIds.has(inv.id)
-  );
-
-  const handleLink = useCallback((inverterId: string) => {
-    if (panelId) {
-      linkInverter(panelId, inverterId);
-      Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Success
-      );
-      router.back();
-    }
-  }, [panelId, linkInverter, router]);
-
-  const handleUnlink = useCallback(() => {
-    if (panelId) {
-      linkInverter(panelId, null);
-      Haptics.notificationAsync(
-        Haptics.NotificationFeedbackType.Warning
-      );
-      router.back();
-    }
-  }, [panelId, linkInverter, router]);
+  const {
+    isViewMode,
+    currentInverter,
+    availableInverters,
+    handleLink,
+    handleUnlink,
+  } = usePanelDetails();
 
   return (
     <>
@@ -94,7 +42,6 @@ export default function PanelDetailsScreen() {
         <Host style={styles.host}>
           <Form>
           {currentInverter ? (
-            // Show currently linked inverter
             <Section
               header={<Text>Linked Inverter</Text>}
             >
@@ -116,7 +63,6 @@ export default function PanelDetailsScreen() {
               )}
             </Section>
           ) : !isViewMode && availableInverters.length > 0 ? (
-            // Show list of available inverters (edit mode only)
             <Section
               header={<Text>Available Inverters</Text>}
               footer={<Text>Select a micro-inverter to link to this panel.</Text>}
@@ -141,7 +87,6 @@ export default function PanelDetailsScreen() {
               </List.ForEach>
             </Section>
           ) : !isViewMode ? (
-            // Empty state - no available inverters (edit mode only)
             <Section>
               <VStack spacing={16}>
                 <Image systemName="exclamationmark.triangle" size={56} color="#8E8E93" />

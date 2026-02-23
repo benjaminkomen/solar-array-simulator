@@ -1,5 +1,4 @@
 import {StyleSheet, View} from 'react-native';
-import {useState, useCallback, useRef} from 'react';
 import {
   Button,
   Form,
@@ -26,90 +25,28 @@ import {
   submitLabel,
   tag,
 } from '@expo/ui/swift-ui/modifiers';
-import {useConfigStore} from '@/hooks/useConfigStore';
-import type {InverterConfig, RoofType} from '@/utils/configStore';
-import {Stack, useLocalSearchParams, useRouter} from "expo-router";
+import type {RoofType} from '@/utils/configStore';
+import {Stack} from "expo-router";
 import {WizardProgress} from "@/components/WizardProgress";
-import {searchCity, type GeocodingResult} from "@/utils/geocoding";
-import * as Haptics from "expo-haptics";
-
-const ROOF_TYPES: { value: RoofType; label: string }[] = [
-  {value: 'gable', label: 'Gable'},
-  {value: 'hip', label: 'Hip'},
-  {value: 'flat', label: 'Flat'},
-  {value: 'shed', label: 'Shed'},
-];
+import { useConfigForm, ROOF_TYPES } from "@/hooks/useConfigForm";
 
 export default function ConfigScreen() {
-  const router = useRouter();
-  const {wizard} = useLocalSearchParams<{ wizard?: string }>();
-  const isWizardMode = wizard === 'true';
-
-  const {config, updateDefaultWattage, removeInverter, updateLocation, updatePanelTiltAngle, updateRoofType} = useConfigStore();
-
-  const [locationQuery, setLocationQuery] = useState('');
-  const [locationResults, setLocationResults] = useState<GeocodingResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleWattageChange = (text: string) => {
-    const wattage = parseInt(text, 10);
-    if (!isNaN(wattage)) {
-      updateDefaultWattage(wattage);
-    }
-  };
-
-  const handleDelete = (indices: number[]) => {
-    indices.forEach((i) => {
-      const inverter = config.inverters[i];
-      if (inverter) removeInverter(inverter.id);
-    });
-  };
-
-  const handleOpenAddSheet = () => {
-    router.push('/inverter-details?mode=add');
-  };
-
-  const handleOpenEditSheet = (inverter: InverterConfig) => {
-    router.push(`/inverter-details?mode=edit&inverterId=${inverter.id}`);
-  };
-
-  const handleContinue = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/upload?wizard=true');
-  };
-
-  const handleLocationSearch = useCallback((text: string) => {
-    setLocationQuery(text);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-
-    if (text.trim().length < 2) {
-      setLocationResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    // Debounce: 1 second (Nominatim rate limit)
-    searchTimeout.current = setTimeout(async () => {
-      try {
-        const results = await searchCity(text);
-        setLocationResults(results);
-        setIsSearching(false);
-      } catch {
-        setLocationResults([]);
-        setIsSearching(false);
-      }
-    }, 1000);
-  }, []);
-
-  const handleSelectLocation = useCallback((result: GeocodingResult) => {
-    const parts = result.displayName.split(', ');
-    const shortName = parts.slice(0, 2).join(', ');
-    updateLocation(result.latitude, result.longitude, shortName);
-    setLocationQuery('');
-    setLocationResults([]);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, [updateLocation]);
+  const {
+    isWizardMode,
+    config,
+    locationQuery,
+    locationResults,
+    isSearching,
+    updatePanelTiltAngle,
+    updateRoofType,
+    handleWattageChange,
+    handleDelete,
+    handleOpenAddSheet,
+    handleOpenEditSheet,
+    handleContinue,
+    handleLocationSearch,
+    handleSelectLocation,
+  } = useConfigForm();
 
   return (
     <>
@@ -118,7 +55,6 @@ export default function ConfigScreen() {
       <View style={styles.container}>
         <Host style={styles.form}>
             <Form modifiers={[scrollDismissesKeyboard('immediately')]}>
-              {/* Panel Settings Section */}
               <Section
                 header={<Text>Panel Settings</Text>}
                 footer={
@@ -143,7 +79,6 @@ export default function ConfigScreen() {
                 </LabeledContent>
               </Section>
 
-              {/* Location Section */}
               <Section
                 header={<Text>Location</Text>}
                 footer={
@@ -167,7 +102,7 @@ export default function ConfigScreen() {
                     <Text modifiers={[opacity(0.6)]}>Searching...</Text>
                   </LabeledContent>
                 )}
-                {locationResults.map((result, index) => (
+                {locationResults.map((result) => (
                   <Button
                     key={`${result.latitude}-${result.longitude}`}
                     onPress={() => handleSelectLocation(result)}
@@ -185,7 +120,6 @@ export default function ConfigScreen() {
                 ))}
               </Section>
 
-              {/* Roof Type Section */}
               <Section
                 header={<Text>Roof</Text>}
                 footer={
@@ -219,7 +153,6 @@ export default function ConfigScreen() {
                 </LabeledContent>
               </Section>
 
-              {/* Micro-inverters Section */}
               <Section
                 header={<Text>Micro-inverters ({config.inverters.length})</Text>}
                 footer={

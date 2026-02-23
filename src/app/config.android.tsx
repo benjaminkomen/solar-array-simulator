@@ -1,4 +1,4 @@
-import { Fragment, useState, useCallback, useRef } from 'react';
+import { Fragment } from 'react';
 import { StyleSheet, View, ScrollView, Text, Pressable } from 'react-native';
 import {
   Host, Picker, Slider, TextInput,
@@ -7,89 +7,30 @@ import {
   HorizontalFloatingToolbar,
 } from '@expo/ui/jetpack-compose';
 import { paddingAll } from '@expo/ui/jetpack-compose/modifiers';
-import { useConfigStore } from '@/hooks/useConfigStore';
-import type { InverterConfig, RoofType } from '@/utils/configStore';
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import type { RoofType } from '@/utils/configStore';
+import { Stack } from "expo-router";
 import { WizardProgress } from "@/components/WizardProgress";
-import { searchCity, type GeocodingResult } from "@/utils/geocoding";
-import * as Haptics from "expo-haptics";
 import { useColors } from "@/utils/theme";
-
-const ROOF_TYPES: { value: RoofType; label: string }[] = [
-  { value: 'gable', label: 'Gable' },
-  { value: 'hip', label: 'Hip' },
-  { value: 'flat', label: 'Flat' },
-  { value: 'shed', label: 'Shed' },
-];
+import { useConfigForm, ROOF_TYPES } from "@/hooks/useConfigForm";
 
 export default function ConfigScreen() {
-  const router = useRouter();
-  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
-  const isWizardMode = wizard === 'true';
   const colors = useColors();
-
-  const { config, updateDefaultWattage, removeInverter, updateLocation, updatePanelTiltAngle, updateRoofType } = useConfigStore();
-
-  const [locationQuery, setLocationQuery] = useState('');
-  const [locationResults, setLocationResults] = useState<GeocodingResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleWattageChange = (text: string) => {
-    const wattage = parseInt(text, 10);
-    if (!isNaN(wattage)) {
-      updateDefaultWattage(wattage);
-    }
-  };
-
-  const handleOpenAddSheet = () => {
-    router.push('/inverter-details?mode=add');
-  };
-
-  const handleOpenEditSheet = (inverter: InverterConfig) => {
-    router.push(`/inverter-details?mode=edit&inverterId=${inverter.id}`);
-  };
-
-  const handleContinue = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/upload?wizard=true');
-  };
-
-  const handleLocationSearch = useCallback((text: string) => {
-    setLocationQuery(text);
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-
-    if (text.trim().length < 2) {
-      setLocationResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    searchTimeout.current = setTimeout(async () => {
-      try {
-        const results = await searchCity(text);
-        setLocationResults(results);
-        setIsSearching(false);
-      } catch {
-        setLocationResults([]);
-        setIsSearching(false);
-      }
-    }, 1000);
-  }, []);
-
-  const handleSelectLocation = useCallback((result: GeocodingResult) => {
-    const parts = result.displayName.split(', ');
-    const shortName = parts.slice(0, 2).join(', ');
-    updateLocation(result.latitude, result.longitude, shortName);
-    setLocationQuery('');
-    setLocationResults([]);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, [updateLocation]);
-
-  const handleDeleteInverter = useCallback((inverter: InverterConfig) => {
-    removeInverter(inverter.id);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-  }, [removeInverter]);
+  const {
+    isWizardMode,
+    config,
+    locationQuery,
+    locationResults,
+    isSearching,
+    updatePanelTiltAngle,
+    updateRoofType,
+    handleWattageChange,
+    handleOpenAddSheet,
+    handleOpenEditSheet,
+    handleContinue,
+    handleLocationSearch,
+    handleSelectLocation,
+    handleDeleteInverter,
+  } = useConfigForm();
 
   return (
     <>
@@ -110,7 +51,6 @@ export default function ConfigScreen() {
           contentContainerStyle={[styles.scrollContent, isWizardMode && styles.scrollContentWithToolbar]}
           keyboardDismissMode="on-drag"
         >
-          {/* Panel Settings */}
           <Host matchContents>
             <Card variant="outlined">
               <Column modifiers={[paddingAll(16)]}>
@@ -132,7 +72,6 @@ export default function ConfigScreen() {
             </Card>
           </Host>
 
-          {/* Location */}
           <Host matchContents>
             <Card variant="outlined">
               <Column modifiers={[paddingAll(16)]}>
@@ -168,7 +107,6 @@ export default function ConfigScreen() {
             </Card>
           </Host>
 
-          {/* Roof */}
           <Host matchContents>
             <Card variant="outlined">
               <Column modifiers={[paddingAll(16)]}>
@@ -204,7 +142,6 @@ export default function ConfigScreen() {
             </Card>
           </Host>
 
-          {/* Micro-inverters */}
           <Host matchContents>
             <Card variant="outlined">
               <Column modifiers={[paddingAll(16)]}>
@@ -237,7 +174,6 @@ export default function ConfigScreen() {
           </Host>
         </ScrollView>
 
-        {/* Floating toolbar */}
         {isWizardMode && (
           <View style={styles.floatingToolbarContainer}>
             <Host matchContents>

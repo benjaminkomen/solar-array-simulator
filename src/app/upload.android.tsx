@@ -1,40 +1,27 @@
-import { useCallback } from "react";
 import { Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
-import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { Stack } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { useImagePicker, type PickedImage } from "@/hooks/useImagePicker";
 import { PermissionModal } from "@/components/PermissionModal";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
+import { useUpload } from "@/hooks/useUpload";
 
 export default function Upload() {
-  const router = useRouter();
-  const { wizard } = useLocalSearchParams<{ wizard?: string }>();
-  const isWizardMode = wizard === 'true';
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const handleSkip = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const wizardParam = isWizardMode ? '?wizard=true' : '';
-    router.push(`/custom${wizardParam}`);
-  };
-
-  const onImageSelected = useCallback((picked: PickedImage) => {
-    const wizardParam = isWizardMode ? '&wizard=true' : '';
-    router.push(`/analyze?imageUri=${encodeURIComponent(picked.uri)}${wizardParam}`);
-  }, [isWizardMode, router]);
-
   const {
+    isWizardMode,
+    handleSkip,
     pickFromCamera,
     pickFromGallery,
     modalState,
     handleModalAllow,
     handleModalClose,
-  } = useImagePicker(onImageSelected);
+  } = useUpload();
 
   return (
     <>
