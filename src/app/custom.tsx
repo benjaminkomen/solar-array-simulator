@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { View, StyleSheet, type LayoutChangeEvent } from "react-native";
+import { View, Text, StyleSheet, type LayoutChangeEvent, Platform, Pressable } from "react-native";
 import { Stack, useLocalSearchParams, Link, useRouter } from "expo-router";
 import { useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
@@ -272,16 +272,33 @@ export default function Custom() {
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="location.north.circle" onPress={handleCompassToggle} accessibilityLabel="Toggle compass" />
-        <Stack.Toolbar.Button onPress={() => {}}>
-          <Stack.Toolbar.Icon sf="link" />
-          {unlinkedCount > 0 && (
-            <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
-          )}
-        </Stack.Toolbar.Button>
-        <Stack.Toolbar.Button icon="scope" onPress={handleSnapToOrigin} accessibilityLabel="Snap to origin" />
-      </Stack.Toolbar>
+      {Platform.OS === "ios" ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button icon="location.north.circle" onPress={handleCompassToggle} accessibilityLabel="Toggle compass" />
+          <Stack.Toolbar.Button onPress={() => {}}>
+            <Stack.Toolbar.Icon sf="link" />
+            {unlinkedCount > 0 && (
+              <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
+            )}
+          </Stack.Toolbar.Button>
+          <Stack.Toolbar.Button icon="scope" onPress={handleSnapToOrigin} accessibilityLabel="Snap to origin" />
+        </Stack.Toolbar>
+      ) : (
+        <Stack.Screen
+          options={{
+            headerRight: () => (
+              <View style={{ flexDirection: "row", gap: 4 }}>
+                <Pressable onPress={handleCompassToggle} accessibilityLabel="Toggle compass" style={{ padding: 8 }}>
+                  <Text style={{ color: "#007AFF", fontSize: 14 }}>Compass</Text>
+                </Pressable>
+                <Pressable onPress={handleSnapToOrigin} accessibilityLabel="Snap to origin" style={{ padding: 8 }}>
+                  <Text style={{ color: "#007AFF", fontSize: 14 }}>Center</Text>
+                </Pressable>
+              </View>
+            ),
+          }}
+        />
+      )}
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
         {compassVisible && (
@@ -311,27 +328,57 @@ export default function Custom() {
           onZoomOut={handleZoomOut}
         />
       </View>
-      <Stack.Toolbar placement="bottom">
-        <Stack.Toolbar.Button icon="plus" onPress={handleAddPanel} accessibilityLabel="Add panel" />
-        {selectedId && (
-          <>
-            <Link href={`/panel-details?panelId=${selectedId}`} asChild>
-              <Stack.Toolbar.Button icon="link" accessibilityLabel="Link inverter" />
-            </Link>
-            <Stack.Toolbar.Button
-              icon="rotate.right"
-              onPress={handleRotatePanel}
-              accessibilityLabel="Rotate panel"
-            />
-            <Stack.Toolbar.Button icon="trash" onPress={handleDeletePanel} accessibilityLabel="Delete panel" />
-          </>
-        )}
-        {isWizardMode && panels.length > 0 && (
-          <Stack.Toolbar.Button onPress={handleFinish}>
-            Finish
-          </Stack.Toolbar.Button>
-        )}
-      </Stack.Toolbar>
+      {Platform.OS === "ios" ? (
+        <Stack.Toolbar placement="bottom">
+          <Stack.Toolbar.Button icon="plus" onPress={handleAddPanel} accessibilityLabel="Add panel" />
+          {selectedId && (
+            <>
+              <Link href={`/panel-details?panelId=${selectedId}`} asChild>
+                <Stack.Toolbar.Button icon="link" accessibilityLabel="Link inverter" />
+              </Link>
+              <Stack.Toolbar.Button
+                icon="rotate.right"
+                onPress={handleRotatePanel}
+                accessibilityLabel="Rotate panel"
+              />
+              <Stack.Toolbar.Button icon="trash" onPress={handleDeletePanel} accessibilityLabel="Delete panel" />
+            </>
+          )}
+          {isWizardMode && panels.length > 0 && (
+            <Stack.Toolbar.Button onPress={handleFinish}>
+              Finish
+            </Stack.Toolbar.Button>
+          )}
+        </Stack.Toolbar>
+      ) : (
+        <View style={[styles.androidBottomBar, { backgroundColor: colors.background.primary, borderTopColor: colors.border.light }]}>
+          <Pressable onPress={handleAddPanel} accessibilityLabel="add" style={styles.androidBarButton}>
+            <Text style={styles.androidBarButtonText}>+</Text>
+          </Pressable>
+          {selectedId && (
+            <>
+              <Pressable
+                onPress={() => router.push(`/panel-details?panelId=${selectedId}`)}
+                accessibilityLabel="Link inverter"
+                style={styles.androidBarButton}
+              >
+                <Text style={styles.androidBarButtonText}>Link</Text>
+              </Pressable>
+              <Pressable onPress={handleRotatePanel} accessibilityLabel="Rotate panel" style={styles.androidBarButton}>
+                <Text style={styles.androidBarButtonText}>Rotate</Text>
+              </Pressable>
+              <Pressable onPress={handleDeletePanel} accessibilityLabel="Delete panel" style={styles.androidBarButton}>
+                <Text style={[styles.androidBarButtonText, { color: "#FF3B30" }]}>Delete</Text>
+              </Pressable>
+            </>
+          )}
+          {isWizardMode && panels.length > 0 && (
+            <Pressable onPress={handleFinish} style={styles.androidBarButton}>
+              <Text style={[styles.androidBarButtonText, { fontWeight: "600" }]}>Finish</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
     </>
   );
 }
@@ -345,5 +392,28 @@ const styles = StyleSheet.create({
     top: 16,
     right: 48,
     zIndex: 10,
+  },
+  androidBottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  androidBarButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    backgroundColor: "rgba(0, 122, 255, 0.1)",
+  },
+  androidBarButtonText: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#007AFF",
   },
 });

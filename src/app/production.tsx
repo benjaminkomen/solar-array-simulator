@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, type LayoutChangeEvent, useColorScheme } from "react-native";
+import { View, Text, StyleSheet, type LayoutChangeEvent, useColorScheme, Platform, Alert, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Stack, useRouter } from "expo-router";
@@ -180,6 +180,14 @@ export default function ProductionScreen() {
     router.push("/simulation");
   }, [router]);
 
+  const handleShowMenu = useCallback(() => {
+    Alert.alert("Options", undefined, [
+      { text: "Edit Configuration", onPress: handleEditConfiguration },
+      { text: "Delete Configuration", onPress: handleDeleteConfiguration, style: "destructive" },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }, [handleEditConfiguration, handleDeleteConfiguration]);
+
   const cardStyle = useMemo(() => ({
     backgroundColor: colors.background.primary,
     borderRadius: 16,
@@ -197,17 +205,34 @@ export default function ProductionScreen() {
 
   return (
     <>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="sun.max" onPress={handleSimulate} accessibilityLabel="Simulate" />
-        <Stack.Toolbar.Menu icon="ellipsis.circle" accessibilityLabel="More options">
-          <Stack.Toolbar.MenuAction icon="pencil" onPress={handleEditConfiguration}>
-            Edit Configuration
-          </Stack.Toolbar.MenuAction>
-          <Stack.Toolbar.MenuAction icon="trash" destructive onPress={handleDeleteConfiguration}>
-            Delete Configuration
-          </Stack.Toolbar.MenuAction>
-        </Stack.Toolbar.Menu>
-      </Stack.Toolbar>
+      {Platform.OS === "ios" ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button icon="sun.max" onPress={handleSimulate} accessibilityLabel="Simulate" />
+          <Stack.Toolbar.Menu icon="ellipsis.circle" accessibilityLabel="More options">
+            <Stack.Toolbar.MenuAction icon="pencil" onPress={handleEditConfiguration}>
+              Edit Configuration
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction icon="trash" destructive onPress={handleDeleteConfiguration}>
+              Delete Configuration
+            </Stack.Toolbar.MenuAction>
+          </Stack.Toolbar.Menu>
+        </Stack.Toolbar>
+      ) : (
+        <Stack.Screen
+          options={{
+            headerRight: () => (
+              <View style={{ flexDirection: "row", gap: 4 }}>
+                <Pressable onPress={handleSimulate} accessibilityLabel="Simulate" style={{ padding: 8 }}>
+                  <Text style={{ color: "#007AFF", fontSize: 16 }}>Simulate</Text>
+                </Pressable>
+                <Pressable onPress={handleShowMenu} accessibilityLabel="More options" style={{ padding: 8 }}>
+                  <Text style={{ color: "#007AFF", fontSize: 20 }}>{"\u22EF"}</Text>
+                </Pressable>
+              </View>
+            ),
+          }}
+        />
+      )}
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]}>
         <View style={cardStyle}>
           <Text style={[styles.cardLabel, { color: colors.text.secondary }]}>
