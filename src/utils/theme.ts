@@ -1,4 +1,4 @@
-import { useColorScheme } from "react-native";
+import { useColorScheme, type ColorValue } from "react-native";
 
 const palette = {
   blue: {
@@ -104,7 +104,32 @@ export const darkColors = {
   system: { red: palette.red.system },
 };
 
-export type Colors = typeof lightColors;
+export type Colors = {
+  primary: ColorValue;
+  primaryLight: ColorValue;
+  text: {
+    primary: ColorValue;
+    secondary: ColorValue;
+    tertiary: ColorValue;
+    inverse: ColorValue;
+  };
+  background: {
+    primary: ColorValue;
+    secondary: ColorValue;
+    tertiary: ColorValue;
+  };
+  border: {
+    light: ColorValue;
+    medium: ColorValue;
+  };
+  // panel colors must remain plain strings — used in Skia canvas worklets
+  panel: {
+    linked: { fill: string; stroke: string; grid: string };
+    unlinked: { fill: string; stroke: string; grid: string };
+    selection: string;
+  };
+  system: { red: ColorValue };
+};
 
 export function useColors(): Colors {
   const scheme = useColorScheme();
