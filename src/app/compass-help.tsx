@@ -1,40 +1,18 @@
-import {StyleSheet, View} from "react-native";
-import {Stack} from "expo-router";
-import {Host, Image, Text, VStack,} from "@expo/ui/swift-ui";
-import {bold, font, opacity, padding} from "@expo/ui/swift-ui/modifiers";
+import { View, Text, StyleSheet } from "react-native";
+import { Stack } from "expo-router";
 
 export default function CompassHelpScreen() {
   return (
     <>
-      <Stack.Screen
-        options={{
-          sheetAllowedDetents: [0.3],
-        }}
-      />
+      <Stack.Screen options={{ title: "Compass Help", headerShown: false }} />
       <View style={styles.container}>
-        <Host style={styles.host}>
-          <VStack spacing={12}>
-            <Image systemName="location.north.fill" size={40} color="#007AFF"/>
-            <Text modifiers={[bold(), font({size: 18})]}>
-              Array Orientation
-            </Text>
-            <Text modifiers={[opacity(0.7), font({size: 15}), padding({horizontal: 16})]}>
-              Drag the arrow to indicate which direction the top of your
-              panel array faces. This helps track your array&apos;s orientation
-              for optimal sun exposure.
-            </Text>
-          </VStack>
-        </Host>
+        <Text style={styles.text}>Compass help is not yet implemented for this platform.</Text>
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  host: {
-    flex: 1,
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
+  text: { fontSize: 16, textAlign: "center", color: "#6b7280" },
 });

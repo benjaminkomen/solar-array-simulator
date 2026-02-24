@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import {View, Text, Platform} from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/utils/theme";
@@ -23,7 +23,7 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        paddingTop: insets.top + 50,
+        paddingTop: Platform.OS === 'android' ? insets.top + 60 : insets.top + 50,
         paddingBottom: 16,
         paddingHorizontal: 24,
         backgroundColor: colors.background.primary,
@@ -60,12 +60,16 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
                 }}
               >
                 {isCompleted ? (
-                  <Image
-                    source="sf:checkmark"
-                    style={{ width: 16, height: 16 }}
-                    contentFit="contain"
-                    tintColor={colors.text.inverse}
-                  />
+                  Platform.OS === 'android' ? (
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text.inverse }}>✓</Text>
+                  ) : (
+                    <Image
+                      source="sf:checkmark"
+                      style={{ width: 16, height: 16 }}
+                      contentFit="contain"
+                      tintColor={colors.text.inverse}
+                    />
+                  )
                 ) : (
                   <Text
                     style={{

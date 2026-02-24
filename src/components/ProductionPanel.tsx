@@ -3,6 +3,7 @@ import {
   useDerivedValue,
   type SharedValue,
 } from "react-native-reanimated";
+import { Platform } from "react-native";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { BasePanelShape, type PanelColors } from "./BasePanelShape";
 
@@ -17,7 +18,7 @@ interface ProductionPanelProps {
 
 export function ProductionPanel({ x, y, rotation, wattage, inverterId, colors }: ProductionPanelProps) {
   const font = matchFont({
-    fontFamily: "System",
+    fontFamily: Platform.select({ ios: "System", default: "sans-serif" }),
     fontSize: 11,
     fontWeight: "bold",
   });

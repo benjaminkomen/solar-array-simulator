@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
@@ -48,29 +49,31 @@ export default function RootLayout() {
             <Stack.Screen
               name="panel-details"
               options={{
-                presentation: "formSheet",
-                sheetGrabberVisible: true,
+                presentation: Platform.OS === 'ios' ? "formSheet" : "transparentModal",
+                headerShown: Platform.OS !== 'android',
+                sheetGrabberVisible: Platform.OS === 'ios',
                 title: "Panel Details",
-                contentStyle: {backgroundColor: "transparent"},
+                contentStyle: Platform.OS === 'ios' ? { backgroundColor: "transparent" } : undefined,
               }}
             />
             <Stack.Screen
               name="inverter-details"
               options={{
-                presentation: "formSheet",
-                sheetGrabberVisible: true,
+                presentation: Platform.OS === 'ios' ? "formSheet" : "transparentModal",
+                headerShown: Platform.OS !== 'android',
+                sheetGrabberVisible: Platform.OS === 'ios',
                 title: "Inverter Details",
-                contentStyle: {backgroundColor: "transparent"},
+                contentStyle: Platform.OS === 'ios' ? { backgroundColor: "transparent" } : undefined,
               }}
             />
             <Stack.Screen
               name="compass-help"
               options={{
-                presentation: "formSheet",
-                sheetGrabberVisible: true,
-                title: "",
+                presentation: Platform.OS === 'ios' ? "formSheet" : "transparentModal",
                 headerShown: false,
-                contentStyle: {backgroundColor: "transparent"},
+                sheetGrabberVisible: Platform.OS === 'ios',
+                title: "",
+                contentStyle: Platform.OS === 'ios' ? { backgroundColor: "transparent" } : undefined,
               }}
             />
             <Stack.Screen
