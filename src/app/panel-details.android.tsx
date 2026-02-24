@@ -66,33 +66,28 @@ export default function PanelDetailsScreen() {
               </Column>
             </Card>
           ) : !isViewMode && availableInverters.length > 0 ? (
-            <Card variant="elevated" color={colors.background.primary}>
-              <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
-                <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
-                  AVAILABLE INVERTERS
-                </UIText>
-                {availableInverters.map((inv, idx) => (
-                  <Fragment key={inv.id}>
-                    {idx > 0 && <Divider />}
-                    <ListItem
-                      headline={inv.serialNumber}
-                      supportingText={`${Math.round(inv.efficiency)}% efficiency`}
-                      modifiers={[clickable(() => handleLink(inv.id))]}
-                    >
-                      <ListItem.Trailing>
-                        <Icon
-                          source={require('@/assets/symbols/chevron_right.xml')}
-                          tintColor={colors.text.tertiary}
-                        />
-                      </ListItem.Trailing>
-                    </ListItem>
-                  </Fragment>
-                ))}
-                <UIText style={{ typography: 'bodySmall' }} color={colors.text.secondary}>
-                  Select a micro-inverter to link to this panel.
-                </UIText>
-              </Column>
-            </Card>
+            <Column modifiers={[fillMaxWidth()]} verticalArrangement={{ spacedBy: 8 }}>
+              <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary} modifiers={[paddingAll(4)]}>
+                AVAILABLE INVERTERS
+              </UIText>
+              <Card variant="elevated" color={colors.background.primary}>
+                <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
+                  {availableInverters.map((inv, idx) => (
+                    <Fragment key={inv.id}>
+                      {idx > 0 && <Divider />}
+                      <ListItem
+                        headline={inv.serialNumber}
+                        supportingText={`${Math.round(inv.efficiency)}% efficiency`}
+                        modifiers={[clickable(() => handleLink(inv.id))]}
+                      />
+                    </Fragment>
+                  ))}
+                </Column>
+              </Card>
+              <UIText style={{ typography: 'bodySmall' }} color={colors.text.secondary} modifiers={[paddingAll(4)]}>
+                Select a micro-inverter to link to this panel.
+              </UIText>
+            </Column>
           ) : !isViewMode ? (
             <Card variant="elevated" color={colors.background.primary}>
               <Column modifiers={[fillMaxWidth(), paddingAll(16)]} horizontalAlignment="center">
