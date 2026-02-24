@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { Stack } from "expo-router";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
@@ -7,13 +8,18 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
 import {
-  Host, Button as JCButton, IconButton, Icon, Row,
+  Host, IconButton, Icon, Row,
   Text as UIText,
-  HorizontalFloatingToolbar,
+  HorizontalFloatingToolbar, TextButton,
+  ModalBottomSheet,
+  ListItem,
+  Column,
 } from "@expo/ui/jetpack-compose";
+import { fillMaxWidth, paddingAll, clickable } from "@expo/ui/jetpack-compose/modifiers";
 
 export default function Custom() {
   const colors = useColors();
+  const [panelSheetVisible, setPanelSheetVisible] = useState(false);
   const {
     isWizardMode,
     config,
@@ -44,6 +50,13 @@ export default function Custom() {
     handleLinkInverter,
   } = useCanvasEditor();
 
+  const handleSelectPanel = (id: string | null) => {
+    setSelectedId(id);
+    if (id !== null) {
+      setPanelSheetVisible(true);
+    }
+  };
+
   return (
     <>
       <Stack.Screen
@@ -54,18 +67,18 @@ export default function Custom() {
             <View style={styles.headerActions}>
               <Host matchContents>
                 <Row>
-                  <IconButton variant="default" onPress={handleCompassToggle}>
-                    <Icon source={require('@/assets/symbols/navigation.xml')} tintColor={colors.text.primary} />
+                  <IconButton variant="bordered" color={colors.primaryLight} onPress={handleCompassToggle}>
+                    <Icon source={require('@/assets/symbols/navigation.xml')} tintColor={colors.primary} />
                   </IconButton>
-                  <IconButton variant="default" onPress={handleSnapToOrigin}>
-                    <Icon source={require('@/assets/symbols/gps_fixed.xml')} tintColor={colors.text.primary} />
+                  <IconButton variant="bordered" color={colors.primaryLight} onPress={handleSnapToOrigin}>
+                    <Icon source={require('@/assets/symbols/gps_fixed.xml')} tintColor={colors.primary} />
                   </IconButton>
                 </Row>
               </Host>
               <View style={styles.linkIconContainer}>
                 <Host matchContents>
-                  <IconButton variant="default" onPress={() => {}}>
-                    <Icon source={require('@/assets/symbols/link.xml')} tintColor={colors.text.primary} />
+                  <IconButton variant="bordered" color={colors.primaryLight} onPress={() => {}}>
+                    <Icon source={require('@/assets/symbols/link.xml')} tintColor={colors.primary} />
                   </IconButton>
                 </Host>
                 {/* @todo: this should be an Expo UI Badge once that is implemented */}
@@ -80,56 +93,91 @@ export default function Custom() {
         }}
       />
       {isWizardMode && <WizardProgress currentStep={3} />}
-      <View style={[styles.container, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
-        {compassVisible && (
-          <View style={styles.compassContainer}>
-            <Compass
-              direction={config.compassDirection}
-              onDirectionChange={updateCompassDirection}
-              onTap={handleCompassTap}
-            />
-          </View>
-        )}
-        <SolarPanelCanvas
-          panels={panels}
-          selectedId={selectedId}
-          onSelectPanel={setSelectedId}
-          onBringToFront={bringToFront}
-          onSavePanelPosition={savePanelPosition}
-          viewportX={viewportX}
-          viewportY={viewportY}
-          scale={scale}
-          canvasWidth={canvasWidth}
-          canvasHeight={canvasHeight}
-        />
-        <ZoomControls
-          currentIndex={zoomIndex}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-        />
+      <View style={styles.outerContainer}>
+        <View style={[styles.canvasContainer, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
+          {compassVisible && (
+            <View style={styles.compassContainer}>
+              <Compass
+                direction={config.compassDirection}
+                onDirectionChange={updateCompassDirection}
+                onTap={handleCompassTap}
+              />
+            </View>
+          )}
+          <SolarPanelCanvas
+            panels={panels}
+            selectedId={selectedId}
+            onSelectPanel={handleSelectPanel}
+            onBringToFront={bringToFront}
+            onSavePanelPosition={savePanelPosition}
+            viewportX={viewportX}
+            viewportY={viewportY}
+            scale={scale}
+            canvasWidth={canvasWidth}
+            canvasHeight={canvasHeight}
+          />
+          <ZoomControls
+            currentIndex={zoomIndex}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+          />
+        </View>
 
         <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
           <Host matchContents>
-            <HorizontalFloatingToolbar variant="vibrant">
-              <JCButton leadingIcon="filled.Add" variant="borderless" onPress={handleAddPanel} />
-              {selectedId && <JCButton leadingIcon="filled.Share" variant="borderless" onPress={handleLinkInverter} />}
-              {selectedId && <JCButton leadingIcon="filled.Refresh" variant="borderless" onPress={handleRotatePanel} />}
-              {selectedId && <JCButton leadingIcon="filled.Delete" variant="borderless" onPress={handleDeletePanel} />}
+            <HorizontalFloatingToolbar variant="standard">
               {isWizardMode && panels.length > 0 && (
-                <HorizontalFloatingToolbar.FloatingActionButton onPress={handleFinish}>
-                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }}>Finish</UIText>
-                </HorizontalFloatingToolbar.FloatingActionButton>
+                <TextButton onPress={handleFinish}>Finish</TextButton>
               )}
+              <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAddPanel}>
+                <Icon source={require('@/assets/symbols/add.xml')} tintColor={colors.text.inverse} />
+              </HorizontalFloatingToolbar.FloatingActionButton>
             </HorizontalFloatingToolbar>
           </Host>
         </View>
       </View>
+
+      {panelSheetVisible && (
+        <Host matchContents>
+          <ModalBottomSheet onDismissRequest={() => setPanelSheetVisible(false)}>
+            <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
+              <ListItem
+                headline="Link Inverter"
+                modifiers={[clickable(() => { setPanelSheetVisible(false); handleLinkInverter(); })]}
+              >
+                <ListItem.Leading>
+                  <Icon source={require('@/assets/symbols/link.xml')} tintColor={colors.primary} />
+                </ListItem.Leading>
+              </ListItem>
+              <ListItem
+                headline="Rotate"
+                modifiers={[clickable(() => { setPanelSheetVisible(false); handleRotatePanel(); })]}
+              >
+                <ListItem.Leading>
+                  <Icon source={require('@/assets/symbols/rotate.xml')} tintColor={colors.primary} />
+                </ListItem.Leading>
+              </ListItem>
+              <ListItem
+                headline="Delete"
+                modifiers={[clickable(() => { setPanelSheetVisible(false); handleDeletePanel(); })]}
+              >
+                <ListItem.Leading>
+                  <Icon source={require('@/assets/symbols/delete.xml')} tintColor={colors.system.red} />
+                </ListItem.Leading>
+              </ListItem>
+            </Column>
+          </ModalBottomSheet>
+        </Host>
+      )}
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  outerContainer: {
+    flex: 1,
+  },
+  canvasContainer: {
     flex: 1,
   },
   compassContainer: {
