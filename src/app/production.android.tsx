@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, useColorScheme, Pressable } from "react-native";
+import { View, Text, StyleSheet, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { ProductionCanvas } from "@/components/ProductionCanvas";
@@ -6,7 +6,7 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
 import { useColors } from "@/utils/theme";
 import { useProductionMonitor } from "@/hooks/useProductionMonitor";
-import { Host, Button, ContextMenu } from "@expo/ui/jetpack-compose";
+import { Host, Button, ContextMenu, IconButton, Icon, Row } from "@expo/ui/jetpack-compose";
 
 const ANDROID_APPBAR_HEIGHT = 56;
 
@@ -46,22 +46,25 @@ export default function ProductionScreen() {
           headerBackVisible: false,
           headerTransparent: true,
           headerRight: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Pressable onPress={handleSimulate} style={styles.headerButton} accessibilityLabel="Simulate">
-                <Text style={[styles.headerButtonText, { color: colors.text.primary }]}>Simulate</Text>
-              </Pressable>
-              <Host matchContents>
+            <Host matchContents>
+              <Row>
+                <IconButton onPress={handleSimulate}>
+                  <Icon source={require('@/assets/symbols/wb_sunny.xml')} tintColor={colors.text.primary} />
+                </IconButton>
                 <ContextMenu>
                   <ContextMenu.Trigger>
-                    <Button leadingIcon="filled.MoreVert" variant="borderless" />
+                    <Button
+                      leadingIcon="filled.MoreVert"
+                      elementColors={{ containerColor: 'transparent', contentColor: colors.text.primary }}
+                    />
                   </ContextMenu.Trigger>
                   <ContextMenu.Items>
                     <Button leadingIcon="filled.Edit" onPress={handleEditConfiguration}>Edit Configuration</Button>
-                    <Button leadingIcon="filled.Delete" onPress={handleDeleteConfiguration}>Delete Configuration</Button>
+                    <Button leadingIcon="filled.Delete" onPress={handleDeleteConfiguration} elementColors={{ contentColor: colors.system.red }}>Delete Configuration</Button>
                   </ContextMenu.Items>
                 </ContextMenu>
-              </Host>
-            </View>
+              </Row>
+            </Host>
           ),
         }}
       />
@@ -134,13 +137,5 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
-  },
-  headerButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  headerButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
