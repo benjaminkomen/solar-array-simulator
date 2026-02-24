@@ -38,7 +38,7 @@ export default function SimulationScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Simulation" }} />
+      <Stack.Screen options={{ title: "Simulation", headerTitleAlign: 'center' }} />
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]}>
         <View style={styles.canvasContainer}>
           <Suspense
@@ -91,7 +91,7 @@ export default function SimulationScreen() {
             <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>
               {formatTime(sunriseHour)}
             </Text>
-            <Host style={styles.sliderContainer}>
+            <Host matchContents style={styles.sliderContainer}>
               <Slider
                 value={currentHour}
                 min={sunriseHour}
@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
   outputLabel: { fontSize: 14, fontWeight: "600", textTransform: "uppercase", letterSpacing: 0.3 },
   outputValue: { fontSize: 32, fontWeight: "700", fontVariant: ["tabular-nums"] },
   currentTime: { fontSize: 40, fontWeight: "700", fontVariant: ["tabular-nums"], textAlign: "center", marginBottom: 4 },
-  sliderRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8, height: 44 },
-  sliderContainer: { flex: 1, height: 44 },
+  sliderRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8, height: 56 },
+  sliderContainer: { flex: 1, height: 56 },
   timeLabel: { fontSize: 11, fontVariant: ["tabular-nums"], width: 60, textAlign: "center" },
   seasonRow: { height: 48 },
 });

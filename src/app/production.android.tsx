@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, StyleSheet, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
@@ -6,7 +7,8 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
 import { useColors } from "@/utils/theme";
 import { useProductionMonitor } from "@/hooks/useProductionMonitor";
-import { Host, Button, ContextMenu, IconButton, Icon, Row } from "@expo/ui/jetpack-compose";
+import { Host, IconButton, Icon, Row, ModalBottomSheet, ListItem, Column } from "@expo/ui/jetpack-compose";
+import { fillMaxWidth, paddingAll, clickable } from "@expo/ui/jetpack-compose/modifiers";
 
 const ANDROID_APPBAR_HEIGHT = 56;
 
@@ -15,6 +17,7 @@ export default function ProductionScreen() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const {
     panels,
@@ -51,18 +54,9 @@ export default function ProductionScreen() {
                 <IconButton onPress={handleSimulate}>
                   <Icon source={require('@/assets/symbols/wb_sunny.xml')} tintColor={colors.text.primary} />
                 </IconButton>
-                <ContextMenu>
-                  <ContextMenu.Trigger>
-                    <Button
-                      leadingIcon="filled.MoreVert"
-                      elementColors={{ containerColor: 'transparent', contentColor: colors.text.primary }}
-                    />
-                  </ContextMenu.Trigger>
-                  <ContextMenu.Items>
-                    <Button leadingIcon="filled.Edit" onPress={handleEditConfiguration}>Edit Configuration</Button>
-                    <Button leadingIcon="filled.Delete" onPress={handleDeleteConfiguration} elementColors={{ contentColor: colors.system.red }}>Delete Configuration</Button>
-                  </ContextMenu.Items>
-                </ContextMenu>
+                <IconButton onPress={() => setMenuVisible(true)}>
+                  <Icon source={require('@/assets/symbols/more_vert.xml')} tintColor={colors.text.primary} />
+                </IconButton>
               </Row>
             </Host>
           ),
@@ -108,6 +102,30 @@ export default function ProductionScreen() {
           />
         </View>
       </View>
+      {menuVisible && (
+        <Host matchContents>
+          <ModalBottomSheet onDismissRequest={() => setMenuVisible(false)}>
+            <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
+              <ListItem
+                headline="Edit Configuration"
+                modifiers={[clickable(() => { setMenuVisible(false); handleEditConfiguration(); })]}
+              >
+                <ListItem.Leading>
+                  <Icon source={require('@/assets/symbols/edit.xml')} tintColor={colors.primary} />
+                </ListItem.Leading>
+              </ListItem>
+              <ListItem
+                headline="Delete Configuration"
+                modifiers={[clickable(() => { setMenuVisible(false); handleDeleteConfiguration(); })]}
+              >
+                <ListItem.Leading>
+                  <Icon source={require('@/assets/symbols/delete.xml')} tintColor={colors.system.red} />
+                </ListItem.Leading>
+              </ListItem>
+            </Column>
+          </ModalBottomSheet>
+        </Host>
+      )}
     </>
   );
 }

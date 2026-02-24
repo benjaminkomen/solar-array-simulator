@@ -126,7 +126,7 @@ export default function Custom() {
         <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
           <Host matchContents>
             <HorizontalFloatingToolbar variant="standard">
-              {isWizardMode && panels.length > 0 && (
+              {isWizardMode && (
                 <TextButton onPress={handleFinish}>Finish</TextButton>
               )}
               <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAddPanel}>
