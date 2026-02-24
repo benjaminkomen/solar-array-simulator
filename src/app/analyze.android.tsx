@@ -13,14 +13,13 @@ import {
   Text as UIText, Column,
   HorizontalFloatingToolbar, TextButton,
 } from "@expo/ui/jetpack-compose";
-import { fillMaxWidth, paddingAll, width as widthModifier } from "@expo/ui/jetpack-compose/modifiers";
+import { fillMaxWidth, paddingAll, padding, width as widthModifier } from "@expo/ui/jetpack-compose/modifiers";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { AnalysisPreview } from "@/components/AnalysisPreview";
 import { WizardProgress } from "@/components/WizardProgress";
 import { Button } from "@/components/Button";
 import { useColors } from "@/utils/theme";
 import { useAnalyzeFlow, MODELS } from "@/hooks/useAnalyzeFlow";
-import {padding} from "@expo/ui/swift-ui/modifiers";
 
 export default function Analyze() {
   const colors = useColors();
@@ -97,7 +96,7 @@ export default function Analyze() {
               <HorizontalFloatingToolbar variant="standard">
                 {isWizardMode && <TextButton onPress={handleSkip}>Skip</TextButton>}
                 <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAnalyze}>
-                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }} modifiers={[padding({ horizontal: 4})]}>Analyze</UIText>
+                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }} modifiers={[padding(4, 0, 4, 0)]}>Analyze</UIText>
                 </HorizontalFloatingToolbar.FloatingActionButton>
               </HorizontalFloatingToolbar>
             </Host>
