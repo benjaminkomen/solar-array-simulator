@@ -20,6 +20,7 @@ import { fillMaxWidth, paddingAll, clickable } from "@expo/ui/jetpack-compose/mo
 export default function Custom() {
   const colors = useColors();
   const [panelSheetVisible, setPanelSheetVisible] = useState(false);
+  const [toolbarHeight, setToolbarHeight] = useState(0);
   const {
     isWizardMode,
     config,
@@ -94,7 +95,7 @@ export default function Custom() {
       />
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={styles.outerContainer}>
-        <View style={[styles.canvasContainer, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
+        <View style={[styles.canvasContainer, { backgroundColor: colors.background.secondary, paddingBottom: toolbarHeight }]} onLayout={handleLayout} testID="canvas-container">
           {compassVisible && (
             <View style={styles.compassContainer}>
               <Compass
@@ -123,7 +124,11 @@ export default function Custom() {
           />
         </View>
 
-        <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
+        <View
+          style={styles.floatingToolbarContainer}
+          pointerEvents="box-none"
+          onLayout={(e) => setToolbarHeight(e.nativeEvent.layout.height + 24)}
+        >
           <Host matchContents>
             <HorizontalFloatingToolbar variant="standard">
               {isWizardMode && (
