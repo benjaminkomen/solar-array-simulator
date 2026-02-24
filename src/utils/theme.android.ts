@@ -1,6 +1,6 @@
 import { useColorScheme } from "react-native";
 import { Color } from "expo-router";
-import { lightColors, darkColors, type Colors } from "./theme";
+import { lightColors, darkColors, type Colors } from "./theme.base";
 
 // UI colors backed by Material You dynamic tokens (adapt to the user's wallpaper).
 // panel.* colors stay as plain hex strings — they are consumed by Skia canvas worklets
@@ -30,7 +30,7 @@ const androidUiColors = {
   system: { red: Color.android.dynamic.error },
 };
 
-export { lightColors, darkColors, type Colors } from "./theme";
+export { lightColors, darkColors, type Colors } from "./theme.base";
 
 export function useColors(): Colors {
   // useColorScheme drives two things:
