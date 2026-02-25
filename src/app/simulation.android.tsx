@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 import { Stack } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Host, Picker, Slider } from "@expo/ui/jetpack-compose";
+import { fillMaxWidth } from "@expo/ui/jetpack-compose/modifiers";
 import { useColors } from "@/utils/theme";
 import { useSimulationControls, SEASONS } from "@/hooks/useSimulationControls";
 
@@ -36,6 +37,16 @@ export default function SimulationScreen() {
     formatWattage,
   } = useSimulationControls();
 
+  // Local state for immediate slider feedback. The hook's setCurrentHour is
+  // debounced so the expensive wattage useMemo only runs after dragging settles.
+  const [displayHour, setDisplayHour] = useState(currentHour);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const handleHourChange = useCallback((val: number) => {
+    setDisplayHour(val);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setCurrentHour(val), 150);
+  }, [setCurrentHour]);
+
   return (
     <>
       <Stack.Screen options={{ title: "Simulation", headerTitleAlign: 'center' }} />
@@ -55,7 +66,7 @@ export default function SimulationScreen() {
               latitude={latitude}
               longitude={longitude}
               season={season}
-              currentHour={currentHour}
+              currentHour={displayHour}
               panels={panels3D}
               tiltAngle={config.panelTiltAngle}
             />
@@ -84,19 +95,20 @@ export default function SimulationScreen() {
           </View>
 
           <Text style={[styles.currentTime, { color: colors.text.primary }]}>
-            {formatTime(currentHour)}
+            {formatTime(displayHour)}
           </Text>
 
           <View style={styles.sliderRow}>
             <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>
               {formatTime(sunriseHour)}
             </Text>
-            <Host matchContents style={styles.sliderContainer}>
+            <Host style={styles.sliderContainer} colorScheme={colorScheme ?? undefined}>
               <Slider
-                value={currentHour}
+                value={displayHour}
                 min={sunriseHour}
                 max={sunsetHour}
-                onValueChange={setCurrentHour}
+                onValueChange={handleHourChange}
+                modifiers={[fillMaxWidth()]}
               />
             </Host>
             <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>
@@ -104,7 +116,7 @@ export default function SimulationScreen() {
             </Text>
           </View>
 
-          <Host style={styles.seasonRow}>
+          <Host style={styles.seasonRow} colorScheme={colorScheme ?? undefined}>
             <Picker
               options={SEASONS.map(s => s.label)}
               selectedIndex={SEASONS.findIndex(s => s.value === season)}
