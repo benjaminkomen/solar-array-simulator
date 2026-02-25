@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,8 +18,29 @@ import { tag, pickerStyle } from "@expo/ui/swift-ui/modifiers";
 import { useColors } from "@/utils/theme";
 import { useSimulationControls, SEASONS } from "@/hooks/useSimulationControls";
 import type { Season } from "@/utils/solarCalculations";
+import { getSolarPosition, getSeasonDate, makeDateAtHour } from "@/utils/solarCalculations";
+import { sceneState } from "@/utils/sceneState";
 
 const SimulationView = React.lazy(() => import("@/components/simulation/SimulationView"));
+
+function syncSceneState(
+  latitude: number,
+  longitude: number,
+  season: string,
+  sunriseHour: number,
+  sunsetHour: number,
+) {
+  sceneState.latitude = latitude;
+  sceneState.longitude = longitude;
+  sceneState.season = season as typeof sceneState.season;
+  sceneState.sunriseHour = sunriseHour;
+  sceneState.sunsetHour = sunsetHour;
+  const noonHour = (sunriseHour + sunsetHour) / 2;
+  const date = makeDateAtHour(getSeasonDate(season as typeof sceneState.season), noonHour);
+  const pos = getSolarPosition(latitude, longitude, date);
+  sceneState.peakElevation = pos.elevation;
+  sceneState._generation++;
+}
 
 export default function SimulationScreen() {
   const insets = useSafeAreaInsets();
@@ -43,6 +64,16 @@ export default function SimulationScreen() {
     formatWattage,
   } = useSimulationControls();
 
+  // Sync non-hour sceneState values (these change rarely — season/location switch)
+  useEffect(() => {
+    syncSceneState(latitude, longitude, season, sunriseHour, sunsetHour);
+  }, [latitude, longitude, season, sunriseHour, sunsetHour]);
+
+  const handleHourChange = useCallback((val: number) => {
+    sceneState.currentHour = val;
+    setCurrentHour(val);
+  }, [setCurrentHour]);
+
   return (
     <>
       <Stack.Screen options={{ title: "Simulation" }} />
@@ -60,10 +91,6 @@ export default function SimulationScreen() {
             }
           >
             <SimulationView
-              latitude={latitude}
-              longitude={longitude}
-              season={season}
-              currentHour={currentHour}
               panels={panels3D}
               tiltAngle={config.panelTiltAngle}
             />
@@ -104,7 +131,7 @@ export default function SimulationScreen() {
                 value={currentHour}
                 min={sunriseHour}
                 max={sunsetHour}
-                onValueChange={setCurrentHour}
+                onValueChange={handleHourChange}
               />
             </Host>
             <Text style={[styles.timeLabel, { color: colors.text.secondary }]}>

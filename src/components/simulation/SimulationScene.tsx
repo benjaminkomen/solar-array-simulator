@@ -1,17 +1,16 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
-import { useThree } from "@react-three/fiber";
+import { useThree, useFrame } from "@react-three/fiber";
 import { SunLight } from "./SunLight";
 import { SolarPanelMesh } from "./SolarPanelMesh";
 import { SkyDome } from "./SkyDome";
 import {
   getSolarPosition,
   calculateIrradiance,
-  getSunriseAndSunset,
-  type Season,
   getSeasonDate,
   makeDateAtHour,
 } from "@/utils/solarCalculations";
+import { sceneState } from "@/utils/sceneState";
 
 export interface Panel3DInfo {
   id: string;
@@ -22,10 +21,6 @@ export interface Panel3DInfo {
 }
 
 interface SimulationSceneProps {
-  latitude: number;
-  longitude: number;
-  season: Season;
-  currentHour: number;
   panels: Panel3DInfo[];
   tiltAngle: number;
 }
@@ -118,51 +113,91 @@ function applyCameraAndScene(
   scene.fog = new THREE.FogExp2(0x9ab8a8, 0.012);
 }
 
+/**
+ * Compute solar values from sceneState for a given hour.
+ */
+function computeSolarValues(hour: number) {
+  const date = makeDateAtHour(getSeasonDate(sceneState.season), hour);
+  const pos = getSolarPosition(sceneState.latitude, sceneState.longitude, date);
+  const irradiance = calculateIrradiance(pos.elevation);
+  return { elevation: pos.elevation, intensity: irradiance / 300 };
+}
+
+/**
+ * Seed sceneState._computed with initial values.
+ * Extracted as a module-level function to satisfy React Compiler
+ * (mutations of module-level variables must not happen during render).
+ */
+function seedComputedSceneState(hour: number) {
+  const solar = computeSolarValues(hour);
+  const sunPos = getVisualSunPosition(
+    sceneState.sunriseHour,
+    sceneState.sunsetHour,
+    hour,
+    sceneState.peakElevation,
+  );
+  sceneState._computed.sunPosition = sunPos;
+  sceneState._computed.intensity = solar.intensity;
+  sceneState._computed.elevation = solar.elevation;
+}
+
 export function SimulationScene({
-  latitude,
-  longitude,
-  season,
-  currentHour,
   panels,
   tiltAngle,
 }: SimulationSceneProps) {
   const { camera, scene } = useThree();
+  const ambientLightRef = useRef<THREE.AmbientLight>(null!);
+  const lastComputedHourRef = useRef(-1);
+  const lastGenerationRef = useRef(-1);
 
-  const { sunriseHour, sunsetHour } = useMemo(() => {
-    const date = getSeasonDate(season);
-    return getSunriseAndSunset(latitude, longitude, date);
-  }, [latitude, longitude, season]);
+  // Compute initial ambient intensity for first render (read-only, no mutations)
+  const initialAmbientIntensity = useMemo(() => {
+    const solar = computeSolarValues(sceneState.currentHour);
+    return 0.1 + Math.max(0, solar.elevation / 90) * 0.15;
+  }, []);
 
-  // Real solar data for sky color and light intensity
-  const solarData = useMemo(() => {
-    const date = makeDateAtHour(getSeasonDate(season), currentHour);
-    const pos = getSolarPosition(latitude, longitude, date);
-    const irradiance = calculateIrradiance(pos.elevation);
-    return {
-      elevation: pos.elevation,
-      intensity: irradiance / 300,
-    };
-  }, [latitude, longitude, season, currentHour]);
+  // Seed sceneState._computed on mount so child components have valid data.
+  // Must be in an effect (not useMemo) to satisfy React Compiler.
+  useEffect(() => {
+    seedComputedSceneState(sceneState.currentHour);
+  }, []);
 
-  // Peak solar elevation determines the arc height (higher in summer)
-  const peakElevation = useMemo(() => {
-    const noonHour = (sunriseHour + sunsetHour) / 2;
-    const date = makeDateAtHour(getSeasonDate(season), noonHour);
-    const pos = getSolarPosition(latitude, longitude, date);
-    return pos.elevation;
-  }, [latitude, longitude, season, sunriseHour, sunsetHour]);
+  // Imperatively update sun position, lighting, and sky every frame when hour changes.
+  // This avoids React re-renders — the slider writes to sceneState directly.
+  useFrame(() => {
+    const hour = sceneState.currentHour;
+    const gen = sceneState._generation;
 
-  // Visual sun position: always in view, sweeping left to right
-  const sunPosition = useMemo(
-    () =>
-      getVisualSunPosition(
-        sunriseHour,
-        sunsetHour,
-        currentHour,
-        peakElevation,
-      ),
-    [sunriseHour, sunsetHour, currentHour, peakElevation],
-  );
+    // Skip if neither hour nor season/location has changed
+    if (
+      Math.abs(hour - lastComputedHourRef.current) < 0.005 &&
+      gen === lastGenerationRef.current
+    ) return;
+    lastComputedHourRef.current = hour;
+    lastGenerationRef.current = gen;
+
+    // Compute solar data
+    const solar = computeSolarValues(hour);
+
+    // Compute visual sun position
+    const sunPos = getVisualSunPosition(
+      sceneState.sunriseHour,
+      sceneState.sunsetHour,
+      hour,
+      sceneState.peakElevation,
+    );
+
+    // Write to shared computed state (read by SunLight and SkyDome in their useFrame)
+    sceneState._computed.sunPosition = sunPos;
+    sceneState._computed.intensity = solar.intensity;
+    sceneState._computed.elevation = solar.elevation;
+
+    // Update ambient light imperatively
+    if (ambientLightRef.current) {
+      ambientLightRef.current.intensity =
+        0.1 + Math.max(0, solar.elevation / 90) * 0.15;
+    }
+  });
 
   const panelLayout = useMemo(() => computePanelLayout(panels), [panels]);
 
@@ -193,19 +228,11 @@ export function SimulationScene({
     applyCameraAndScene(camera, scene, panels.length > 0);
   }, [camera, scene, panels.length]);
 
-  // Low ambient so directional light creates visible contrast on ground
-  const ambientIntensity =
-    0.1 + Math.max(0, solarData.elevation / 90) * 0.15;
-
   return (
     <>
-      <SkyDome elevation={solarData.elevation} />
-      <ambientLight intensity={ambientIntensity} />
-      <SunLight
-        position={sunPosition}
-        intensity={solarData.intensity}
-        elevation={solarData.elevation}
-      />
+      <SkyDome />
+      <ambientLight ref={ambientLightRef} intensity={initialAmbientIntensity} />
+      <SunLight />
 
       {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.0, 0]}>

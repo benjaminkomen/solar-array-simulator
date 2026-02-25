@@ -1,15 +1,7 @@
 import { useRef } from "react";
 import * as THREE from "three/webgpu";
 import { useFrame } from "@react-three/fiber";
-
-interface SunLightProps {
-  /** Sun position in world coordinates */
-  position: { x: number; y: number; z: number };
-  /** Light intensity based on irradiance */
-  intensity: number;
-  /** Real solar elevation in degrees (for color temperature) */
-  elevation: number;
-}
+import { sceneState } from "@/utils/sceneState";
 
 const WARM_LIGHT = new THREE.Color(0xffcc88);
 const WHITE_LIGHT = new THREE.Color(0xfff4e6);
@@ -48,17 +40,18 @@ function updateSunMesh(
   mat.color.setRGB(brightness, brightness * 0.88, brightness * 0.55);
 }
 
-export function SunLight({ position, intensity, elevation }: SunLightProps) {
+export function SunLight() {
   const lightRef = useRef<THREE.DirectionalLight>(null!);
   const meshRef = useRef<THREE.Mesh>(null!);
 
   useFrame(() => {
+    const { sunPosition, intensity, elevation } = sceneState._computed;
     if (lightRef.current) {
       updateLight(
         lightRef.current,
-        position.x,
-        position.y,
-        position.z,
+        sunPosition.x,
+        sunPosition.y,
+        sunPosition.z,
         intensity,
         elevation,
       );
@@ -66,25 +59,27 @@ export function SunLight({ position, intensity, elevation }: SunLightProps) {
     if (meshRef.current) {
       updateSunMesh(
         meshRef.current,
-        position.x,
-        position.y,
-        position.z,
+        sunPosition.x,
+        sunPosition.y,
+        sunPosition.z,
         elevation,
       );
     }
   });
 
+  const { sunPosition: pos, intensity } = sceneState._computed;
+
   return (
     <>
       <directionalLight
         ref={lightRef}
-        position={[position.x, position.y, position.z]}
+        position={[pos.x, pos.y, pos.z]}
         intensity={intensity}
         color={WHITE_LIGHT}
       />
       {/* Sun sphere — toneMapped: false pushes color above bloom threshold */}
-      <mesh ref={meshRef} position={[position.x, position.y, position.z]}>
-        <sphereGeometry args={[2, 64, 64]} />
+      <mesh ref={meshRef} position={[pos.x, pos.y, pos.z]}>
+        <sphereGeometry args={[2, 16, 16]} />
         <meshBasicMaterial
           color={0xffdd88}
           toneMapped={false}

@@ -2,11 +2,7 @@ import { useRef, useMemo } from "react";
 import * as THREE from "three/webgpu";
 import { useFrame } from "@react-three/fiber";
 import { createCloudTexture } from "@/utils/cloudTexture";
-
-interface SkyDomeProps {
-  /** Sun elevation in degrees — drives sky color and cloud opacity */
-  elevation: number;
-}
+import { sceneState } from "@/utils/sceneState";
 
 const SKY_RADIUS = 100;
 const CLOUD_RADIUS = 95;
@@ -94,9 +90,10 @@ function updateCloudMaterial(
   }
 }
 
-export function SkyDome({ elevation }: SkyDomeProps) {
+export function SkyDome() {
   const skyMeshRef = useRef<THREE.Mesh>(null!);
   const cloudMaterialRef = useRef<THREE.MeshBasicMaterial>(null!);
+  const lastElevationRef = useRef(-999);
 
   // Pre-build sky geometry with vertex colors
   const { skyGeometry, positionsAttr, colorAttr } = useMemo(() => {
@@ -153,8 +150,12 @@ export function SkyDome({ elevation }: SkyDomeProps) {
   };
 
   useFrame((_, delta) => {
-    if (skyMeshRef.current) {
+    const elevation = sceneState._computed.elevation;
+
+    // Only recompute vertex colors when elevation changes meaningfully (~0.5°)
+    if (skyMeshRef.current && Math.abs(elevation - lastElevationRef.current) > 0.5) {
       updateSkyColors(skyGeometry, positionsAttr, colorAttr, elevation);
+      lastElevationRef.current = elevation;
     }
     if (cloudMaterialRef.current) {
       updateCloudMaterial(cloudMaterialRef.current, elevation, delta);
