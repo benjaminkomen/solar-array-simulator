@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import { Platform, useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
@@ -7,6 +7,7 @@ import { useColors } from "@/utils/theme";
 
 export default function RootLayout() {
   const colors = useColors();
+  const colorScheme = useColorScheme();
 
   return (
     <GestureHandlerRootView style={{flex: 1}}>
@@ -16,6 +17,7 @@ export default function RootLayout() {
             screenOptions={{
               headerTransparent: true,
               headerTintColor: colors.text.primary,
+              statusBarStyle: colorScheme === 'dark' ? 'light' : 'dark',
             }}
           >
             <Stack.Screen name="index" options={{
