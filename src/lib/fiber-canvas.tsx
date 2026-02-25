@@ -122,12 +122,13 @@ export const FiberCanvas = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-render the R3F tree whenever children change
+  // Re-render the R3F tree whenever children change.
+  // The dependency array prevents unnecessary R3F reconciliation on every parent re-render.
   useEffect(() => {
     if (root.current) {
       root.current.render(children);
     }
-  });
+  }, [children]);
 
   return <Canvas ref={canvasRef} style={style} />;
 };

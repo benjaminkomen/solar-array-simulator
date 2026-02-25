@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useRef, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,8 +12,28 @@ import { Host, Picker, Slider } from "@expo/ui/jetpack-compose";
 import { fillMaxWidth } from "@expo/ui/jetpack-compose/modifiers";
 import { useColors } from "@/utils/theme";
 import { useSimulationControls, SEASONS } from "@/hooks/useSimulationControls";
+import { sceneState } from "@/utils/sceneState";
+import { getSolarPosition, getSeasonDate, makeDateAtHour } from "@/utils/solarCalculations";
 
 const SimulationView = React.lazy(() => import("@/components/simulation/SimulationView"));
+
+function syncSceneState(
+  latitude: number,
+  longitude: number,
+  season: string,
+  sunriseHour: number,
+  sunsetHour: number,
+) {
+  sceneState.latitude = latitude;
+  sceneState.longitude = longitude;
+  sceneState.season = season as typeof sceneState.season;
+  sceneState.sunriseHour = sunriseHour;
+  sceneState.sunsetHour = sunsetHour;
+  const noonHour = (sunriseHour + sunsetHour) / 2;
+  const date = makeDateAtHour(getSeasonDate(season as typeof sceneState.season), noonHour);
+  const pos = getSolarPosition(latitude, longitude, date);
+  sceneState.peakElevation = pos.elevation;
+}
 
 export default function SimulationScreen() {
   const insets = useSafeAreaInsets();
@@ -42,10 +62,19 @@ export default function SimulationScreen() {
   const [displayHour, setDisplayHour] = useState(currentHour);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const handleHourChange = useCallback((val: number) => {
+    // Immediately update the 3D scene via sceneState (no React re-render)
+    sceneState.currentHour = val;
+    // Update display text (re-renders this component only, not 3D scene)
     setDisplayHour(val);
+    // Debounce the expensive wattage calculation
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => setCurrentHour(val), 150);
   }, [setCurrentHour]);
+
+  // Sync non-hour sceneState values (these change rarely — season/location switch)
+  useEffect(() => {
+    syncSceneState(latitude, longitude, season, sunriseHour, sunsetHour);
+  }, [latitude, longitude, season, sunriseHour, sunsetHour]);
 
   return (
     <>
@@ -63,10 +92,6 @@ export default function SimulationScreen() {
             }
           >
             <SimulationView
-              latitude={latitude}
-              longitude={longitude}
-              season={season}
-              currentHour={displayHour}
               panels={panels3D}
               tiltAngle={config.panelTiltAngle}
             />
