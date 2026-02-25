@@ -59,4 +59,4 @@ settings.local.json
 *.tar.gz
 
 # Google Service Account Key
-*.json
+service-account-key.json
