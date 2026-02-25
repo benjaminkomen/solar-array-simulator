@@ -148,6 +148,7 @@ export function SimulationScene({
   const { camera, scene } = useThree();
   const ambientLightRef = useRef<THREE.AmbientLight>(null!);
   const lastComputedHourRef = useRef(-1);
+  const lastGenerationRef = useRef(-1);
 
   // Compute initial ambient intensity for first render (read-only, no mutations)
   const initialAmbientIntensity = useMemo(() => {
@@ -165,10 +166,15 @@ export function SimulationScene({
   // This avoids React re-renders — the slider writes to sceneState directly.
   useFrame(() => {
     const hour = sceneState.currentHour;
+    const gen = sceneState._generation;
 
-    // Skip if hour hasn't changed enough (~18 seconds of solar time)
-    if (Math.abs(hour - lastComputedHourRef.current) < 0.005) return;
+    // Skip if neither hour nor season/location has changed
+    if (
+      Math.abs(hour - lastComputedHourRef.current) < 0.005 &&
+      gen === lastGenerationRef.current
+    ) return;
     lastComputedHourRef.current = hour;
+    lastGenerationRef.current = gen;
 
     // Compute solar data
     const solar = computeSolarValues(hour);

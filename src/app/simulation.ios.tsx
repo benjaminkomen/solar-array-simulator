@@ -39,6 +39,7 @@ function syncSceneState(
   const date = makeDateAtHour(getSeasonDate(season as typeof sceneState.season), noonHour);
   const pos = getSolarPosition(latitude, longitude, date);
   sceneState.peakElevation = pos.elevation;
+  sceneState._generation++;
 }
 
 export default function SimulationScreen() {

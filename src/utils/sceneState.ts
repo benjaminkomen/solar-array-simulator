@@ -24,6 +24,8 @@ export const sceneState = {
   sunsetHour: 20,
   /** Pre-computed peak elevation for sun arc (updated on season/location change) */
   peakElevation: 60,
+  /** Bumped by syncSceneState so useFrame knows to recompute after season/location change */
+  _generation: 0,
 
   /** Computed by SimulationScene's useFrame, read by SunLight/SkyDome */
   _computed: {
