@@ -4,6 +4,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  useColorScheme,
   useWindowDimensions,
 } from "react-native";
 import { Stack } from "expo-router";
@@ -23,6 +24,7 @@ import { useAnalyzeFlow, MODELS } from "@/hooks/useAnalyzeFlow";
 
 export default function Analyze() {
   const colors = useColors();
+  const colorScheme = useColorScheme();
   const {width: screenWidth} = useWindowDimensions();
   const cardWidth = screenWidth - 32;
 
@@ -65,7 +67,7 @@ export default function Analyze() {
             />
           </View>
 
-          <Host matchContents style={styles.pickerCardHost}>
+          <Host matchContents style={styles.pickerCardHost} colorScheme={colorScheme ?? undefined}>
             <Card variant="outlined" modifiers={[widthModifier(cardWidth)]}>
               <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
                 <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
@@ -92,7 +94,7 @@ export default function Analyze() {
           </Host>
 
           <View style={styles.floatingToolbarContainer}>
-            <Host matchContents>
+            <Host matchContents colorScheme={colorScheme ?? undefined}>
               <HorizontalFloatingToolbar variant="standard">
                 {isWizardMode && <TextButton onPress={handleSkip}>Skip</TextButton>}
                 <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAnalyze}>
@@ -166,7 +168,7 @@ export default function Analyze() {
 
           {isWizardMode && (
             <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
-              <Host matchContents>
+              <Host matchContents colorScheme={colorScheme ?? undefined}>
                 <HorizontalFloatingToolbar variant="standard">
                   <TextButton onPress={handleSkip}>Skip</TextButton>
                 </HorizontalFloatingToolbar>

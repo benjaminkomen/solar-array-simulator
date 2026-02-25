@@ -1,3 +1,4 @@
+import { useColorScheme } from 'react-native';
 import {
   Host, Icon, IconButton, ModalBottomSheet, Slider, TextInput,
   Card, Text as UIText, Column, Row,
@@ -8,6 +9,7 @@ import { useInverterForm } from '@/hooks/useInverterForm';
 
 export default function InverterDetailsScreen() {
   const colors = useColors();
+  const colorScheme = useColorScheme();
   const {
     isAddMode,
     serial,
@@ -19,7 +21,7 @@ export default function InverterDetailsScreen() {
   } = useInverterForm();
 
   return (
-    <Host matchContents>
+    <Host matchContents colorScheme={colorScheme ?? undefined}>
       <ModalBottomSheet onDismissRequest={handleCancel}>
         <Column modifiers={[fillMaxWidth(), paddingAll(16)]} verticalArrangement={{ spacedBy: 16 }}>
 

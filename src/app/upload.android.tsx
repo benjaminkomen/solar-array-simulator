@@ -109,7 +109,7 @@ export default function Upload() {
 
         {isWizardMode && (
           <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
-            <Host matchContents>
+            <Host matchContents colorScheme={colorScheme ?? undefined}>
               <Button variant="elevated" onPress={handleSkip} modifiers={[paddingAll(8)]}>Skip</Button>
             </Host>
           </View>
