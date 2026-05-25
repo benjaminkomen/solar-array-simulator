@@ -85,7 +85,7 @@ export function PermissionModal({
               source={isDenied ? "sf:exclamationmark.triangle" : icon}
               style={{ width: 28, height: 28 }}
               contentFit="contain"
-              tintColor={isDenied ? colors.system.red : colors.primary}
+              tintColor={(isDenied ? colors.system.red : colors.primary) as string}
             />
           </View>
 

@@ -9,6 +9,10 @@ interface UseZoomResult {
   handleZoomOut: () => void;
 }
 
+function animateScaleTo(scale: SharedValue<number>, target: number) {
+  scale.value = withTiming(target, { duration: 200 });
+}
+
 export function useZoom(): UseZoomResult {
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX);
   const scale = useSharedValue(ZOOM_LEVELS[DEFAULT_ZOOM_INDEX]);
@@ -17,7 +21,7 @@ export function useZoom(): UseZoomResult {
     if (zoomIndex > 0) {
       const newIndex = zoomIndex - 1;
       setZoomIndex(newIndex);
-      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
+      animateScaleTo(scale, ZOOM_LEVELS[newIndex]);
     }
   }, [zoomIndex, scale]);
 
@@ -25,7 +29,7 @@ export function useZoom(): UseZoomResult {
     if (zoomIndex < ZOOM_LEVELS.length - 1) {
       const newIndex = zoomIndex + 1;
       setZoomIndex(newIndex);
-      scale.value = withTiming(ZOOM_LEVELS[newIndex], { duration: 200 });
+      animateScaleTo(scale, ZOOM_LEVELS[newIndex]);
     }
   }, [zoomIndex, scale]);
 

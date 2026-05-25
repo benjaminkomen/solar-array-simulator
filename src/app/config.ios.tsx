@@ -13,12 +13,14 @@ import {
   Spacer,
   Text,
   TextField,
+  useNativeState,
   VStack,
 } from '@expo/ui/swift-ui';
 import {
   buttonStyle,
   font,
   foregroundStyle,
+  keyboardType,
   opacity,
   pickerStyle,
   scrollDismissesKeyboard,
@@ -48,6 +50,9 @@ export default function ConfigScreen() {
     handleSelectLocation,
   } = useConfigForm();
 
+  const wattageState = useNativeState(config.defaultMaxWattage.toString());
+  const locationState = useNativeState(locationQuery || config.locationName || '');
+
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal"/>
@@ -67,11 +72,10 @@ export default function ConfigScreen() {
                 <LabeledContent label="Default Production">
                   <HStack>
                     <TextField
-                      keyboardType="numbers-and-punctuation"
-                      defaultValue={config.defaultMaxWattage.toString()}
-                      onChangeText={handleWattageChange}
+                      text={wattageState}
+                      onTextChange={handleWattageChange}
                       placeholder="430"
-                      modifiers={[submitLabel('done')]}
+                      modifiers={[keyboardType('numbers-and-punctuation'), submitLabel('done')]}
                     />
                     <Spacer/>
                     <Text testID='text-input-unit'>W</Text>
@@ -91,8 +95,8 @@ export default function ConfigScreen() {
               >
                 <LabeledContent label="City">
                   <TextField
-                    defaultValue={locationQuery || config.locationName || ''}
-                    onChangeText={handleLocationSearch}
+                    text={locationState}
+                    onTextChange={handleLocationSearch}
                     placeholder="e.g. Amsterdam, Netherlands"
                     modifiers={[submitLabel('search')]}
                   />

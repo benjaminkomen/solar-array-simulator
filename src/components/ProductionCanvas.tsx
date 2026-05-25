@@ -14,6 +14,20 @@ import { hitTestPanels, screenToWorld } from "@/utils/panelUtils";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useColors } from "@/utils/theme";
 
+function applyViewportPan(
+  viewportX: SharedValue<number>,
+  viewportY: SharedValue<number>,
+  startX: number,
+  startY: number,
+  translationX: number,
+  translationY: number,
+  scale: number,
+) {
+  "worklet";
+  viewportX.value = startX + translationX / scale;
+  viewportY.value = startY + translationY / scale;
+}
+
 interface ProductionCanvasProps {
   panels: PanelData[];
   wattages: Map<string, number>;
@@ -82,8 +96,15 @@ export function ProductionCanvas({
     })
     .onUpdate((e) => {
       "worklet";
-      viewportX.value = viewportStartX.value + e.translationX / scale.value;
-      viewportY.value = viewportStartY.value + e.translationY / scale.value;
+      applyViewportPan(
+        viewportX,
+        viewportY,
+        viewportStartX.value,
+        viewportStartY.value,
+        e.translationX,
+        e.translationY,
+        scale.value,
+      );
     })
     .onEnd(() => {
       "worklet";

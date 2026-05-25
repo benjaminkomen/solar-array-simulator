@@ -14,6 +14,20 @@ import { snapToNeighbors } from "@/utils/neighborSnap";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useColors } from "@/utils/theme";
 
+function applyViewportPan(
+  viewportX: SharedValue<number>,
+  viewportY: SharedValue<number>,
+  startX: number,
+  startY: number,
+  translationX: number,
+  translationY: number,
+  scale: number,
+) {
+  "worklet";
+  viewportX.value = startX + translationX / scale;
+  viewportY.value = startY + translationY / scale;
+}
+
 interface SolarPanelCanvasProps {
   panels: PanelData[];
   selectedId: string | null;
@@ -103,8 +117,15 @@ export function SolarPanelCanvas({
     .onUpdate((e) => {
       "worklet";
       if (isPanningViewport.value) {
-        viewportX.value = viewportStartX.value + e.translationX / scale.value;
-        viewportY.value = viewportStartY.value + e.translationY / scale.value;
+        applyViewportPan(
+          viewportX,
+          viewportY,
+          viewportStartX.value,
+          viewportStartY.value,
+          e.translationX,
+          e.translationY,
+          scale.value,
+        );
         return;
       }
 

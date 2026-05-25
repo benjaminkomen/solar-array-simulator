@@ -48,7 +48,7 @@ export default function Upload() {
             source="sf:photo.on.rectangle"
             style={styles.icon}
             contentFit="contain"
-            tintColor={colors.primary}
+            tintColor={colors.primary as string}
           />
         </Animated.View>
 
@@ -80,7 +80,7 @@ export default function Upload() {
                 source="sf:camera"
                 style={styles.buttonIcon}
                 contentFit="contain"
-                tintColor={colors.text.inverse}
+                tintColor={colors.text.inverse as string}
               />
               <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
                 Take Photo
@@ -108,7 +108,7 @@ export default function Upload() {
                 source="sf:photo.on.rectangle"
                 style={styles.buttonIcon}
                 contentFit="contain"
-                tintColor={colors.primary}
+                tintColor={colors.primary as string}
               />
               <Text style={[styles.buttonText, { color: colors.primary }]}>
                 Choose from Gallery
