@@ -1,28 +1,28 @@
 import {Fragment, useState} from 'react';
 import {StyleSheet, useColorScheme, View} from 'react-native';
 import {
-  Box,
-  Card,
   Column,
-  Divider,
-  HorizontalFloatingToolbar,
+  ElevatedCard,
+  HorizontalDivider,
   Host,
   Icon,
   LazyColumn,
   ListItem,
-  Picker,
+  SegmentedButton,
+  SingleChoiceSegmentedButtonRow,
   Slider,
-  Text as UIText, TextButton,
-  TextInput,
+  TextField,
+  Text as UIText,
+  useNativeState,
 } from '@expo/ui/jetpack-compose';
 import {
-  align,
-  clickable, fillMaxSize,
+  clickable,
   fillMaxWidth,
-  offset,
   paddingAll,
 } from '@expo/ui/jetpack-compose/modifiers';
 import {Stack} from "expo-router";
+import ChevronRight from '@expo/material-symbols/chevron_right.xml';
+import Add from '@expo/material-symbols/add.xml';
 import {WizardProgress} from "@/components/WizardProgress";
 import {useColors} from "@/utils/theme";
 import {ROOF_TYPES, useConfigForm} from "@/hooks/useConfigForm";
@@ -47,6 +47,9 @@ export default function ConfigScreen() {
     handleSelectLocation,
   } = useConfigForm();
 
+  const wattageState = useNativeState(config.defaultMaxWattage.toString());
+  const locationState = useNativeState(locationQuery);
+
   const handleSelectLocationAndReset = (result: Parameters<typeof handleSelectLocation>[0]) => {
     handleSelectLocation(result);
     setLocationSelectCount(c => c + 1);
@@ -63,148 +66,153 @@ export default function ConfigScreen() {
       {isWizardMode && <WizardProgress currentStep={1}/>}
       <View style={styles.container}>
         <Host style={styles.host} colorScheme={colorScheme ?? undefined}>
-          <Box modifiers={[fillMaxSize()]} floatingToolbarExitAlwaysScrollBehavior="bottom">
-            <LazyColumn
-              verticalArrangement={{spacedBy: 8}}
-              contentPadding={{start: 16, top: 16, end: 16, bottom: 80}}
-            >
-              {/* Panel Settings */}
-              <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary}>
-                Panel Settings
-              </UIText>
-              <Card variant="elevated" color={colors.background.primary}>
-                <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
-                  <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary}>
-                    Default Production
-                  </UIText>
-                  <TextInput
-                    defaultValue={config.defaultMaxWattage.toString()}
-                    onChangeText={handleWattageChange}
-                    keyboardType="numeric"
-                    modifiers={[fillMaxWidth()]}
-                  />
-                </Column>
-              </Card>
-              <UIText style={{fontSize: 13}} color={colors.text.secondary}>
-                Configure the default wattage each micro-inverter and solar panel will produce at maximum production.
-              </UIText>
-
-              {/* Location */}
-              <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary}>
-                Location
-              </UIText>
-              <Card variant="elevated" color={colors.background.primary}>
-                <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
-                  <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary}>
-                    City
-                  </UIText>
-                  {/* @ts-ignore - placeholder not in TextInput types but passed to native component */}
-                  <TextInput
-                    key={locationSelectCount}
-                    defaultValue={locationQuery}
-                    onChangeText={handleLocationSearch}
-                    placeholder="e.g. Amsterdam, Netherlands"
-                    modifiers={[fillMaxWidth()]}
-                  />
-                  {isSearching && (
-                    <UIText style={{typography: 'bodySmall'}} color={colors.text.secondary}>
-                      Searching...
-                    </UIText>
-                  )}
-                  {locationResults.map((result) => (
-                    <ListItem
-                      key={`${result.latitude}-${result.longitude}`}
-                      headline={result.displayName.split(', ').slice(0, 2).join(', ')}
-                      supportingText={result.displayName}
-                      modifiers={[clickable(() => handleSelectLocationAndReset(result))]}
-                    />
-                  ))}
-                </Column>
-              </Card>
-              <UIText style={{fontSize: 13}} color={colors.text.secondary}>
-                {config.locationName
-                  ? `Current: ${config.locationName} (${config.latitude?.toFixed(2)}\u00B0, ${config.longitude?.toFixed(2)}\u00B0)`
-                  : 'Search for your city to enable realistic solar simulation.'}
-              </UIText>
-
-              {/* Roof */}
-              <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary}>
-                Roof
-              </UIText>
-              <Card variant="elevated" color={colors.background.primary}>
-                <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
-                  <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary}>
-                    Roof Type
-                  </UIText>
-                  <Picker
-                    options={ROOF_TYPES.map(rt => rt.label)}
-                    selectedIndex={ROOF_TYPES.findIndex(rt => rt.value === config.roofType)}
-                    onOptionSelected={({nativeEvent: {index}}) => {
-                      const selected = ROOF_TYPES[index];
-                      if (selected) updateRoofType(selected.value);
-                    }}
-                    variant="segmented"
-                  />
-                  <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary}>
-                    {`Tilt Angle: ${Math.round(config.panelTiltAngle)}\u00B0`}
-                  </UIText>
-                  <Slider
-                    value={config.panelTiltAngle}
-                    min={0}
-                    max={90}
-                    steps={18}
-                    onValueChange={updatePanelTiltAngle}
-                  />
-                </Column>
-              </Card>
-              <UIText style={{fontSize: 13}} color={colors.text.secondary}>
-                Select your roof shape for the 3D simulation view.
-              </UIText>
-
-              {/* Micro-inverters */}
-              <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary}>
-                {`Micro-inverters (${config.inverters.length})`}
-              </UIText>
-              <Card variant="elevated" color={colors.background.primary}>
-                <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
-                  {config.inverters.map((inverter, idx) => (
-                    <Fragment key={inverter.id}>
-                      {idx > 0 && <Divider/>}
-                      <ListItem
-                        headline={inverter.serialNumber}
-                        supportingText={`${Math.round(inverter.efficiency)}% efficiency`}
-                        modifiers={[clickable(() => handleOpenEditSheet(inverter))]}
-                      >
-                        <ListItem.Trailing>
-                          <Icon
-                            source={require('@/assets/symbols/chevron_right.xml')}
-                            tintColor={colors.text.tertiary}
-                          />
-                        </ListItem.Trailing>
-                      </ListItem>
-                    </Fragment>
-                  ))}
-                </Column>
-              </Card>
-              <UIText style={{fontSize: 13}} color={colors.text.secondary}>
-                Tap to edit efficiency.
-              </UIText>
-            </LazyColumn>
-
-            <HorizontalFloatingToolbar variant="standard" modifiers={[align('bottomCenter'), offset(0, -16)]}>
-              {isWizardMode && (
-                <TextButton onPress={handleContinue}>Continue</TextButton>
-              )}
-              <HorizontalFloatingToolbar.FloatingActionButton onPress={handleOpenAddSheet}>
-                <Icon
-                  source={require('@/assets/symbols/add.xml')}
-                  tintColor={colors.text.inverse}
+          <LazyColumn
+            verticalArrangement={{spacedBy: 8}}
+            contentPadding={{start: 16, top: 16, end: 16, bottom: 80}}
+          >
+            {/* Panel Settings */}
+            <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary as string}>
+              Panel Settings
+            </UIText>
+            <ElevatedCard colors={{containerColor: colors.background.primary}}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
+                <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary as string}>
+                  Default Production
+                </UIText>
+                <TextField
+                  value={wattageState}
+                  onValueChange={handleWattageChange}
+                  keyboardOptions={{keyboardType: 'number'}}
+                  modifiers={[fillMaxWidth()]}
                 />
-              </HorizontalFloatingToolbar.FloatingActionButton>
-            </HorizontalFloatingToolbar>
-          </Box>
+              </Column>
+            </ElevatedCard>
+            <UIText style={{fontSize: 13}} color={colors.text.secondary as string}>
+              Configure the default wattage each micro-inverter and solar panel will produce at maximum production.
+            </UIText>
+
+            {/* Location */}
+            <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary as string}>
+              Location
+            </UIText>
+            <ElevatedCard colors={{containerColor: colors.background.primary}}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
+                <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary as string}>
+                  City
+                </UIText>
+                <TextField
+                  key={locationSelectCount}
+                  value={locationState}
+                  onValueChange={handleLocationSearch}
+                  modifiers={[fillMaxWidth()]}
+                >
+                  <TextField.Placeholder>
+                    <UIText>e.g. Amsterdam, Netherlands</UIText>
+                  </TextField.Placeholder>
+                </TextField>
+                {isSearching && (
+                  <UIText style={{typography: 'bodySmall'}} color={colors.text.secondary as string}>
+                    Searching...
+                  </UIText>
+                )}
+                {locationResults.map((result) => (
+                  <ListItem
+                    key={`${result.latitude}-${result.longitude}`}
+                    modifiers={[clickable(() => handleSelectLocationAndReset(result))]}
+                  >
+                    <ListItem.HeadlineContent>
+                      <UIText>{result.displayName.split(', ').slice(0, 2).join(', ')}</UIText>
+                    </ListItem.HeadlineContent>
+                    <ListItem.SupportingContent>
+                      <UIText>{result.displayName}</UIText>
+                    </ListItem.SupportingContent>
+                  </ListItem>
+                ))}
+              </Column>
+            </ElevatedCard>
+            <UIText style={{fontSize: 13}} color={colors.text.secondary as string}>
+              {config.locationName
+                ? `Current: ${config.locationName} (${config.latitude?.toFixed(2)}\u00B0, ${config.longitude?.toFixed(2)}\u00B0)`
+                : 'Search for your city to enable realistic solar simulation.'}
+            </UIText>
+
+            {/* Roof */}
+            <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary as string}>
+              Roof
+            </UIText>
+            <ElevatedCard colors={{containerColor: colors.background.primary}}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
+                <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary as string}>
+                  Roof Type
+                </UIText>
+                <SingleChoiceSegmentedButtonRow>
+                  {ROOF_TYPES.map((rt) => (
+                    <SegmentedButton
+                      key={rt.value}
+                      selected={rt.value === config.roofType}
+                      onClick={() => updateRoofType(rt.value)}
+                    >
+                      <SegmentedButton.Label>
+                        <UIText>{rt.label}</UIText>
+                      </SegmentedButton.Label>
+                    </SegmentedButton>
+                  ))}
+                </SingleChoiceSegmentedButtonRow>
+                <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary as string}>
+                  {`Tilt Angle: ${Math.round(config.panelTiltAngle)}\u00B0`}
+                </UIText>
+                <Slider
+                  value={config.panelTiltAngle}
+                  min={0}
+                  max={90}
+                  steps={18}
+                  onValueChange={updatePanelTiltAngle}
+                />
+              </Column>
+            </ElevatedCard>
+            <UIText style={{fontSize: 13}} color={colors.text.secondary as string}>
+              Select your roof shape for the 3D simulation view.
+            </UIText>
+
+            {/* Micro-inverters */}
+            <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary as string}>
+              {`Micro-inverters (${config.inverters.length})`}
+            </UIText>
+            <ElevatedCard colors={{containerColor: colors.background.primary}}>
+              <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
+                {config.inverters.map((inverter, idx) => (
+                  <Fragment key={inverter.id}>
+                    {idx > 0 && <HorizontalDivider/>}
+                    <ListItem
+                      modifiers={[clickable(() => handleOpenEditSheet(inverter))]}
+                    >
+                      <ListItem.HeadlineContent>
+                        <UIText>{inverter.serialNumber}</UIText>
+                      </ListItem.HeadlineContent>
+                      <ListItem.SupportingContent>
+                        <UIText>{`${Math.round(inverter.efficiency)}% efficiency`}</UIText>
+                      </ListItem.SupportingContent>
+                      <ListItem.TrailingContent>
+                        <Icon source={ChevronRight} tint={colors.text.tertiary} />
+                      </ListItem.TrailingContent>
+                    </ListItem>
+                  </Fragment>
+                ))}
+              </Column>
+            </ElevatedCard>
+            <UIText style={{fontSize: 13}} color={colors.text.secondary as string}>
+              Tap to edit efficiency.
+            </UIText>
+          </LazyColumn>
         </Host>
       </View>
+
+      <Stack.Toolbar placement="bottom">
+        {isWizardMode && (
+          <Stack.Toolbar.Button onPress={handleContinue}>Continue</Stack.Toolbar.Button>
+        )}
+        <Stack.Toolbar.Button icon={Add} onPress={handleOpenAddSheet} accessibilityLabel="Add inverter" />
+      </Stack.Toolbar>
     </>
   );
 }

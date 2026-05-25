@@ -1,9 +1,20 @@
 import { useColorScheme } from 'react-native';
 import {
-  Host, Icon, IconButton, ModalBottomSheet, Slider, TextInput,
-  Card, Text as UIText, Column, Row,
+  Column,
+  Host,
+  Icon,
+  IconButton,
+  ModalBottomSheet,
+  OutlinedCard,
+  Row,
+  Slider,
+  TextField,
+  Text as UIText,
+  useNativeState,
 } from '@expo/ui/jetpack-compose';
-import { paddingAll, fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
+import { fillMaxWidth, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
+import Check from '@expo/material-symbols/check.xml';
+import Close from '@expo/material-symbols/close.xml';
 import { useColors } from '@/utils/theme';
 import { useInverterForm } from '@/hooks/useInverterForm';
 
@@ -20,6 +31,8 @@ export default function InverterDetailsScreen() {
     handleCancel,
   } = useInverterForm();
 
+  const serialState = useNativeState(serial);
+
   return (
     <Host matchContents colorScheme={colorScheme ?? undefined}>
       <ModalBottomSheet onDismissRequest={handleCancel}>
@@ -27,41 +40,41 @@ export default function InverterDetailsScreen() {
 
           {/* Header: Cancel | Title | Save */}
           <Row horizontalArrangement="spaceBetween" modifiers={[fillMaxWidth()]}>
-            <IconButton onPress={handleCancel}>
-              <Icon source={require('@/assets/symbols/close.xml')} tintColor={colors.text.secondary} />
+            <IconButton onClick={handleCancel}>
+              <Icon source={Close} tint={colors.text.secondary} />
             </IconButton>
-            <UIText style={{ typography: 'titleMedium', fontWeight: '700' }} color={colors.text.primary}>
+            <UIText style={{ typography: 'titleMedium', fontWeight: '700' }} color={colors.text.primary as string}>
               {isAddMode ? 'New Micro-inverter' : 'Edit Micro-inverter'}
             </UIText>
-            <IconButton onPress={handleSave}>
-              <Icon source={require('@/assets/symbols/check.xml')} tintColor={colors.primary} />
+            <IconButton onClick={handleSave}>
+              <Icon source={Check} tint={colors.primary} />
             </IconButton>
           </Row>
 
           {/* Details */}
-          <Card variant="outlined">
+          <OutlinedCard>
             <Column modifiers={[paddingAll(16), fillMaxWidth()]}>
-              <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
+              <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary as string}>
                 DETAILS
               </UIText>
-              <UIText style={{ typography: 'bodyLarge' }} color={colors.text.primary}>
+              <UIText style={{ typography: 'bodyLarge' }} color={colors.text.primary as string}>
                 Serial Number
               </UIText>
-              <TextInput
-                defaultValue={serial}
-                onChangeText={setSerial}
-                keyboardType="numeric"
+              <TextField
+                value={serialState}
+                onValueChange={setSerial}
+                keyboardOptions={{ keyboardType: 'number' }}
               />
             </Column>
-          </Card>
+          </OutlinedCard>
 
           {/* Efficiency */}
-          <Card variant="outlined">
+          <OutlinedCard>
             <Column modifiers={[paddingAll(16)]}>
-              <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
+              <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary as string}>
                 EFFICIENCY
               </UIText>
-              <UIText style={{ typography: 'headlineMedium', fontWeight: '700' }} color={colors.text.primary}>
+              <UIText style={{ typography: 'headlineMedium', fontWeight: '700' }} color={colors.text.primary as string}>
                 {`${Math.round(efficiency)}%`}
               </UIText>
               <Slider
@@ -70,13 +83,13 @@ export default function InverterDetailsScreen() {
                 min={0}
                 max={1}
               />
-              <UIText style={{ typography: 'bodySmall' }} color={colors.text.secondary}>
+              <UIText style={{ typography: 'bodySmall' }} color={colors.text.secondary as string}>
                 {isAddMode
                   ? 'Set the expected efficiency for this micro-inverter.'
                   : 'Adjust for shading, dirt, or other obstructions.'}
               </UIText>
             </Column>
-          </Card>
+          </OutlinedCard>
 
         </Column>
       </ModalBottomSheet>

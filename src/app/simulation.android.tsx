@@ -8,7 +8,13 @@ import {
 } from "react-native";
 import { Stack } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Host, Picker, Slider } from "@expo/ui/jetpack-compose";
+import {
+  Host,
+  SegmentedButton,
+  SingleChoiceSegmentedButtonRow,
+  Slider,
+  Text as UIText,
+} from "@expo/ui/jetpack-compose";
 import { fillMaxWidth } from "@expo/ui/jetpack-compose/modifiers";
 import { useColors } from "@/utils/theme";
 import { useSimulationControls, SEASONS } from "@/hooks/useSimulationControls";
@@ -61,14 +67,14 @@ export default function SimulationScreen() {
   // Local state for immediate slider feedback. The hook's setCurrentHour is
   // debounced so the expensive wattage useMemo only runs after dragging settles.
   const [displayHour, setDisplayHour] = useState(currentHour);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleHourChange = useCallback((val: number) => {
     // Immediately update the 3D scene via sceneState (no React re-render)
     sceneState.currentHour = val;
     // Update display text (re-renders this component only, not 3D scene)
     setDisplayHour(val);
     // Debounce the expensive wattage calculation
-    clearTimeout(debounceRef.current);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => setCurrentHour(val), 150);
   }, [setCurrentHour]);
 
@@ -143,15 +149,19 @@ export default function SimulationScreen() {
           </View>
 
           <Host style={styles.seasonRow} colorScheme={colorScheme ?? undefined}>
-            <Picker
-              options={SEASONS.map(s => s.label)}
-              selectedIndex={SEASONS.findIndex(s => s.value === season)}
-              onOptionSelected={({ nativeEvent: { index } }) => {
-                const selected = SEASONS[index];
-                if (selected) setSeason(selected.value);
-              }}
-              variant="segmented"
-            />
+            <SingleChoiceSegmentedButtonRow>
+              {SEASONS.map((s) => (
+                <SegmentedButton
+                  key={s.value}
+                  selected={s.value === season}
+                  onClick={() => setSeason(s.value)}
+                >
+                  <SegmentedButton.Label>
+                    <UIText>{s.label}</UIText>
+                  </SegmentedButton.Label>
+                </SegmentedButton>
+              ))}
+            </SingleChoiceSegmentedButtonRow>
           </Host>
         </View>
       </View>

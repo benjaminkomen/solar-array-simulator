@@ -1,10 +1,18 @@
 import { Fragment } from 'react';
 import { useRouter } from 'expo-router';
 import {
-  Host, ModalBottomSheet, Card, ListItem, Divider, Button, Icon,
-  Text as UIText, Column,
+  Column,
+  ElevatedCard,
+  HorizontalDivider,
+  Host,
+  Icon,
+  ListItem,
+  ModalBottomSheet,
+  TextButton,
+  Text as UIText,
 } from '@expo/ui/jetpack-compose';
-import { paddingAll, fillMaxWidth, clickable } from '@expo/ui/jetpack-compose/modifiers';
+import { clickable, fillMaxWidth, paddingAll } from '@expo/ui/jetpack-compose/modifiers';
+import LinkOff from '@expo/material-symbols/link_off.xml';
 import { useColors } from '@/utils/theme';
 import { usePanelDetails } from '@/hooks/usePanelDetails';
 
@@ -24,84 +32,97 @@ export default function PanelDetailsScreen() {
       <ModalBottomSheet onDismissRequest={() => router.back()}>
         <Column modifiers={[paddingAll(16), fillMaxWidth()]} verticalArrangement={{ spacedBy: 16 }}>
 
-          <UIText style={{ typography: 'titleMedium', fontWeight: '700', textAlign: 'center' }} color={colors.text.primary} modifiers={[fillMaxWidth()]}>
+          <UIText style={{ typography: 'titleMedium', fontWeight: '700', textAlign: 'center' }} color={colors.text.primary as string} modifiers={[fillMaxWidth()]}>
             Panel Details
           </UIText>
 
           {currentInverter ? (
-            <Card variant="elevated" color={colors.background.primary}>
+            <ElevatedCard colors={{ containerColor: colors.background.primary }}>
               <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
-                <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary} modifiers={[paddingAll(8)]}>
+                <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary as string} modifiers={[paddingAll(8)]}>
                   LINKED INVERTER
                 </UIText>
-                <ListItem headline="Serial Number">
-                  <ListItem.Trailing>
-                    <UIText style={{ typography: 'bodyMedium' }} color={colors.text.secondary}>
+                <ListItem>
+                  <ListItem.HeadlineContent>
+                    <UIText>Serial Number</UIText>
+                  </ListItem.HeadlineContent>
+                  <ListItem.TrailingContent>
+                    <UIText style={{ typography: 'bodyMedium' }} color={colors.text.secondary as string}>
                       {currentInverter.serialNumber}
                     </UIText>
-                  </ListItem.Trailing>
+                  </ListItem.TrailingContent>
                 </ListItem>
-                <Divider />
-                <ListItem headline="Efficiency">
-                  <ListItem.Trailing>
-                    <UIText style={{ typography: 'bodyMedium' }} color={colors.text.secondary}>
+                <HorizontalDivider />
+                <ListItem>
+                  <ListItem.HeadlineContent>
+                    <UIText>Efficiency</UIText>
+                  </ListItem.HeadlineContent>
+                  <ListItem.TrailingContent>
+                    <UIText style={{ typography: 'bodyMedium' }} color={colors.text.secondary as string}>
                       {`${Math.round(currentInverter.efficiency)}%`}
                     </UIText>
-                  </ListItem.Trailing>
+                  </ListItem.TrailingContent>
                 </ListItem>
                 {!isViewMode && (
                   <>
-                    <Divider />
+                    <HorizontalDivider />
                     <ListItem
-                      headline="Unlink Inverter"
                       modifiers={[clickable(handleUnlink)]}
-                      colors={{ headlineColor: colors.system.red }}
+                      colors={{ contentColor: colors.system.red }}
                     >
-                      <ListItem.Leading>
-                        <Icon source={require('@/assets/symbols/link_off.xml')} tintColor={colors.system.red} />
-                      </ListItem.Leading>
+                      <ListItem.HeadlineContent>
+                        <UIText color={colors.system.red as string}>Unlink Inverter</UIText>
+                      </ListItem.HeadlineContent>
+                      <ListItem.LeadingContent>
+                        <Icon source={LinkOff} tint={colors.system.red} />
+                      </ListItem.LeadingContent>
                     </ListItem>
                   </>
                 )}
               </Column>
-            </Card>
+            </ElevatedCard>
           ) : !isViewMode && availableInverters.length > 0 ? (
             <Column modifiers={[fillMaxWidth()]} verticalArrangement={{ spacedBy: 8 }}>
-              <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary} modifiers={[paddingAll(4)]}>
+              <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary as string} modifiers={[paddingAll(4)]}>
                 AVAILABLE INVERTERS
               </UIText>
-              <Card variant="elevated" color={colors.background.primary}>
+              <ElevatedCard colors={{ containerColor: colors.background.primary }}>
                 <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
                   {availableInverters.map((inv, idx) => (
                     <Fragment key={inv.id}>
-                      {idx > 0 && <Divider />}
+                      {idx > 0 && <HorizontalDivider />}
                       <ListItem
-                        headline={inv.serialNumber}
-                        supportingText={`${Math.round(inv.efficiency)}% efficiency`}
                         modifiers={[clickable(() => handleLink(inv.id))]}
-                      />
+                      >
+                        <ListItem.HeadlineContent>
+                          <UIText>{inv.serialNumber}</UIText>
+                        </ListItem.HeadlineContent>
+                        <ListItem.SupportingContent>
+                          <UIText>{`${Math.round(inv.efficiency)}% efficiency`}</UIText>
+                        </ListItem.SupportingContent>
+                      </ListItem>
                     </Fragment>
                   ))}
                 </Column>
-              </Card>
-              <UIText style={{ typography: 'bodySmall' }} color={colors.text.secondary} modifiers={[paddingAll(4)]}>
+              </ElevatedCard>
+              <UIText style={{ typography: 'bodySmall' }} color={colors.text.secondary as string} modifiers={[paddingAll(4)]}>
                 Select a micro-inverter to link to this panel.
               </UIText>
             </Column>
           ) : !isViewMode ? (
-            <Card variant="elevated" color={colors.background.primary}>
+            <ElevatedCard colors={{ containerColor: colors.background.primary }}>
               <Column modifiers={[fillMaxWidth(), paddingAll(16)]} horizontalAlignment="center">
-                <UIText style={{ typography: 'headlineSmall', fontWeight: '700' }} color={colors.text.primary}>
+                <UIText style={{ typography: 'headlineSmall', fontWeight: '700' }} color={colors.text.primary as string}>
                   No Available Inverters
                 </UIText>
-                <UIText style={{ typography: 'bodyMedium', textAlign: 'center' }} color={colors.text.secondary}>
+                <UIText style={{ typography: 'bodyMedium', textAlign: 'center' }} color={colors.text.secondary as string}>
                   All inverters are assigned. Unlink a panel first or add a new inverter.
                 </UIText>
-                <Button leadingIcon="filled.Add" variant="borderless" onPress={() => router.push('/config')}>
+                <TextButton onClick={() => router.push('/config')}>
                   Add Inverter
-                </Button>
+                </TextButton>
               </Column>
-            </Card>
+            </ElevatedCard>
           ) : null}
 
         </Column>

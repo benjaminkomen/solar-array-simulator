@@ -8,19 +8,26 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
 import {
-  Host, IconButton, Icon, Row,
-  Text as UIText,
-  HorizontalFloatingToolbar, TextButton,
-  ModalBottomSheet,
-  ListItem,
   Column,
+  Host,
+  Icon,
+  ListItem,
+  ModalBottomSheet,
+  OutlinedIconButton,
+  Row,
+  Text as UIText,
 } from "@expo/ui/jetpack-compose";
-import { fillMaxWidth, paddingAll, clickable } from "@expo/ui/jetpack-compose/modifiers";
+import { clickable, fillMaxWidth, paddingAll } from "@expo/ui/jetpack-compose/modifiers";
+import Add from "@expo/material-symbols/add.xml";
+import Delete from "@expo/material-symbols/delete.xml";
+import MyLocation from "@expo/material-symbols/my_location.xml";
+import Link from "@expo/material-symbols/link.xml";
+import Navigation from "@expo/material-symbols/navigation.xml";
+import RotateRight from "@expo/material-symbols/rotate_right.xml";
 
 export default function Custom() {
   const colors = useColors();
   const [panelSheetVisible, setPanelSheetVisible] = useState(false);
-  const [toolbarHeight, setToolbarHeight] = useState(0);
   const {
     isWizardMode,
     config,
@@ -68,23 +75,32 @@ export default function Custom() {
             <View style={styles.headerActions}>
               <Host matchContents>
                 <Row>
-                  <IconButton variant="bordered" color={colors.primaryLight} onPress={handleCompassToggle}>
-                    <Icon source={require('@/assets/symbols/navigation.xml')} tintColor={colors.primary} />
-                  </IconButton>
-                  <IconButton variant="bordered" color={colors.primaryLight} onPress={handleSnapToOrigin}>
-                    <Icon source={require('@/assets/symbols/gps_fixed.xml')} tintColor={colors.primary} />
-                  </IconButton>
+                  <OutlinedIconButton
+                    onClick={handleCompassToggle}
+                    colors={{ contentColor: colors.primary, containerColor: colors.primaryLight }}
+                  >
+                    <Icon source={Navigation} tint={colors.primary} />
+                  </OutlinedIconButton>
+                  <OutlinedIconButton
+                    onClick={handleSnapToOrigin}
+                    colors={{ contentColor: colors.primary, containerColor: colors.primaryLight }}
+                  >
+                    <Icon source={MyLocation} tint={colors.primary} />
+                  </OutlinedIconButton>
                 </Row>
               </Host>
               <View style={styles.linkIconContainer}>
                 <Host matchContents>
-                  <IconButton variant="bordered" color={colors.primaryLight} onPress={() => {}}>
-                    <Icon source={require('@/assets/symbols/link.xml')} tintColor={colors.primary} />
-                  </IconButton>
+                  <OutlinedIconButton
+                    onClick={() => {}}
+                    colors={{ contentColor: colors.primary, containerColor: colors.primaryLight }}
+                  >
+                    <Icon source={Link} tint={colors.primary} />
+                  </OutlinedIconButton>
                 </Host>
                 {/* @todo: this should be an Expo UI Badge once that is implemented */}
                 {unlinkedCount > 0 && (
-                  <View style={[styles.badge, { backgroundColor: colors.system.red }]}>
+                  <View style={[styles.badge, { backgroundColor: colors.system.red as string }]}>
                     <Text style={styles.badgeText}>{unlinkedCount}</Text>
                   </View>
                 )}
@@ -95,7 +111,7 @@ export default function Custom() {
       />
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={styles.outerContainer}>
-        <View style={[styles.canvasContainer, { backgroundColor: colors.background.secondary, paddingBottom: toolbarHeight }]} onLayout={handleLayout} testID="canvas-container">
+        <View style={[styles.canvasContainer, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
           {compassVisible && (
             <View style={styles.compassContainer}>
               <Compass
@@ -124,51 +140,48 @@ export default function Custom() {
           />
         </View>
 
-        <View
-          style={styles.floatingToolbarContainer}
-          pointerEvents="box-none"
-          onLayout={(e) => setToolbarHeight(e.nativeEvent.layout.height + 24)}
-        >
-          <Host matchContents>
-            <HorizontalFloatingToolbar variant="standard">
-              {isWizardMode && (
-                <TextButton onPress={handleFinish}>Finish</TextButton>
-              )}
-              <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAddPanel}>
-                <Icon source={require('@/assets/symbols/add.xml')} tintColor={colors.text.inverse} />
-              </HorizontalFloatingToolbar.FloatingActionButton>
-            </HorizontalFloatingToolbar>
-          </Host>
-        </View>
       </View>
+
+      <Stack.Toolbar placement="bottom">
+        {isWizardMode && (
+          <Stack.Toolbar.Button onPress={handleFinish}>Finish</Stack.Toolbar.Button>
+        )}
+        <Stack.Toolbar.Button icon={Add} onPress={handleAddPanel} accessibilityLabel="Add panel" />
+      </Stack.Toolbar>
 
       {panelSheetVisible && (
         <Host matchContents>
           <ModalBottomSheet onDismissRequest={() => setPanelSheetVisible(false)}>
             <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
               <ListItem
-                headline="Link Inverter"
                 modifiers={[clickable(() => { setPanelSheetVisible(false); handleLinkInverter(); })]}
               >
-                <ListItem.Leading>
-                  <Icon source={require('@/assets/symbols/link.xml')} tintColor={colors.primary} />
-                </ListItem.Leading>
+                <ListItem.HeadlineContent>
+                  <UIText>Link Inverter</UIText>
+                </ListItem.HeadlineContent>
+                <ListItem.LeadingContent>
+                  <Icon source={Link} tint={colors.primary} />
+                </ListItem.LeadingContent>
               </ListItem>
               <ListItem
-                headline="Rotate"
                 modifiers={[clickable(() => { setPanelSheetVisible(false); handleRotatePanel(); })]}
               >
-                <ListItem.Leading>
-                  <Icon source={require('@/assets/symbols/rotate.xml')} tintColor={colors.primary} />
-                </ListItem.Leading>
+                <ListItem.HeadlineContent>
+                  <UIText>Rotate</UIText>
+                </ListItem.HeadlineContent>
+                <ListItem.LeadingContent>
+                  <Icon source={RotateRight} tint={colors.primary} />
+                </ListItem.LeadingContent>
               </ListItem>
               <ListItem
-                headline="Delete"
                 modifiers={[clickable(() => { setPanelSheetVisible(false); handleDeletePanel(); })]}
               >
-                <ListItem.Leading>
-                  <Icon source={require('@/assets/symbols/delete.xml')} tintColor={colors.system.red} />
-                </ListItem.Leading>
+                <ListItem.HeadlineContent>
+                  <UIText>Delete</UIText>
+                </ListItem.HeadlineContent>
+                <ListItem.LeadingContent>
+                  <Icon source={Delete} tint={colors.system.red} />
+                </ListItem.LeadingContent>
               </ListItem>
             </Column>
           </ModalBottomSheet>
@@ -213,13 +226,5 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 10,
     fontWeight: "700",
-  },
-  floatingToolbarContainer: {
-    position: "absolute",
-    bottom: 24,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 20,
   },
 });
