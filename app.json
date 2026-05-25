@@ -55,7 +55,10 @@
       [
         "expo-build-properties",
         {
-          "useHermesV1": true
+          "useHermesV1": true,
+          "android": {
+            "usePrecompiledHeaders": true
+          }
         }
       ],
       "expo-sqlite",
