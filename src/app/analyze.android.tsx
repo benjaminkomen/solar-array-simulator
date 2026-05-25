@@ -164,14 +164,28 @@ export default function Analyze() {
 
       {phase === "select_model" && (
         <Stack.Toolbar placement="bottom">
-          {isWizardMode && <Stack.Toolbar.Button onPress={handleSkip}>Skip</Stack.Toolbar.Button>}
-          <Stack.Toolbar.Button onPress={handleAnalyze}>Analyze</Stack.Toolbar.Button>
+          {isWizardMode && (
+            <Stack.Toolbar.View>
+              <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
+                <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Skip</Text>
+              </Pressable>
+            </Stack.Toolbar.View>
+          )}
+          <Stack.Toolbar.View>
+            <Pressable style={styles.toolbarTextButton} onPress={handleAnalyze}>
+              <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Analyze</Text>
+            </Pressable>
+          </Stack.Toolbar.View>
         </Stack.Toolbar>
       )}
 
       {phase === "results" && isWizardMode && (
         <Stack.Toolbar placement="bottom">
-          <Stack.Toolbar.Button onPress={handleSkip}>Skip</Stack.Toolbar.Button>
+          <Stack.Toolbar.View>
+            <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
+              <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Skip</Text>
+            </Pressable>
+          </Stack.Toolbar.View>
         </Stack.Toolbar>
       )}
     </>
@@ -241,5 +255,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 8,
+  },
+  toolbarTextButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  toolbarTextButtonLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });

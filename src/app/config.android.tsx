@@ -1,5 +1,5 @@
 import {Fragment, useState} from 'react';
-import {StyleSheet, useColorScheme, View} from 'react-native';
+import {Pressable, StyleSheet, Text, useColorScheme, View} from 'react-native';
 import {
   Column,
   ElevatedCard,
@@ -209,7 +209,11 @@ export default function ConfigScreen() {
 
       <Stack.Toolbar placement="bottom">
         {isWizardMode && (
-          <Stack.Toolbar.Button onPress={handleContinue}>Continue</Stack.Toolbar.Button>
+          <Stack.Toolbar.View>
+            <Pressable style={styles.toolbarTextButton} onPress={handleContinue}>
+              <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Continue</Text>
+            </Pressable>
+          </Stack.Toolbar.View>
         )}
         <Stack.Toolbar.Button icon={Add} onPress={handleOpenAddSheet} accessibilityLabel="Add inverter" />
       </Stack.Toolbar>
@@ -223,5 +227,17 @@ const styles = StyleSheet.create({
   },
   host: {
     flex: 1,
+  },
+  toolbarTextButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  toolbarTextButtonLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

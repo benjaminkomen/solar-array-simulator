@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { Pressable, View, StyleSheet, Text } from "react-native";
 import { Stack } from "expo-router";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
@@ -144,7 +144,11 @@ export default function Custom() {
 
       <Stack.Toolbar placement="bottom">
         {isWizardMode && (
-          <Stack.Toolbar.Button onPress={handleFinish}>Finish</Stack.Toolbar.Button>
+          <Stack.Toolbar.View>
+            <Pressable style={styles.toolbarTextButton} onPress={handleFinish}>
+              <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Finish</Text>
+            </Pressable>
+          </Stack.Toolbar.View>
         )}
         <Stack.Toolbar.Button icon={Add} onPress={handleAddPanel} accessibilityLabel="Add panel" />
       </Stack.Toolbar>
@@ -226,5 +230,17 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 10,
     fontWeight: "700",
+  },
+  toolbarTextButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  toolbarTextButtonLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });
