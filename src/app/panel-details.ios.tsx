@@ -21,8 +21,10 @@ import {
   opacity,
 } from '@expo/ui/swift-ui/modifiers';
 import { usePanelDetails } from '@/hooks/usePanelDetails';
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function PanelDetailsScreen() {
+  useMarkInteractive();
   const {
     isViewMode,
     currentInverter,

@@ -6,8 +6,10 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
 import { useColors } from "@/utils/theme";
 import { useProductionMonitor } from "@/hooks/useProductionMonitor";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function ProductionScreen() {
+  useMarkInteractive();
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const colorScheme = useColorScheme();

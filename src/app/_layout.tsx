@@ -4,8 +4,13 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useColors } from "@/utils/theme";
+import { Observe, ObserveRoot } from "expo-observe";
 
-export default function RootLayout() {
+Observe.configure({
+  integrations: { "expo-router": true },
+});
+
+function RootLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
 
@@ -99,3 +104,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default ObserveRoot.wrap(RootLayout);

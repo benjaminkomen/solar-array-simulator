@@ -2,8 +2,10 @@ import {StyleSheet, View} from "react-native";
 import {Stack} from "expo-router";
 import {Host, Image, Text, VStack,} from "@expo/ui/swift-ui";
 import {bold, font, opacity, padding} from "@expo/ui/swift-ui/modifiers";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function CompassHelpScreen() {
+  useMarkInteractive();
   return (
     <>
       <Stack.Screen

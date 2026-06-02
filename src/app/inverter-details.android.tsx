@@ -17,8 +17,10 @@ import Check from '@expo/material-symbols/check.xml';
 import Close from '@expo/material-symbols/close.xml';
 import { useColors } from '@/utils/theme';
 import { useInverterForm } from '@/hooks/useInverterForm';
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function InverterDetailsScreen() {
+  useMarkInteractive();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const {

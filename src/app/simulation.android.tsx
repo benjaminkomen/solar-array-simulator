@@ -20,6 +20,7 @@ import { useColors } from "@/utils/theme";
 import { useSimulationControls, SEASONS } from "@/hooks/useSimulationControls";
 import { sceneState } from "@/utils/sceneState";
 import { getSolarPosition, getSeasonDate, makeDateAtHour } from "@/utils/solarCalculations";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 const SimulationView = React.lazy(() => import("@/components/simulation/SimulationView"));
 
@@ -43,6 +44,7 @@ function syncSceneState(
 }
 
 export default function SimulationScreen() {
+  useMarkInteractive();
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const colorScheme = useColorScheme();

@@ -9,8 +9,10 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useUpload } from "@/hooks/useUpload";
 import {paddingAll} from "@expo/ui/jetpack-compose/modifiers";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Upload() {
+  useMarkInteractive();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";

@@ -31,8 +31,10 @@ import type {RoofType} from '@/utils/configStore';
 import {Stack} from "expo-router";
 import {WizardProgress} from "@/components/WizardProgress";
 import { useConfigForm, ROOF_TYPES } from "@/hooks/useConfigForm";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function ConfigScreen() {
+  useMarkInteractive();
   const {
     isWizardMode,
     config,

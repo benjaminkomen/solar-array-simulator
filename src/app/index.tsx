@@ -6,8 +6,10 @@ import * as Haptics from "expo-haptics";
 import { Button } from "@/components/Button";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { useColors } from "@/utils/theme";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Index() {
+  useMarkInteractive();
   const router = useRouter();
   const { getWizardCompleted } = useConfigStore();
   const colors = useColors();

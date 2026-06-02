@@ -16,8 +16,10 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { Button } from "@/components/Button";
 import { useColors } from "@/utils/theme";
 import { useAnalyzeFlow, MODELS } from "@/hooks/useAnalyzeFlow";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Analyze() {
+  useMarkInteractive();
   const colors = useColors();
 
   const {

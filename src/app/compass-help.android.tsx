@@ -3,8 +3,10 @@ import { Host, ModalBottomSheet, Text as UIText, Column, Icon } from "@expo/ui/j
 import { paddingAll } from "@expo/ui/jetpack-compose/modifiers";
 import Navigation from "@expo/material-symbols/navigation.xml";
 import { useColors } from "@/utils/theme";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function CompassHelpScreen() {
+  useMarkInteractive();
   const colors = useColors();
   const router = useRouter();
 

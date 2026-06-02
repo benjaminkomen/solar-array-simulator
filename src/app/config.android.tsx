@@ -26,8 +26,10 @@ import Add from '@expo/material-symbols/add.xml';
 import {WizardProgress} from "@/components/WizardProgress";
 import {useColors} from "@/utils/theme";
 import {ROOF_TYPES, useConfigForm} from "@/hooks/useConfigForm";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function ConfigScreen() {
+  useMarkInteractive();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const [locationSelectCount, setLocationSelectCount] = useState(0);

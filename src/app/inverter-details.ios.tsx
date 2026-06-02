@@ -17,8 +17,10 @@ import {
   submitLabel,
 } from '@expo/ui/swift-ui/modifiers';
 import { useInverterForm } from '@/hooks/useInverterForm';
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function InverterDetailsScreen() {
+  useMarkInteractive();
   const {
     isAddMode,
     serial,

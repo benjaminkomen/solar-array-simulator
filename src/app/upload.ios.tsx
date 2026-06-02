@@ -7,8 +7,10 @@ import { PermissionModal } from "@/components/PermissionModal";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useUpload } from "@/hooks/useUpload";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Upload() {
+  useMarkInteractive();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";

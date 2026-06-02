@@ -6,8 +6,10 @@ import { Compass } from "@/components/Compass";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Custom() {
+  useMarkInteractive();
   const colors = useColors();
   const {
     isWizardMode,

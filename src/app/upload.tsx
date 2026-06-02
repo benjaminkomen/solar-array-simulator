@@ -1,7 +1,9 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function UploadScreen() {
+  useMarkInteractive();
   return (
     <>
       <Stack.Screen options={{ title: "Upload" }} />

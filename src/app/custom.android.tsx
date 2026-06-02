@@ -7,6 +7,7 @@ import { Compass } from "@/components/Compass";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 import {
   Column,
   Host,
@@ -26,6 +27,7 @@ import Navigation from "@expo/material-symbols/navigation.xml";
 import RotateRight from "@expo/material-symbols/rotate_right.xml";
 
 export default function Custom() {
+  useMarkInteractive();
   const colors = useColors();
   const [panelSheetVisible, setPanelSheetVisible] = useState(false);
   const {

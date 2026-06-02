@@ -15,8 +15,10 @@ import { clickable, fillMaxWidth, paddingAll } from '@expo/ui/jetpack-compose/mo
 import LinkOff from '@expo/material-symbols/link_off.xml';
 import { useColors } from '@/utils/theme';
 import { usePanelDetails } from '@/hooks/usePanelDetails';
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function PanelDetailsScreen() {
+  useMarkInteractive();
   const colors = useColors();
   const router = useRouter();
   const {
