@@ -11,7 +11,7 @@ import {
   SegmentedButton,
   SingleChoiceSegmentedButtonRow,
   Slider,
-  TextField,
+  OutlinedTextField,
   Text as UIText,
   useNativeState,
 } from '@expo/ui/jetpack-compose';
@@ -81,7 +81,7 @@ export default function ConfigScreen() {
                 <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary as string}>
                   Default Production
                 </UIText>
-                <TextField
+                <OutlinedTextField
                   value={wattageState}
                   onValueChange={handleWattageChange}
                   keyboardOptions={{keyboardType: 'number'}}
@@ -102,16 +102,16 @@ export default function ConfigScreen() {
                 <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary as string}>
                   City
                 </UIText>
-                <TextField
+                <OutlinedTextField
                   key={locationSelectCount}
                   value={locationState}
                   onValueChange={handleLocationSearch}
                   modifiers={[fillMaxWidth()]}
                 >
-                  <TextField.Placeholder>
+                  <OutlinedTextField.Placeholder>
                     <UIText>e.g. Amsterdam, Netherlands</UIText>
-                  </TextField.Placeholder>
-                </TextField>
+                  </OutlinedTextField.Placeholder>
+                </OutlinedTextField>
                 {isSearching && (
                   <UIText style={{typography: 'bodySmall'}} color={colors.text.secondary as string}>
                     Searching...

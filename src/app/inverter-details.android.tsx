@@ -8,7 +8,7 @@ import {
   OutlinedCard,
   Row,
   Slider,
-  TextField,
+  OutlinedTextField,
   Text as UIText,
   useNativeState,
 } from '@expo/ui/jetpack-compose';
@@ -62,7 +62,7 @@ export default function InverterDetailsScreen() {
               <UIText style={{ typography: 'bodyLarge' }} color={colors.text.primary as string}>
                 Serial Number
               </UIText>
-              <TextField
+              <OutlinedTextField
                 value={serialState}
                 onValueChange={setSerial}
                 keyboardOptions={{ keyboardType: 'number' }}
