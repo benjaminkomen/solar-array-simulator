@@ -210,13 +210,11 @@ export default function ConfigScreen() {
       </View>
 
       <Stack.Toolbar placement="bottom">
-        {isWizardMode && (
-          <Stack.Toolbar.View>
-            <Pressable style={styles.toolbarTextButton} onPress={handleContinue}>
-              <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Continue</Text>
-            </Pressable>
-          </Stack.Toolbar.View>
-        )}
+        <Stack.Toolbar.View hidden={!isWizardMode}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleContinue}>
+            <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Continue</Text>
+          </Pressable>
+        </Stack.Toolbar.View>
         <Stack.Toolbar.Button icon={Add} onPress={handleOpenAddSheet} accessibilityLabel="Add inverter" />
       </Stack.Toolbar>
     </>

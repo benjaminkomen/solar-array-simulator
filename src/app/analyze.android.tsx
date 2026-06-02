@@ -164,32 +164,23 @@ export default function Analyze() {
         </View>
       )}
 
-      {phase === "select_model" && (
-        <Stack.Toolbar placement="bottom">
-          {isWizardMode && (
-            <Stack.Toolbar.View>
-              <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
-                <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Skip</Text>
-              </Pressable>
-            </Stack.Toolbar.View>
-          )}
-          <Stack.Toolbar.View>
-            <Pressable style={styles.toolbarTextButton} onPress={handleAnalyze}>
-              <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Analyze</Text>
-            </Pressable>
-          </Stack.Toolbar.View>
-        </Stack.Toolbar>
-      )}
-
-      {phase === "results" && isWizardMode && (
-        <Stack.Toolbar placement="bottom">
-          <Stack.Toolbar.View>
-            <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
-              <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Skip</Text>
-            </Pressable>
-          </Stack.Toolbar.View>
-        </Stack.Toolbar>
-      )}
+      <Stack.Toolbar placement="bottom">
+        <Stack.Toolbar.View hidden={!isWizardMode || phase !== "select_model"}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
+            <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Skip</Text>
+          </Pressable>
+        </Stack.Toolbar.View>
+        <Stack.Toolbar.View hidden={phase !== "select_model"}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleAnalyze}>
+            <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Analyze</Text>
+          </Pressable>
+        </Stack.Toolbar.View>
+        <Stack.Toolbar.View hidden={phase !== "results" || !isWizardMode}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
+            <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Skip</Text>
+          </Pressable>
+        </Stack.Toolbar.View>
+      </Stack.Toolbar>
     </>
   );
 }
