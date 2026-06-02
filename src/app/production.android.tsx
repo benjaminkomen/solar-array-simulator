@@ -9,16 +9,14 @@ import { useColors } from "@/utils/theme";
 import { useProductionMonitor } from "@/hooks/useProductionMonitor";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 import {
-  Column,
+  DropdownMenu,
+  DropdownMenuItem,
   Host,
   Icon,
   IconButton,
-  ListItem,
-  ModalBottomSheet,
   Row,
   Text as UIText,
 } from "@expo/ui/jetpack-compose";
-import { clickable, fillMaxWidth, paddingAll } from "@expo/ui/jetpack-compose/modifiers";
 import Delete from "@expo/material-symbols/delete.xml";
 import Edit from "@expo/material-symbols/edit.xml";
 import MoreVert from "@expo/material-symbols/more_vert.xml";
@@ -69,9 +67,31 @@ export default function ProductionScreen() {
                 <IconButton onClick={handleSimulate}>
                   <Icon source={WbSunny} tint={colors.text.primary} />
                 </IconButton>
-                <IconButton onClick={() => setMenuVisible(true)}>
-                  <Icon source={MoreVert} tint={colors.text.primary} />
-                </IconButton>
+                <DropdownMenu expanded={menuVisible} onDismissRequest={() => setMenuVisible(false)}>
+                  <DropdownMenu.Trigger>
+                    <IconButton onClick={() => setMenuVisible(true)}>
+                      <Icon source={MoreVert} tint={colors.text.primary} />
+                    </IconButton>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Items>
+                    <DropdownMenuItem onClick={() => { setMenuVisible(false); handleEditConfiguration(); }}>
+                      <DropdownMenuItem.LeadingIcon>
+                        <Icon source={Edit} tint={colors.primary} />
+                      </DropdownMenuItem.LeadingIcon>
+                      <DropdownMenuItem.Text>
+                        <UIText>Edit Configuration</UIText>
+                      </DropdownMenuItem.Text>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setMenuVisible(false); handleDeleteConfiguration(); }}>
+                      <DropdownMenuItem.LeadingIcon>
+                        <Icon source={Delete} tint={colors.system.red} />
+                      </DropdownMenuItem.LeadingIcon>
+                      <DropdownMenuItem.Text>
+                        <UIText>Delete Configuration</UIText>
+                      </DropdownMenuItem.Text>
+                    </DropdownMenuItem>
+                  </DropdownMenu.Items>
+                </DropdownMenu>
               </Row>
             </Host>
           ),
@@ -117,34 +137,6 @@ export default function ProductionScreen() {
           />
         </View>
       </View>
-      {menuVisible && (
-        <Host matchContents>
-          <ModalBottomSheet onDismissRequest={() => setMenuVisible(false)}>
-            <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
-              <ListItem
-                modifiers={[clickable(() => { setMenuVisible(false); handleEditConfiguration(); })]}
-              >
-                <ListItem.HeadlineContent>
-                  <UIText>Edit Configuration</UIText>
-                </ListItem.HeadlineContent>
-                <ListItem.LeadingContent>
-                  <Icon source={Edit} tint={colors.primary} />
-                </ListItem.LeadingContent>
-              </ListItem>
-              <ListItem
-                modifiers={[clickable(() => { setMenuVisible(false); handleDeleteConfiguration(); })]}
-              >
-                <ListItem.HeadlineContent>
-                  <UIText>Delete Configuration</UIText>
-                </ListItem.HeadlineContent>
-                <ListItem.LeadingContent>
-                  <Icon source={Delete} tint={colors.system.red} />
-                </ListItem.LeadingContent>
-              </ListItem>
-            </Column>
-          </ModalBottomSheet>
-        </Host>
-      )}
     </>
   );
 }
