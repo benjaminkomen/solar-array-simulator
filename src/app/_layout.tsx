@@ -8,6 +8,7 @@ import { Observe, ObserveRoot } from "expo-observe";
 
 Observe.configure({
   integrations: { "expo-router": true },
+  dispatchInDebug: true,
 });
 
 function RootLayout() {
