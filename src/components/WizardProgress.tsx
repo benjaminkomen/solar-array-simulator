@@ -67,7 +67,7 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
                       source="sf:checkmark"
                       style={{ width: 16, height: 16 }}
                       contentFit="contain"
-                      tintColor={colors.text.inverse}
+                      tintColor={colors.text.inverse as string}
                     />
                   )
                 ) : (

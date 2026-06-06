@@ -30,7 +30,13 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      ["expo-router", { "origin": "https://react-native-array-layout-2.expo.app", "unstable_useServerMiddleware": true }],
+      [
+        "expo-router",
+        {
+          "origin": "https://react-native-array-layout-2.expo.app",
+          "unstable_useServerMiddleware": true
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -46,7 +52,17 @@
       "expo-font",
       "expo-image",
       "expo-web-browser",
-      "expo-build-properties"
+      [
+        "expo-build-properties",
+        {
+          "useHermesV1": true,
+          "android": {
+            "usePrecompiledHeaders": true
+          }
+        }
+      ],
+      "expo-sqlite",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,

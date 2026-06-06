@@ -180,7 +180,7 @@ export function ProcessingOverlay({ imageUri }: ProcessingOverlayProps) {
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 100,
     backgroundColor: "#000",
   },

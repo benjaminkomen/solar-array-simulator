@@ -7,12 +7,25 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
 import { useColors } from "@/utils/theme";
 import { useProductionMonitor } from "@/hooks/useProductionMonitor";
-import { Host, IconButton, Icon, Row, ModalBottomSheet, ListItem, Column } from "@expo/ui/jetpack-compose";
-import { fillMaxWidth, paddingAll, clickable } from "@expo/ui/jetpack-compose/modifiers";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  Host,
+  Icon,
+  IconButton,
+  Row,
+  Text as UIText,
+} from "@expo/ui/jetpack-compose";
+import Delete from "@expo/material-symbols/delete.xml";
+import Edit from "@expo/material-symbols/edit.xml";
+import MoreVert from "@expo/material-symbols/more_vert.xml";
+import WbSunny from "@expo/material-symbols/wb_sunny.xml";
 
 const ANDROID_APPBAR_HEIGHT = 56;
 
 export default function ProductionScreen() {
+  useMarkInteractive();
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const colorScheme = useColorScheme();
@@ -51,12 +64,34 @@ export default function ProductionScreen() {
           headerRight: () => (
             <Host matchContents>
               <Row>
-                <IconButton onPress={handleSimulate}>
-                  <Icon source={require('@/assets/symbols/wb_sunny.xml')} tintColor={colors.text.primary} />
+                <IconButton onClick={handleSimulate}>
+                  <Icon source={WbSunny} tint={colors.text.primary} />
                 </IconButton>
-                <IconButton onPress={() => setMenuVisible(true)}>
-                  <Icon source={require('@/assets/symbols/more_vert.xml')} tintColor={colors.text.primary} />
-                </IconButton>
+                <DropdownMenu expanded={menuVisible} onDismissRequest={() => setMenuVisible(false)}>
+                  <DropdownMenu.Trigger>
+                    <IconButton onClick={() => setMenuVisible(true)}>
+                      <Icon source={MoreVert} tint={colors.text.primary} />
+                    </IconButton>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Items>
+                    <DropdownMenuItem onClick={() => { setMenuVisible(false); handleEditConfiguration(); }}>
+                      <DropdownMenuItem.LeadingIcon>
+                        <Icon source={Edit} tint={colors.primary} />
+                      </DropdownMenuItem.LeadingIcon>
+                      <DropdownMenuItem.Text>
+                        <UIText>Edit Configuration</UIText>
+                      </DropdownMenuItem.Text>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setMenuVisible(false); handleDeleteConfiguration(); }}>
+                      <DropdownMenuItem.LeadingIcon>
+                        <Icon source={Delete} tint={colors.system.red} />
+                      </DropdownMenuItem.LeadingIcon>
+                      <DropdownMenuItem.Text>
+                        <UIText>Delete Configuration</UIText>
+                      </DropdownMenuItem.Text>
+                    </DropdownMenuItem>
+                  </DropdownMenu.Items>
+                </DropdownMenu>
               </Row>
             </Host>
           ),
@@ -102,30 +137,6 @@ export default function ProductionScreen() {
           />
         </View>
       </View>
-      {menuVisible && (
-        <Host matchContents>
-          <ModalBottomSheet onDismissRequest={() => setMenuVisible(false)}>
-            <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
-              <ListItem
-                headline="Edit Configuration"
-                modifiers={[clickable(() => { setMenuVisible(false); handleEditConfiguration(); })]}
-              >
-                <ListItem.Leading>
-                  <Icon source={require('@/assets/symbols/edit.xml')} tintColor={colors.primary} />
-                </ListItem.Leading>
-              </ListItem>
-              <ListItem
-                headline="Delete Configuration"
-                modifiers={[clickable(() => { setMenuVisible(false); handleDeleteConfiguration(); })]}
-              >
-                <ListItem.Leading>
-                  <Icon source={require('@/assets/symbols/delete.xml')} tintColor={colors.system.red} />
-                </ListItem.Leading>
-              </ListItem>
-            </Column>
-          </ModalBottomSheet>
-        </Host>
-      )}
     </>
   );
 }

@@ -1,7 +1,9 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function CustomScreen() {
+  useMarkInteractive();
   return (
     <>
       <Stack.Screen options={{ title: "Layout Editor" }} />

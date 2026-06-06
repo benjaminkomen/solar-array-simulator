@@ -1,26 +1,23 @@
-import { useState } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { Pressable, View, StyleSheet, Text } from "react-native";
 import { Stack } from "expo-router";
+import { Badge, Host, Icon, Text as UIText } from "@expo/ui/jetpack-compose";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
-import {
-  Host, IconButton, Icon, Row,
-  Text as UIText,
-  HorizontalFloatingToolbar, TextButton,
-  ModalBottomSheet,
-  ListItem,
-  Column,
-} from "@expo/ui/jetpack-compose";
-import { fillMaxWidth, paddingAll, clickable } from "@expo/ui/jetpack-compose/modifiers";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
+import Add from "@expo/material-symbols/add.xml";
+import Delete from "@expo/material-symbols/delete.xml";
+import MyLocation from "@expo/material-symbols/my_location.xml";
+import Link from "@expo/material-symbols/link.xml";
+import Navigation from "@expo/material-symbols/navigation.xml";
+import RotateRight from "@expo/material-symbols/rotate_right.xml";
 
 export default function Custom() {
+  useMarkInteractive();
   const colors = useColors();
-  const [panelSheetVisible, setPanelSheetVisible] = useState(false);
-  const [toolbarHeight, setToolbarHeight] = useState(0);
   const {
     isWizardMode,
     config,
@@ -51,51 +48,35 @@ export default function Custom() {
     handleLinkInverter,
   } = useCanvasEditor();
 
-  const handleSelectPanel = (id: string | null) => {
-    setSelectedId(id);
-    if (id !== null) {
-      setPanelSheetVisible(true);
-    }
-  };
-
   return (
     <>
       <Stack.Screen
         options={{
           title: "",
           headerTitleAlign: 'center',
-          headerRight: () => (
-            <View style={styles.headerActions}>
-              <Host matchContents>
-                <Row>
-                  <IconButton variant="bordered" color={colors.primaryLight} onPress={handleCompassToggle}>
-                    <Icon source={require('@/assets/symbols/navigation.xml')} tintColor={colors.primary} />
-                  </IconButton>
-                  <IconButton variant="bordered" color={colors.primaryLight} onPress={handleSnapToOrigin}>
-                    <Icon source={require('@/assets/symbols/gps_fixed.xml')} tintColor={colors.primary} />
-                  </IconButton>
-                </Row>
-              </Host>
-              <View style={styles.linkIconContainer}>
-                <Host matchContents>
-                  <IconButton variant="bordered" color={colors.primaryLight} onPress={() => {}}>
-                    <Icon source={require('@/assets/symbols/link.xml')} tintColor={colors.primary} />
-                  </IconButton>
-                </Host>
-                {/* @todo: this should be an Expo UI Badge once that is implemented */}
-                {unlinkedCount > 0 && (
-                  <View style={[styles.badge, { backgroundColor: colors.system.red }]}>
-                    <Text style={styles.badgeText}>{unlinkedCount}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          ),
         }}
       />
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button icon={Navigation} onPress={handleCompassToggle} accessibilityLabel="Toggle compass" />
+        <Stack.Toolbar.Button icon={MyLocation} onPress={handleSnapToOrigin} accessibilityLabel="Snap to origin" />
+        <Stack.Toolbar.View>
+          <View style={styles.badgedButton}>
+            <Host matchContents>
+              <Icon source={Link} tint={colors.text.primary} />
+            </Host>
+            {unlinkedCount > 0 && (
+              <Host matchContents style={styles.badge}>
+                <Badge containerColor={colors.system.red as string}>
+                  <UIText>{String(unlinkedCount)}</UIText>
+                </Badge>
+              </Host>
+            )}
+          </View>
+        </Stack.Toolbar.View>
+      </Stack.Toolbar>
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={styles.outerContainer}>
-        <View style={[styles.canvasContainer, { backgroundColor: colors.background.secondary, paddingBottom: toolbarHeight }]} onLayout={handleLayout} testID="canvas-container">
+        <View style={[styles.canvasContainer, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
           {compassVisible && (
             <View style={styles.compassContainer}>
               <Compass
@@ -108,7 +89,7 @@ export default function Custom() {
           <SolarPanelCanvas
             panels={panels}
             selectedId={selectedId}
-            onSelectPanel={handleSelectPanel}
+            onSelectPanel={setSelectedId}
             onBringToFront={bringToFront}
             onSavePanelPosition={savePanelPosition}
             viewportX={viewportX}
@@ -123,57 +104,43 @@ export default function Custom() {
             onZoomOut={handleZoomOut}
           />
         </View>
-
-        <View
-          style={styles.floatingToolbarContainer}
-          pointerEvents="box-none"
-          onLayout={(e) => setToolbarHeight(e.nativeEvent.layout.height + 24)}
-        >
-          <Host matchContents>
-            <HorizontalFloatingToolbar variant="standard">
-              {isWizardMode && (
-                <TextButton onPress={handleFinish}>Finish</TextButton>
-              )}
-              <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAddPanel}>
-                <Icon source={require('@/assets/symbols/add.xml')} tintColor={colors.text.inverse} />
-              </HorizontalFloatingToolbar.FloatingActionButton>
-            </HorizontalFloatingToolbar>
-          </Host>
-        </View>
       </View>
 
-      {panelSheetVisible && (
-        <Host matchContents>
-          <ModalBottomSheet onDismissRequest={() => setPanelSheetVisible(false)}>
-            <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
-              <ListItem
-                headline="Link Inverter"
-                modifiers={[clickable(() => { setPanelSheetVisible(false); handleLinkInverter(); })]}
-              >
-                <ListItem.Leading>
-                  <Icon source={require('@/assets/symbols/link.xml')} tintColor={colors.primary} />
-                </ListItem.Leading>
-              </ListItem>
-              <ListItem
-                headline="Rotate"
-                modifiers={[clickable(() => { setPanelSheetVisible(false); handleRotatePanel(); })]}
-              >
-                <ListItem.Leading>
-                  <Icon source={require('@/assets/symbols/rotate.xml')} tintColor={colors.primary} />
-                </ListItem.Leading>
-              </ListItem>
-              <ListItem
-                headline="Delete"
-                modifiers={[clickable(() => { setPanelSheetVisible(false); handleDeletePanel(); })]}
-              >
-                <ListItem.Leading>
-                  <Icon source={require('@/assets/symbols/delete.xml')} tintColor={colors.system.red} />
-                </ListItem.Leading>
-              </ListItem>
-            </Column>
-          </ModalBottomSheet>
-        </Host>
-      )}
+      <Stack.Toolbar placement="bottom">
+        <Stack.Toolbar.View>
+          <View style={styles.bottomToolbar}>
+            {isWizardMode && (
+              <Pressable style={styles.toolbarTextButton} onPress={handleFinish}>
+                <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Finish</Text>
+              </Pressable>
+            )}
+            <Pressable style={styles.toolbarIconButton} onPress={handleAddPanel} accessibilityLabel="Add panel">
+              <Host matchContents>
+                <Icon source={Add} tint={colors.primary} />
+              </Host>
+            </Pressable>
+            {selectedId && (
+              <>
+                <Pressable style={styles.toolbarIconButton} onPress={handleLinkInverter} accessibilityLabel="Link inverter">
+                  <Host matchContents>
+                    <Icon source={Link} tint={colors.primary} />
+                  </Host>
+                </Pressable>
+                <Pressable style={styles.toolbarIconButton} onPress={handleRotatePanel} accessibilityLabel="Rotate panel">
+                  <Host matchContents>
+                    <Icon source={RotateRight} tint={colors.primary} />
+                  </Host>
+                </Pressable>
+                <Pressable style={styles.toolbarIconButton} onPress={handleDeletePanel} accessibilityLabel="Delete panel">
+                  <Host matchContents>
+                    <Icon source={Delete} tint={colors.primary} />
+                  </Host>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </Stack.Toolbar.View>
+      </Stack.Toolbar>
     </>
   );
 }
@@ -191,35 +158,37 @@ const styles = StyleSheet.create({
     right: 48,
     zIndex: 10,
   },
-  headerActions: {
-    flexDirection: "row",
+  badgedButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
     alignItems: "center",
-  },
-  linkIconContainer: {
-    position: "relative",
   },
   badge: {
     position: "absolute",
-    top: 4,
-    right: 4,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
+    top: 2,
+    right: 2,
+  },
+  bottomToolbar: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  toolbarTextButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  toolbarIconButton: {
+    width: 48,
+    height: 48,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 3,
   },
-  badgeText: {
-    color: "#ffffff",
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  floatingToolbarContainer: {
-    position: "absolute",
-    bottom: 24,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 20,
+  toolbarTextButtonLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });

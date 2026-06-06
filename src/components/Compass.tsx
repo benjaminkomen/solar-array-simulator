@@ -29,6 +29,16 @@ function snapToDirection(degrees: number): number {
   return (Math.round(degrees / 45) * 45) % 360;
 }
 
+function setAngleValue(angle: { value: number }, value: number) {
+  "worklet";
+  angle.value = value;
+}
+
+function animateAngleTo(angle: { value: number }, target: number) {
+  "worklet";
+  angle.value = withTiming(target, { duration: 150 });
+}
+
 export function Compass({
   direction,
   onDirectionChange,
@@ -40,7 +50,7 @@ export function Compass({
 
   // Sync with external direction prop
   useEffect(() => {
-    angle.value = direction;
+    setAngleValue(angle, direction);
   }, [direction, angle]);
 
   const font = matchFont({
@@ -104,12 +114,11 @@ export function Compass({
       const dy = e.y - CENTER;
       const rawAngle = Math.atan2(dx, -dy); // -dy because y increases downward, we want 0° at top
       const degrees = ((rawAngle * 180) / Math.PI + 360) % 360;
-      angle.value = degrees;
+      setAngleValue(angle, degrees);
     })
     .onEnd(() => {
-      // Snap to nearest 45 degrees
       const snapped = snapToDirection(angle.value);
-      angle.value = withTiming(snapped, { duration: 150 });
+      animateAngleTo(angle, snapped);
       scheduleOnRN(triggerHaptic);
       scheduleOnRN(handleDirectionChange, snapped);
     });
@@ -158,7 +167,7 @@ export function Compass({
             <Path
               key={arc.key}
               path={arc.path}
-              color={colors.border.medium}
+              color={colors.border.medium as string}
               strokeWidth={2}
               style="stroke"
               strokeCap="round"
@@ -178,7 +187,7 @@ export function Compass({
                   y={y + 4} // Adjust for baseline
                   text={label.text}
                   font={font}
-                  color={label.text === "N" ? colors.text.primary : colors.text.secondary}
+                  color={(label.text === "N" ? colors.text.primary : colors.text.secondary) as string}
                 />
               );
             })}
@@ -187,7 +196,7 @@ export function Compass({
           <Group transform={arrowTransform}>
             <Path
               path={arrowPath}
-              color={colors.text.primary}
+              color={colors.text.primary as string}
               style="fill"
             />
           </Group>

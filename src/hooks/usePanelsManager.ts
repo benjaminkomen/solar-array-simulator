@@ -78,7 +78,9 @@ export function usePanelsManager(): UsePanelsManagerResult {
   const panelsRef = useRef<PanelData[]>([]);
 
   // Keep ref in sync for worklet access
-  panelsRef.current = panels;
+  useEffect(() => {
+    panelsRef.current = panels;
+  }, [panels]);
 
   // Subscribe to store changes (for cross-component sync)
   useEffect(() => {

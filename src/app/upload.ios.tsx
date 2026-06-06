@@ -7,8 +7,10 @@ import { PermissionModal } from "@/components/PermissionModal";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useUpload } from "@/hooks/useUpload";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Upload() {
+  useMarkInteractive();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -48,7 +50,7 @@ export default function Upload() {
             source="sf:photo.on.rectangle"
             style={styles.icon}
             contentFit="contain"
-            tintColor={colors.primary}
+            tintColor={colors.primary as string}
           />
         </Animated.View>
 
@@ -80,7 +82,7 @@ export default function Upload() {
                 source="sf:camera"
                 style={styles.buttonIcon}
                 contentFit="contain"
-                tintColor={colors.text.inverse}
+                tintColor={colors.text.inverse as string}
               />
               <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
                 Take Photo
@@ -108,7 +110,7 @@ export default function Upload() {
                 source="sf:photo.on.rectangle"
                 style={styles.buttonIcon}
                 contentFit="contain"
-                tintColor={colors.primary}
+                tintColor={colors.primary as string}
               />
               <Text style={[styles.buttonText, { color: colors.primary }]}>
                 Choose from Gallery

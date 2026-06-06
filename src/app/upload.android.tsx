@@ -3,14 +3,16 @@ import { Stack } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { Button, Host } from "@expo/ui/jetpack-compose";
+import { ElevatedButton, Host, Text as UIText } from "@expo/ui/jetpack-compose";
 import { PermissionModal } from "@/components/PermissionModal";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useUpload } from "@/hooks/useUpload";
 import {paddingAll} from "@expo/ui/jetpack-compose/modifiers";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Upload() {
+  useMarkInteractive();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -110,7 +112,7 @@ export default function Upload() {
         {isWizardMode && (
           <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
             <Host matchContents colorScheme={colorScheme ?? undefined}>
-              <Button variant="elevated" onPress={handleSkip} modifiers={[paddingAll(8)]}>Skip</Button>
+              <ElevatedButton onClick={handleSkip} modifiers={[paddingAll(8)]}><UIText>Skip</UIText></ElevatedButton>
             </Host>
           </View>
         )}

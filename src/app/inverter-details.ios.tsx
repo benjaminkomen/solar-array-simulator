@@ -8,15 +8,19 @@ import {
   Slider,
   Text,
   TextField,
+  useNativeState,
 } from '@expo/ui/swift-ui';
 import {
   bold,
+  keyboardType,
   scrollDismissesKeyboard,
   submitLabel,
 } from '@expo/ui/swift-ui/modifiers';
 import { useInverterForm } from '@/hooks/useInverterForm';
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function InverterDetailsScreen() {
+  useMarkInteractive();
   const {
     isAddMode,
     serial,
@@ -26,6 +30,8 @@ export default function InverterDetailsScreen() {
     handleSave,
     handleCancel,
   } = useInverterForm();
+
+  const serialState = useNativeState(serial);
 
   return (
     <>
@@ -48,11 +54,10 @@ export default function InverterDetailsScreen() {
               <Section header={<Text>Details</Text>}>
                 <LabeledContent label="Serial Number">
                   <TextField
-                    defaultValue={serial}
-                    onChangeText={setSerial}
+                    text={serialState}
+                    onTextChange={setSerial}
                     placeholder="Enter serial number"
-                    keyboardType="numbers-and-punctuation"
-                    modifiers={[submitLabel('done')]}
+                    modifiers={[keyboardType('numbers-and-punctuation'), submitLabel('done')]}
                   />
                 </LabeledContent>
               </Section>

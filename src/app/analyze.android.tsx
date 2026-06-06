@@ -10,19 +10,24 @@ import {
 import { Stack } from "expo-router";
 import { Image } from "expo-image";
 import {
-  Host, Picker, Card,
-  Text as UIText, Column,
-  HorizontalFloatingToolbar, TextButton,
+  Column,
+  Host,
+  OutlinedCard,
+  RadioButton,
+  Row,
+  Text as UIText,
 } from "@expo/ui/jetpack-compose";
-import { fillMaxWidth, paddingAll, padding, width as widthModifier } from "@expo/ui/jetpack-compose/modifiers";
+import { clickable, fillMaxWidth, paddingAll, width as widthModifier } from "@expo/ui/jetpack-compose/modifiers";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { AnalysisPreview } from "@/components/AnalysisPreview";
 import { WizardProgress } from "@/components/WizardProgress";
 import { Button } from "@/components/Button";
 import { useColors } from "@/utils/theme";
 import { useAnalyzeFlow, MODELS } from "@/hooks/useAnalyzeFlow";
+import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Analyze() {
+  useMarkInteractive();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const {width: screenWidth} = useWindowDimensions();
@@ -68,41 +73,31 @@ export default function Analyze() {
           </View>
 
           <Host matchContents style={styles.pickerCardHost} colorScheme={colorScheme ?? undefined}>
-            <Card variant="outlined" modifiers={[widthModifier(cardWidth)]}>
+            <OutlinedCard modifiers={[widthModifier(cardWidth)]}>
               <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
-                <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary}>
+                <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary as string}>
                   SELECT AI MODEL
                 </UIText>
-                <Picker
-                  options={MODELS.map(m => m.name + (m.isDefault ? " (Default)" : ""))}
-                  selectedIndex={MODELS.findIndex(m => m.id === selectedModel)}
-                  onOptionSelected={({ nativeEvent: { index } }) => {
-                    const selected = MODELS[index];
-                    if (selected) {
-                      handleModelChange(selected.id);
-                    }
-                  }}
-                  variant="radio"
-                />
+                {MODELS.map((m) => (
+                  <Row
+                    key={m.id}
+                    modifiers={[fillMaxWidth(), paddingAll(8), clickable(() => handleModelChange(m.id))]}
+                    verticalAlignment="center"
+                  >
+                    <RadioButton selected={m.id === selectedModel} onClick={() => handleModelChange(m.id)} />
+                    <UIText style={{ typography: 'bodyMedium' }} color={colors.text.primary as string}>
+                      {m.name}{m.isDefault ? " (Default)" : ""}
+                    </UIText>
+                  </Row>
+                ))}
                 {error && (
-                  <UIText style={{ typography: 'bodySmall' }} color={colors.system.red}>
+                  <UIText style={{ typography: 'bodySmall' }} color={colors.system.red as string}>
                     {error}
                   </UIText>
                 )}
               </Column>
-            </Card>
+            </OutlinedCard>
           </Host>
-
-          <View style={styles.floatingToolbarContainer}>
-            <Host matchContents colorScheme={colorScheme ?? undefined}>
-              <HorizontalFloatingToolbar variant="standard">
-                {isWizardMode && <TextButton onPress={handleSkip}>Skip</TextButton>}
-                <HorizontalFloatingToolbar.FloatingActionButton onPress={handleAnalyze}>
-                  <UIText style={{ typography: 'labelLarge', fontWeight: '600' }} modifiers={[padding(4, 0, 4, 0)]}>Analyze</UIText>
-                </HorizontalFloatingToolbar.FloatingActionButton>
-              </HorizontalFloatingToolbar>
-            </Host>
-          </View>
         </View>
       )}
 
@@ -166,17 +161,26 @@ export default function Analyze() {
             </View>
           </ScrollView>
 
-          {isWizardMode && (
-            <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
-              <Host matchContents colorScheme={colorScheme ?? undefined}>
-                <HorizontalFloatingToolbar variant="standard">
-                  <TextButton onPress={handleSkip}>Skip</TextButton>
-                </HorizontalFloatingToolbar>
-              </Host>
-            </View>
-          )}
         </View>
       )}
+
+      <Stack.Toolbar placement="bottom">
+        <Stack.Toolbar.View hidden={!isWizardMode || phase !== "select_model"}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
+            <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Skip</Text>
+          </Pressable>
+        </Stack.Toolbar.View>
+        <Stack.Toolbar.View hidden={phase !== "select_model"}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleAnalyze}>
+            <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Analyze</Text>
+          </Pressable>
+        </Stack.Toolbar.View>
+        <Stack.Toolbar.View hidden={phase !== "results" || !isWizardMode}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
+            <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Skip</Text>
+          </Pressable>
+        </Stack.Toolbar.View>
+      </Stack.Toolbar>
     </>
   );
 }
@@ -244,5 +248,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 8,
+  },
+  toolbarTextButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  toolbarTextButtonLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });
