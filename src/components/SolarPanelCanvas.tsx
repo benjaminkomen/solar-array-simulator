@@ -97,20 +97,20 @@ export function SolarPanelCanvas({
       const hitId = hitTestPanels(world.x, world.y, states);
 
       if (hitId) {
-        draggedPanelId.value = hitId;
-        isPanningViewport.value = false;
+        draggedPanelId.set(hitId);
+        isPanningViewport.set(false);
         const panel = panels.find((p) => p.id === hitId);
         if (panel) {
-          panelOffsetX.value = panel.x.value;
-          panelOffsetY.value = panel.y.value;
+          panelOffsetX.set(panel.x.value);
+          panelOffsetY.set(panel.y.value);
         }
         scheduleOnRN(onSelectPanel, hitId);
         scheduleOnRN(onBringToFront, hitId);
       } else {
-        draggedPanelId.value = null;
-        isPanningViewport.value = true;
-        viewportStartX.value = viewportX.value;
-        viewportStartY.value = viewportY.value;
+        draggedPanelId.set(null);
+        isPanningViewport.set(true);
+        viewportStartX.set(viewportX.value);
+        viewportStartY.set(viewportY.value);
         scheduleOnRN(onSelectPanel, null);
       }
     })
@@ -135,13 +135,13 @@ export function SolarPanelCanvas({
       const panel = panels.find((p) => p.id === panelId);
       if (!panel) return;
 
-      panel.x.value = panelOffsetX.value + e.translationX / scale.value;
-      panel.y.value = panelOffsetY.value + e.translationY / scale.value;
+      panel.x.set(panelOffsetX.value + e.translationX / scale.value);
+      panel.y.set(panelOffsetY.value + e.translationY / scale.value);
     })
     .onEnd(() => {
       "worklet";
       if (isPanningViewport.value) {
-        isPanningViewport.value = false;
+        isPanningViewport.set(false);
         return;
       }
 
@@ -177,12 +177,12 @@ export function SolarPanelCanvas({
         panelOffsetY.value
       );
 
-      panel.x.value = snapped.x;
-      panel.y.value = snapped.y;
+      panel.x.set(snapped.x);
+      panel.y.set(snapped.y);
 
       scheduleOnRN(onSavePanelPosition, panelId, panel.x.value, panel.y.value);
 
-      draggedPanelId.value = null;
+      draggedPanelId.set(null);
     });
 
   // Tap gesture for selection without drag

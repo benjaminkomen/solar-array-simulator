@@ -90,9 +90,9 @@ export function ProductionCanvas({
   const panGesture = Gesture.Pan()
     .onStart(() => {
       "worklet";
-      isPanningViewport.value = true;
-      viewportStartX.value = viewportX.value;
-      viewportStartY.value = viewportY.value;
+      isPanningViewport.set(true);
+      viewportStartX.set(viewportX.value);
+      viewportStartY.set(viewportY.value);
     })
     .onUpdate((e) => {
       "worklet";
@@ -108,7 +108,7 @@ export function ProductionCanvas({
     })
     .onEnd(() => {
       "worklet";
-      isPanningViewport.value = false;
+      isPanningViewport.set(false);
     });
 
   const combinedGestures = Gesture.Exclusive(panGesture, tapGesture);
