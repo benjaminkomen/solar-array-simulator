@@ -1,6 +1,7 @@
 import {Fragment, useState} from 'react';
 import {Pressable, StyleSheet, Text, useColorScheme, View} from 'react-native';
 import {
+  Box,
   Column,
   ElevatedCard,
   HorizontalDivider,
@@ -16,12 +17,16 @@ import {
   useNativeState,
 } from '@expo/ui/jetpack-compose';
 import {
+  background,
   clickable,
+  fillMaxSize,
   fillMaxWidth,
   paddingAll,
 } from '@expo/ui/jetpack-compose/modifiers';
+import {SwipeToDismissBox} from 'expo-ui-swipe-to-dismiss-box';
 import {Stack} from "expo-router";
 import ChevronRight from '@expo/material-symbols/chevron_right.xml';
+import Delete from '@expo/material-symbols/delete.xml';
 import Add from '@expo/material-symbols/add.xml';
 import {WizardProgress} from "@/components/WizardProgress";
 import {useColors} from "@/utils/theme";
@@ -42,6 +47,7 @@ export default function ConfigScreen() {
     updatePanelTiltAngle,
     updateRoofType,
     handleWattageChange,
+    handleDeleteInverter,
     handleOpenAddSheet,
     handleOpenEditSheet,
     handleContinue,
@@ -185,25 +191,35 @@ export default function ConfigScreen() {
                 {config.inverters.map((inverter, idx) => (
                   <Fragment key={inverter.id}>
                     {idx > 0 && <HorizontalDivider/>}
-                    <ListItem
-                      modifiers={[clickable(() => handleOpenEditSheet(inverter))]}
+                    <SwipeToDismissBox
+                      enableDismissFromStartToEnd={false}
+                      onEndToStart={() => handleDeleteInverter(inverter)}
                     >
-                      <ListItem.HeadlineContent>
-                        <UIText>{inverter.serialNumber}</UIText>
-                      </ListItem.HeadlineContent>
-                      <ListItem.SupportingContent>
-                        <UIText>{`${Math.round(inverter.efficiency)}% efficiency`}</UIText>
-                      </ListItem.SupportingContent>
-                      <ListItem.TrailingContent>
-                        <Icon source={ChevronRight} tint={colors.text.tertiary} />
-                      </ListItem.TrailingContent>
-                    </ListItem>
+                      <SwipeToDismissBox.BackgroundEndToStart>
+                        <Box contentAlignment="centerEnd" modifiers={[fillMaxSize(), background('#EF5350'), paddingAll(16)]}>
+                          <Icon source={Delete} size={24} tint="#FFFFFF" />
+                        </Box>
+                      </SwipeToDismissBox.BackgroundEndToStart>
+                      <ListItem
+                        modifiers={[clickable(() => handleOpenEditSheet(inverter))]}
+                      >
+                        <ListItem.HeadlineContent>
+                          <UIText>{inverter.serialNumber}</UIText>
+                        </ListItem.HeadlineContent>
+                        <ListItem.SupportingContent>
+                          <UIText>{`${Math.round(inverter.efficiency)}% efficiency`}</UIText>
+                        </ListItem.SupportingContent>
+                        <ListItem.TrailingContent>
+                          <Icon source={ChevronRight} tint={colors.text.tertiary} />
+                        </ListItem.TrailingContent>
+                      </ListItem>
+                    </SwipeToDismissBox>
                   </Fragment>
                 ))}
               </Column>
             </ElevatedCard>
             <UIText style={{fontSize: 13}} color={colors.text.secondary as string}>
-              Tap to edit efficiency.
+              Tap to edit efficiency. Swipe left to delete.
             </UIText>
           </LazyColumn>
         </Host>

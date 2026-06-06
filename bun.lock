@@ -30,6 +30,7 @@
         "expo-status-bar": "~56.0.4",
         "expo-symbols": "~56.0.5",
         "expo-system-ui": "~56.0.5",
+        "expo-ui-swipe-to-dismiss-box": "^1.0.1",
         "expo-web-browser": "~56.0.5",
         "react": "19.2.3",
         "react-dom": "19.2.3",
@@ -906,6 +907,8 @@
     "expo-symbols": ["expo-symbols@56.0.5", "", { "dependencies": { "@expo-google-fonts/material-symbols": "^0.4.1", "sf-symbols-typescript": "^2.0.0" }, "peerDependencies": { "expo": "*", "expo-font": "*", "react": "*", "react-native": "*" } }, "sha512-RIukH0Xo80C7RU8qreipL2SPy2Py+Km8JFPbCmbPQpHkM3DW9Znlmg6VfhzbtUOlO5EuNSF0lAJ3l2VJi6qYrw=="],
 
     "expo-system-ui": ["expo-system-ui@56.0.5", "", { "dependencies": { "@react-native/normalize-colors": "0.85.3", "debug": "^4.3.2" }, "peerDependencies": { "expo": "*", "react-native": "*", "react-native-web": "*" }, "optionalPeers": ["react-native-web"] }, "sha512-n1MmnUArV4cc3gVed9fGtluPme00PE9axKVx+NHbKxHFMam5l4GcOI7PxbYKFNx8o7WA1LRD7eLW33agmZrxGg=="],
+
+    "expo-ui-swipe-to-dismiss-box": ["expo-ui-swipe-to-dismiss-box@1.0.1", "", { "peerDependencies": { "@expo/ui": ">=0.6.0", "expo": ">=52.0.0", "react": "*", "react-native": "*" } }, "sha512-JMpGwIL+b1nn5X75aR3S7YfkIK9Fg79cBCyFckCZOsQI4o7wFsaBrFPToyHrILnfn2Pq5vjJkhvQzZgO3fFO9Q=="],
 
     "expo-updates-interface": ["expo-updates-interface@56.0.2", "", { "peerDependencies": { "expo": "*" } }, "sha512-eWTwSZ9y8vrULG2oBn2TQSSIwBGSq/TxGJ3jY6tuVS2FWH/ASRIiKs3zkUZTRoC3ZuV2alz0mUClYV7nNrFx8g=="],
 
