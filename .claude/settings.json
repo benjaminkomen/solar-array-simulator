@@ -3,5 +3,23 @@
     "allow": [
       "mcp__argent"
     ]
+  },
+  "extraKnownMarketplaces": {
+    "expo-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "expo/skills"
+      }
+    },
+    "cwb-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "Code-with-Beto/skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "expo@expo-plugins": true,
+    "cwb-theming@cwb-plugins": true
   }
 }
