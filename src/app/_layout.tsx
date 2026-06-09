@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { Platform, useColorScheme } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, ThemeProvider } from "expo-router";
+import * as SystemUI from "expo-system-ui";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useColors } from "@/utils/theme";
+import { useColors, useNavigationTheme } from "@/utils/theme";
 import { Observe, ObserveRoot } from "expo-observe";
 
 Observe.configure({
@@ -14,11 +16,23 @@ Observe.configure({
 function RootLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
+  const navigationTheme = useNavigationTheme();
+
+  // Keep the Android window/navigation-bar background aligned with the
+  // Material You surface so there's no light flash and the system bars blend
+  // into the app. No-op on iOS/web.
+  const surface = colors.background.primary as string;
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      SystemUI.setBackgroundColorAsync(surface);
+    }
+  }, [surface]);
 
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <ErrorBoundary>
         <PanelsProvider>
+          <ThemeProvider value={navigationTheme}>
           <Stack
             screenOptions={{
               headerTransparent: true,
@@ -100,6 +114,7 @@ function RootLayout() {
               }}
             />
           </Stack>
+          </ThemeProvider>
         </PanelsProvider>
       </ErrorBoundary>
     </GestureHandlerRootView>

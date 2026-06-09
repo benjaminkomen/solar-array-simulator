@@ -1,7 +1,7 @@
 import { useColorScheme, AppState } from "react-native";
 import { useEffect, useReducer } from "react";
 import { Color } from "expo-router";
-import { lightColors, darkColors, type Colors } from "./theme.base";
+import { lightColors, darkColors, buildNavigationTheme, type Colors } from "./theme.base";
 
 export { lightColors, darkColors, type Colors } from "./theme.base";
 
@@ -45,10 +45,23 @@ export function useColors(): Colors {
       medium: Color.android.dynamic.outline,
     },
 
-    system: { red: Color.android.dynamic.error },
+    system: {
+      red: Color.android.dynamic.error,
+      errorContainer: Color.android.dynamic.errorContainer,
+      onError: Color.android.dynamic.onError,
+      onErrorContainer: Color.android.dynamic.onErrorContainer,
+    },
 
     // panel.* must stay as plain hex strings — Skia canvas worklets run on the
     // UI thread and cannot resolve PlatformColor / dynamic color references.
     panel: scheme === "dark" ? darkColors.panel : lightColors.panel,
   };
+}
+
+export function useNavigationTheme(): ReactNavigation.Theme {
+  // useColors() already force-updates on foreground + light/dark switches, so
+  // the navigation chrome tracks Material You wallpaper changes.
+  const colors = useColors();
+  const scheme = useColorScheme();
+  return buildNavigationTheme(colors, scheme === "dark");
 }

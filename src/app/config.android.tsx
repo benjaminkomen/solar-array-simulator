@@ -82,7 +82,7 @@ export default function ConfigScreen() {
             <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary as string}>
               Panel Settings
             </UIText>
-            <ElevatedCard colors={{containerColor: colors.background.primary}}>
+            <ElevatedCard>
               <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
                 <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary as string}>
                   Default Production
@@ -103,7 +103,7 @@ export default function ConfigScreen() {
             <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary as string}>
               Location
             </UIText>
-            <ElevatedCard colors={{containerColor: colors.background.primary}}>
+            <ElevatedCard>
               <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
                 <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary as string}>
                   City
@@ -148,7 +148,7 @@ export default function ConfigScreen() {
             <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary as string}>
               Roof
             </UIText>
-            <ElevatedCard colors={{containerColor: colors.background.primary}}>
+            <ElevatedCard>
               <Column modifiers={[fillMaxWidth(), paddingAll(16)]}>
                 <UIText style={{typography: 'bodyLarge'}} color={colors.text.primary as string}>
                   Roof Type
@@ -186,7 +186,7 @@ export default function ConfigScreen() {
             <UIText style={{fontSize: 15, fontWeight: '600'}} color={colors.text.secondary as string}>
               {`Micro-inverters (${config.inverters.length})`}
             </UIText>
-            <ElevatedCard colors={{containerColor: colors.background.primary}}>
+            <ElevatedCard>
               <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
                 {config.inverters.map((inverter, idx) => (
                   <Fragment key={inverter.id}>
@@ -196,8 +196,8 @@ export default function ConfigScreen() {
                       onEndToStart={() => handleDeleteInverter(inverter)}
                     >
                       <SwipeToDismissBox.BackgroundEndToStart>
-                        <Box contentAlignment="centerEnd" modifiers={[fillMaxSize(), background('#EF5350'), paddingAll(16)]}>
-                          <Icon source={Delete} size={24} tint="#FFFFFF" />
+                        <Box contentAlignment="centerEnd" modifiers={[fillMaxSize(), background(colors.system.errorContainer as string), paddingAll(16)]}>
+                          <Icon source={Delete} size={24} tint={colors.system.onErrorContainer} />
                         </Box>
                       </SwipeToDismissBox.BackgroundEndToStart>
                       <ListItem
