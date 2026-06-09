@@ -1,4 +1,4 @@
-import {StyleSheet, View} from 'react-native';
+import {PlatformColor, StyleSheet, View} from 'react-native';
 import {
   Button,
   Form,
@@ -186,7 +186,7 @@ export default function ConfigScreen() {
                           </Text>
                         </VStack>
                         <Spacer/>
-                        <Image systemName="chevron.right" size={14} color="#C7C7CC"/>
+                        <Image systemName="chevron.right" size={14} color={PlatformColor("tertiaryLabel")}/>
                       </HStack>
                     </Button>
                   ))}
