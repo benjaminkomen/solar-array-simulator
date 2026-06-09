@@ -1,7 +1,5 @@
-import { useEffect } from "react";
 import { Platform, useColorScheme } from "react-native";
 import { Stack, ThemeProvider } from "expo-router";
-import * as SystemUI from "expo-system-ui";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -18,18 +16,11 @@ function RootLayout() {
   const colorScheme = useColorScheme();
   const navigationTheme = useNavigationTheme();
 
-  // Keep the Android window/navigation-bar background aligned with the
-  // Material You surface so there's no light flash and the system bars blend
-  // into the app. No-op on iOS/web.
-  const surface = colors.background.primary as string;
-  useEffect(() => {
-    if (Platform.OS === "android") {
-      SystemUI.setBackgroundColorAsync(surface);
-    }
-  }, [surface]);
-
+  // Paint the root view with the themed surface so the area behind the
+  // (edge-to-edge) Android system bars and any pre-paint gap follow the
+  // Material You palette. Declarative + re-renders with the dynamic color.
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background.primary }}>
       <ErrorBoundary>
         <PanelsProvider>
           <ThemeProvider value={navigationTheme}>
