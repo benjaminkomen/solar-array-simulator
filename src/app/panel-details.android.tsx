@@ -39,7 +39,7 @@ export default function PanelDetailsScreen() {
           </UIText>
 
           {currentInverter ? (
-            <ElevatedCard colors={{ containerColor: colors.background.primary }}>
+            <ElevatedCard>
               <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
                 <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary as string} modifiers={[paddingAll(8)]}>
                   LINKED INVERTER
@@ -88,7 +88,7 @@ export default function PanelDetailsScreen() {
               <UIText style={{ typography: 'labelMedium', letterSpacing: 0.5 }} color={colors.text.secondary as string} modifiers={[paddingAll(4)]}>
                 AVAILABLE INVERTERS
               </UIText>
-              <ElevatedCard colors={{ containerColor: colors.background.primary }}>
+              <ElevatedCard>
                 <Column modifiers={[fillMaxWidth(), paddingAll(8)]}>
                   {availableInverters.map((inv, idx) => (
                     <Fragment key={inv.id}>
@@ -112,7 +112,7 @@ export default function PanelDetailsScreen() {
               </UIText>
             </Column>
           ) : !isViewMode ? (
-            <ElevatedCard colors={{ containerColor: colors.background.primary }}>
+            <ElevatedCard>
               <Column modifiers={[fillMaxWidth(), paddingAll(16)]} horizontalAlignment="center">
                 <UIText style={{ typography: 'headlineSmall', fontWeight: '700' }} color={colors.text.primary as string}>
                   No Available Inverters

@@ -1,4 +1,4 @@
-import {StyleSheet, View} from 'react-native';
+import {PlatformColor, StyleSheet, View} from 'react-native';
 import {Link, Stack} from 'expo-router';
 import {
   Button,
@@ -56,8 +56,8 @@ export default function PanelDetailsScreen() {
               {!isViewMode && (
                 <Button onPress={handleUnlink} modifiers={[buttonStyle('plain')]}>
                   <HStack spacing={8}>
-                    <Image systemName="link.badge.plus" size={20} color="#FF3B30" />
-                    <Text modifiers={[foregroundStyle({type: 'color', color: '#FF3B30'}), bold()]}>
+                    <Image systemName="link.badge.plus" size={20} color={PlatformColor("systemRed")} />
+                    <Text modifiers={[foregroundStyle({type: 'color', color: PlatformColor("systemRed")}), bold()]}>
                       Unlink Inverter
                     </Text>
                   </HStack>
@@ -82,7 +82,7 @@ export default function PanelDetailsScreen() {
                         </Text>
                       </VStack>
                       <Spacer />
-                      <Image systemName="chevron.right" size={14} color="#C7C7CC" />
+                      <Image systemName="chevron.right" size={14} color={PlatformColor("tertiaryLabel")} />
                     </HStack>
                   </Button>
                 ))}
@@ -91,7 +91,7 @@ export default function PanelDetailsScreen() {
           ) : !isViewMode ? (
             <Section>
               <VStack spacing={16}>
-                <Image systemName="exclamationmark.triangle" size={56} color="#8E8E93" />
+                <Image systemName="exclamationmark.triangle" size={56} color={PlatformColor("secondaryLabel")} />
                 <Text modifiers={[bold(), font({size: 20})]}>No Available Inverters</Text>
                 <Text modifiers={[opacity(0.6), font({size: 15})]}>
                   All inverters are assigned. Unlink a panel first or add a new inverter.
@@ -99,8 +99,8 @@ export default function PanelDetailsScreen() {
                 <Link href="/config" asChild>
                   <Button>
                     <HStack>
-                      <Image systemName="plus.circle" size={22} color="#007AFF" />
-                      <Text modifiers={[foregroundStyle({type: 'color', color: '#007AFF'}), bold()]}>
+                      <Image systemName="plus.circle" size={22} color={PlatformColor("systemBlue")} />
+                      <Text modifiers={[foregroundStyle({type: 'color', color: PlatformColor("systemBlue")}), bold()]}>
                         Add Inverter
                       </Text>
                     </HStack>

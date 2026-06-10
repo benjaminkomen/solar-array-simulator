@@ -1,4 +1,5 @@
 import { useColorScheme, type ColorValue } from "react-native";
+import { DefaultTheme, DarkTheme } from "expo-router";
 
 const palette = {
   blue: {
@@ -62,7 +63,13 @@ export const lightColors = {
     selection: palette.amber[400],
   },
 
-  system: { red: palette.red.system },
+  system: {
+    red: palette.red.system,
+    // Material 3 error-container roles (fallbacks for non-Android platforms).
+    errorContainer: "#fce8e6",
+    onError: "#ffffff",
+    onErrorContainer: "#410e0b",
+  },
 };
 
 export const darkColors = {
@@ -101,7 +108,12 @@ export const darkColors = {
     selection: palette.amber[400],
   },
 
-  system: { red: palette.red.system },
+  system: {
+    red: palette.red.system,
+    errorContainer: "#601410",
+    onError: "#ffffff",
+    onErrorContainer: "#f9dedc",
+  },
 };
 
 export type Colors = {
@@ -128,10 +140,40 @@ export type Colors = {
     unlinked: { fill: string; stroke: string; grid: string };
     selection: string;
   };
-  system: { red: ColorValue };
+  system: {
+    red: ColorValue;
+    errorContainer: ColorValue;
+    onError: ColorValue;
+    onErrorContainer: ColorValue;
+  };
 };
 
 export function useColors(): Colors {
   const scheme = useColorScheme();
   return scheme === "dark" ? darkColors : lightColors;
+}
+
+/**
+ * Builds a React Navigation theme from our semantic tokens so navigation chrome
+ * (headers, screen/card backgrounds, borders) follows the active palette. On
+ * Android the passed `colors` resolve from `Color.android.dynamic.*`, so the
+ * navigation surface tracks the Material You wallpaper palette automatically.
+ */
+export function buildNavigationTheme(
+  colors: Colors,
+  isDark: boolean,
+): ReactNavigation.Theme {
+  const base = isDark ? DarkTheme : DefaultTheme;
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: colors.primary as string,
+      background: colors.background.primary as string,
+      card: colors.background.primary as string,
+      text: colors.text.primary as string,
+      border: colors.border.light as string,
+      notification: colors.primary as string,
+    },
+  };
 }

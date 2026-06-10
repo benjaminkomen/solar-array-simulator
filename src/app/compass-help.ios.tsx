@@ -1,4 +1,4 @@
-import {StyleSheet, View} from "react-native";
+import {PlatformColor, StyleSheet, View} from "react-native";
 import {Stack} from "expo-router";
 import {Host, Image, Text, VStack,} from "@expo/ui/swift-ui";
 import {bold, font, opacity, padding} from "@expo/ui/swift-ui/modifiers";
@@ -16,7 +16,7 @@ export default function CompassHelpScreen() {
       <View style={styles.container}>
         <Host style={styles.host}>
           <VStack spacing={12}>
-            <Image systemName="location.north.fill" size={40} color="#007AFF"/>
+            <Image systemName="location.north.fill" size={40} color={PlatformColor("systemBlue")}/>
             <Text modifiers={[bold(), font({size: 18})]}>
               Array Orientation
             </Text>

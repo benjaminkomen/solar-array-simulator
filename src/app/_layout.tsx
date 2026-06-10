@@ -1,9 +1,9 @@
 import { Platform, useColorScheme } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, ThemeProvider } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useColors } from "@/utils/theme";
+import { useColors, useNavigationTheme } from "@/utils/theme";
 import { Observe, ObserveRoot } from "expo-observe";
 
 Observe.configure({
@@ -14,11 +14,16 @@ Observe.configure({
 function RootLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
+  const navigationTheme = useNavigationTheme();
 
+  // Paint the root view with the themed surface so the area behind the
+  // (edge-to-edge) Android system bars and any pre-paint gap follow the
+  // Material You palette. Declarative + re-renders with the dynamic color.
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background.primary }}>
       <ErrorBoundary>
         <PanelsProvider>
+          <ThemeProvider value={navigationTheme}>
           <Stack
             screenOptions={{
               headerTransparent: true,
@@ -100,6 +105,7 @@ function RootLayout() {
               }}
             />
           </Stack>
+          </ThemeProvider>
         </PanelsProvider>
       </ErrorBoundary>
     </GestureHandlerRootView>
