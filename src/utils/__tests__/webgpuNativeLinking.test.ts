@@ -43,6 +43,27 @@ describe("WebGPU native linking (Expo SDK 56 / RN 0.85)", () => {
     ).toBeUndefined();
   });
 
+  it("sets Android minSdk 26 for react-native-webgpu AHardwareBuffer (keeps Hermes V1 + PCH)", () => {
+    const appJson = readJson("app.json") as {
+      expo: { plugins: (string | [string, Record<string, unknown>])[] };
+    };
+    const buildProps = appJson.expo.plugins.find(
+      (plugin) => Array.isArray(plugin) && plugin[0] === "expo-build-properties",
+    ) as [string, Record<string, unknown>] | undefined;
+
+    expect(buildProps?.[1]?.useHermesV1).toBe(true);
+    const android = buildProps?.[1]?.android as
+      | {
+          minSdkVersion?: number;
+          usePrecompiledHeaders?: boolean;
+        }
+      | undefined;
+    // react-native-webgpu 0.10 CMake inherits the app minSdk. Expo default 24
+    // fails AHardwareBuffer_* (API 26+). Library source/example set minSdk 26.
+    expect(android?.minSdkVersion).toBeGreaterThanOrEqual(26);
+    expect(android?.usePrecompiledHeaders).toBe(true);
+  });
+
   it("registers the Expo plugin and pins RN autolinking for iOS + Android", () => {
     const appJson = readJson("app.json") as {
       expo: { plugins: (string | [string, unknown])[] };
