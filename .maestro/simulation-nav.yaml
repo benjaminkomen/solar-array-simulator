@@ -21,18 +21,12 @@ appId: com.bkomen.solararraysimulator
 - assertVisible: "Fall"
 - assertVisible: "Winter"
 
-# Android AVD WebGPU: chrome (Simulation / seasons / Total Output) is immediate;
-# the canvas stays black for tens of seconds while Dawn paints. That is not
-# "WebGPU unavailable". waitForAnimationToEnd returns immediately on a static
-# black canvas — do not use it as the 3D settle. Optional wait is a timed
-# settle until a paint testID exists.
-- runFlow:
-    when:
-      platform: Android
-    commands:
-      - extendedWaitUntil:
-          visible:
-            id: "webgpu-scene-painted"
-          timeout: 90000
-          optional: true
+# Short settle only. Do not wait for a testID that is not in the tree —
+# a 90s optional wait lets the app leave Simulation (AVD launcher).
+# Proof must be taken while Simulation chrome is still in the foreground
+# (panel/sun or black canvas with chrome — never the launcher).
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: "Simulation"
+- assertVisible: "Total Output"
 - takeScreenshot: sim-3d-proof

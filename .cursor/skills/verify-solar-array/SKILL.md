@@ -101,7 +101,7 @@ Maestro notes (from the repo, not folklore):
 - SwiftUI section headers may be invisible to Maestro; assert body copy (`Default Production`, `Panel Settings`).
 - `extendedWaitUntil` with an id must nest: `visible: { id: "canvas-container" }`.
 - iOS `launch-fresh`: deep-link `127.0.0.1:8081`, tap **Open** (not Cancel), wait for **Continue**. Android: wait for Home, `openLink` to `10.0.2.2:8081` (`disableOnboarding=1`), Recently Opened / typed **Connect** fallback. Then poll: dismiss Dev Menu (`Close` or `50%,15%` when `Go home`/`Reload` is up — that is attached, not a failed launch) or tap **Continue** if the first-run sheet appears. Do not wait 90s for Continue while the Dev Menu is covering Welcome.
-- Android Simulation 3D: chrome can be up while the canvas is still black. That is a GPU settle, not "WebGPU unavailable". `simulation-nav` waits ~90s after chrome (`optional` `webgpu-scene-painted`) before `sim-3d-proof`. Do not treat a black canvas as a failed native link if seasons / Total Output are visible.
+- Android Simulation 3D: chrome can be up while the canvas is still black. That is a GPU settle, not "WebGPU unavailable". `simulation-nav` takes `sim-3d-proof` immediately after season asserts (short settle only) while "Simulation" / "Total Output" are still visible. Do not wait 90s for `webgpu-scene-painted` — that id is not in the tree and the app can leave to the AVD launcher. A black canvas with chrome up is valid proof; the launcher home screen is not.
 - `analyze-skip` gallery picker is still iOS Photos chrome (`Photos` + `17%,25%`). Android system picker is a different OS sheet — prove Analyze header after a real pick, or Skip.
 
 Android development build: `eas.json` `development` (`developmentClient: true`, `arm64-v8a`) — `eas build --profile development --platform android`, install the APK on the AVD. `development-simulator` / `preview-simulator` are **iOS-only** (`ios.simulator: true`). Do not invent a second Android profile unless EAS requires it.
@@ -122,7 +122,7 @@ Proof standards:
 - Exercise a real user path from the Feature Map. Do not set `wizardCompleted` in the KV store or deep-link past the change under test as the primary proof.
 - Capture the action **and** the resulting visible state (screenshot or Maestro `assertVisible`). "Looks right in code" is not evidence.
 - A status-200 from `/api/analyze` is not Analyze proof. Drive Upload → gallery/camera → Analyze header (or Skip).
-- Skia/WebGPU pixels are not queryable. Prove Custom via `canvas-container` + toolbar (`Finish` after add). Prove Simulation via chrome (`Simulation`, `Total Output`, season labels). On Android, wait for the `simulation-nav` 3D settle before treating a screenshot as painted-scene proof — a black canvas with chrome up is not "WebGPU unavailable".
+- Skia/WebGPU pixels are not queryable. Prove Custom via `canvas-container` + toolbar (`Finish` after add). Prove Simulation via chrome (`Simulation`, `Total Output`, season labels) and `sim-3d-proof` taken while that chrome is still in the foreground. A black canvas with chrome up is not "WebGPU unavailable"; the AVD launcher is not Simulation proof.
 - Record the feature id, platform, and the flow/command on every artifact.
 - If a path is unreachable (no sim, no emulator, no photo library, no AWS keys), name the path and the unmet precondition. Do not mark it verified via a different entry point.
 
