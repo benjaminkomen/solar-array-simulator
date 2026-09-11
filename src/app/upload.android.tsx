@@ -1,14 +1,13 @@
+import { useEffect, useState } from "react";
 import { Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { ElevatedButton, Host, Text as UIText } from "@expo/ui/jetpack-compose";
 import { PermissionModal } from "@/components/PermissionModal";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useUpload } from "@/hooks/useUpload";
-import {paddingAll} from "@expo/ui/jetpack-compose/modifiers";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Upload() {
@@ -16,6 +15,14 @@ export default function Upload() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  // Reanimated `entering` schedules updates during the first render. On Android
+  // that races Config→Upload and trips LogBox ("state update on a component
+  // that hasn't mounted yet"). Enable the fade only after mount.
+  const [enterReady, setEnterReady] = useState(false);
+  useEffect(() => {
+    setEnterReady(true);
+  }, []);
+  const fadeIn = enterReady ? FadeIn.duration(300) : undefined;
 
   const {
     isWizardMode,
@@ -29,7 +36,6 @@ export default function Upload() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "" }} />
       {isWizardMode && <WizardProgress currentStep={2} />}
       <View style={styles.outerContainer}>
       <ScrollView
@@ -38,7 +44,7 @@ export default function Upload() {
         contentContainerStyle={[styles.scrollContent, isWizardMode && styles.scrollContentWithToolbar]}
       >
         <Animated.View
-          entering={FadeIn.duration(300)}
+          entering={fadeIn}
           style={[
             styles.iconContainer,
             {
@@ -53,21 +59,21 @@ export default function Upload() {
         </Animated.View>
 
         <Animated.Text
-          entering={FadeIn.duration(300).delay(100)}
+          entering={fadeIn?.delay(100)}
           style={[styles.title, { color: colors.text.primary }]}
         >
           Take or Select Photo
         </Animated.Text>
 
         <Animated.Text
-          entering={FadeIn.duration(300).delay(150)}
+          entering={fadeIn?.delay(150)}
           style={[styles.subtitle, { color: colors.text.secondary }]}
         >
           Photograph your solar panel array with visible serial numbers
         </Animated.Text>
 
         <View style={styles.buttonsContainer}>
-          <Animated.View entering={FadeIn.duration(300).delay(200)}>
+          <Animated.View entering={fadeIn?.delay(200)}>
             <Pressable
               testID="take-photo-button"
               onPress={() => {
@@ -83,7 +89,7 @@ export default function Upload() {
             </Pressable>
           </Animated.View>
 
-          <Animated.View entering={FadeIn.duration(300).delay(300)}>
+          <Animated.View entering={fadeIn?.delay(300)}>
             <Pressable
               testID="choose-gallery-button"
               onPress={() => {
@@ -109,14 +115,15 @@ export default function Upload() {
         </View>
       </ScrollView>
 
-        {isWizardMode && (
-          <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
-            <Host matchContents colorScheme={colorScheme ?? undefined}>
-              <ElevatedButton onClick={handleSkip} modifiers={[paddingAll(8)]}><UIText>Skip</UIText></ElevatedButton>
-            </Host>
-          </View>
-        )}
       </View>
+
+      <Stack.Toolbar placement="bottom">
+        <Stack.Toolbar.View hidden={!isWizardMode}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
+            <Text style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}>Skip</Text>
+          </Pressable>
+        </Stack.Toolbar.View>
+      </Stack.Toolbar>
 
       {modalState && (
         <PermissionModal
@@ -185,12 +192,16 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
   },
-  floatingToolbarContainer: {
-    position: "absolute",
-    bottom: 30,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 20,
+  toolbarTextButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  toolbarTextButtonLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });

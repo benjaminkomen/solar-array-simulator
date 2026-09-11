@@ -14,7 +14,7 @@ Wizard step 1 (`/config?wizard=true`) and later "Edit Configuration". Sets defau
 ## How to get to it (user POV)
 
 - Welcome → Get Started (`/config?wizard=true`).
-- Production → More options → Edit Configuration (also `wizard=true`).
+- Production → Production menu → Edit Configuration (also `wizard=true`).
 - Panel Details → Add Inverter (pushes `/config` without requiring wizard chrome).
 - Config toolbar plus → Inverter Details (`/inverter-details?mode=add`). Tap a row → `mode=edit`.
 
@@ -26,7 +26,7 @@ Preconditions:
 - Drive iOS Simulator or Android emulator. Android uses Jetpack Compose chrome with the same body copy (`Panel Settings`, `Continue`).
 
 - **Enter from Welcome.** `smoke` or `run-flow wizard-happy-path`: tap `id: get-started-button`, wait for "Panel Settings". Assert "Configure", "Photo", "Layout", and "Default Production".
-- **Continue.** Tap "Continue". Upload ("Take or Select Photo") is the success state. Do not skip this if you changed the toolbar.
+- **Continue.** Tap "Continue". Upload ("Take or Select Photo") is the success state. Do not skip this if you changed the toolbar. A LogBox overlay ("Can't perform a React state update on a component that hasn't mounted yet") is a product failure — dismiss/retry is not success.
 - **Add inverter.** Tap toolbar `add` (iOS `icon="plus"`, accessibilityLabel "Add inverter"). Sheet title is "New Micro-inverter". Cancel (`xmark` / "Cancel") dismisses without a new row; Save (`checkmark` / "Save") returns to Config with count + 1. No Maestro flow covers the sheet — drive it as a follow-up after Config is on screen.
 - **Edit inverter.** Tap a serial-number row. Sheet title is "Edit Micro-inverter". Change efficiency, Save, assert the row subtitle (`N% efficiency`).
 - **Edit from Production.** `run-flow production-menu` opens the menu, taps "Edit Configuration", asserts "Panel Settings" and "Default Production".
