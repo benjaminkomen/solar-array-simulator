@@ -7,7 +7,7 @@ Wizard step 3 (`/custom?wizard=true`): Skia canvas for laying out panels. Select
 - `custom-canvas` mounts `id: canvas-container` with zoom controls.
 - `custom-add` toolbar plus adds a panel. Wizard "Finish" appears only after `panels.length > 0`.
 - `custom-select-actions` after a selection: Link inverter, Rotate, Delete.
-- `custom-panel-details` form sheet `/panel-details?panelId=…` (link / unlink / empty state).
+- `custom-panel-details` form sheet `/panel-details?panelId=…` (link / unlink / empty state). Body is shared `PanelDetailsForm` (`FieldGroup`). iOS formSheet / Android `ModalBottomSheet` chrome stay in the route files and `_layout`.
 - `custom-panel-view` from Production tap (read-only, `mode=view`) — covered here because it is the same sheet.
 - `custom-finish` Finish → Production ("Total Array Output").
 
@@ -34,8 +34,9 @@ Preconditions:
 
 ## Gotchas
 
-- Shared `custom.tsx` is a stub. Product UI is `custom.ios.tsx` / `custom.android.tsx`, both mounting the same `CustomHeaderToolbar` / `CustomBottomToolbar` tree (`src/components/CustomChrome.tsx`). Icons are SF Symbol vs Material (`Platform` only).
+- Shared `custom.tsx` is the web stub. Product UI is `custom.ios.tsx` / `custom.android.tsx`, both mounting the same `CustomHeaderToolbar` / `CustomBottomToolbar` tree (`src/components/CustomChrome.tsx`). Icons are SF Symbol vs Material (`Platform` only).
 - Android `Stack.Toolbar.Button` puts `accessibilityLabel` on a Compose `Icon` (`android.view.View`, `clickable=false`). Maestro then taps a dead node. Android tappable chrome (Add, compass, snap, selected actions, Finish) uses `Stack.Toolbar.View` + RN `Pressable` (`accessibilityRole="button"`, `collapsable={false}`, `cancelable={false}`). Keep Compose `Icon` **without** an a11y label; draw the Pressable **above** the Host (`pointerEvents="none"`) so a clickable Add still fires `onPress`. Do not put the Host inside the Pressable — clickable=true then no-ops. `handleAddPanel` must not return early when canvas measure is 0×0.
+- Panel Details body is `src/components/PanelDetailsForm.tsx` (`FieldGroup` from `@expo/ui`). Sheet presentation stays split (`formSheet` on iOS, `transparentModal` + `ModalBottomSheet` on Android). First-paint Host stays on the platform chrome only — do not add a Host on the shared form to “look native.”
 - Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches. Do not skip the Finish assert if Add misses (#54).
 - Finish is hidden when `panels.length === 0` or not in wizard mode (`shouldShowWizardFinish`). Adding then deleting the last panel hides it again.
 - `Stack.Toolbar.Badge` is only on the header-right link `Stack.Toolbar.Button` when `unlinkedCount > 0`. Do not add Badge on Production / Config / bottom toolbar. Android omits `accessibilityLabel` on that Badge button so Maestro does not hit a second dead node.

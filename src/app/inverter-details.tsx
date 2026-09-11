@@ -1,20 +1,44 @@
-import { View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
+import { InverterDetailsForm } from "@/components/InverterDetailsForm";
+import { useInverterForm } from "@/hooks/useInverterForm";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function InverterDetailsScreen() {
   useMarkInteractive();
+  const {
+    isAddMode,
+    serial,
+    setSerial,
+    efficiency,
+    setEfficiency,
+    handleSave,
+    handleCancel,
+  } = useInverterForm();
+
   return (
     <>
-      <Stack.Screen options={{ title: "Inverter Details" }} />
-      <View style={styles.container}>
-        <Text style={styles.text}>Inverter details is not yet implemented for this platform.</Text>
-      </View>
+      <Stack.Screen
+        options={{
+          title: isAddMode ? "New Micro-inverter" : "Edit Micro-inverter",
+        }}
+      />
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button onPress={handleCancel} accessibilityLabel="Cancel">
+          Cancel
+        </Stack.Toolbar.Button>
+      </Stack.Toolbar>
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button onPress={handleSave} accessibilityLabel="Save">
+          Save
+        </Stack.Toolbar.Button>
+      </Stack.Toolbar>
+      <InverterDetailsForm
+        isAddMode={isAddMode}
+        serial={serial}
+        setSerial={setSerial}
+        efficiency={efficiency}
+        setEfficiency={setEfficiency}
+      />
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
-  text: { fontSize: 16, textAlign: "center", color: "#6b7280" },
-});

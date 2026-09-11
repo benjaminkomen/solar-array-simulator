@@ -1,22 +1,9 @@
-import {StyleSheet, View} from 'react-native';
-import {Stack} from 'expo-router';
-import {
-  Form,
-  Host,
-  LabeledContent,
-  Section,
-  Slider,
-  Text,
-  TextField,
-  useNativeState,
-} from '@expo/ui/swift-ui';
-import {
-  bold,
-  keyboardType,
-  scrollDismissesKeyboard,
-  submitLabel,
-} from '@expo/ui/swift-ui/modifiers';
-import { useInverterForm } from '@/hooks/useInverterForm';
+import { StyleSheet, View } from "react-native";
+import { Stack } from "expo-router";
+import { Host } from "@expo/ui/swift-ui";
+import { scrollDismissesKeyboard } from "@expo/ui/swift-ui/modifiers";
+import { InverterDetailsForm } from "@/components/InverterDetailsForm";
+import { useInverterForm } from "@/hooks/useInverterForm";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function InverterDetailsScreen() {
@@ -31,13 +18,11 @@ export default function InverterDetailsScreen() {
     handleCancel,
   } = useInverterForm();
 
-  const serialState = useNativeState(serial);
-
   return (
     <>
       <Stack.Screen
         options={{
-          title: isAddMode ? 'New Micro-inverter' : 'Edit Micro-inverter',
+          title: isAddMode ? "New Micro-inverter" : "Edit Micro-inverter",
           sheetAllowedDetents: [0.6, 1.0],
         }}
       />
@@ -49,43 +34,16 @@ export default function InverterDetailsScreen() {
       </Stack.Toolbar>
       <View style={styles.container}>
         <Host style={styles.host}>
-            <Form modifiers={[scrollDismissesKeyboard('immediately')]}>
-              {/* Serial Number Section */}
-              <Section header={<Text>Details</Text>}>
-                <LabeledContent label="Serial Number">
-                  <TextField
-                    text={serialState}
-                    onTextChange={setSerial}
-                    placeholder="Enter serial number"
-                    modifiers={[keyboardType('numbers-and-punctuation'), submitLabel('done')]}
-                  />
-                </LabeledContent>
-              </Section>
-
-              {/* Efficiency Section */}
-              <Section
-                header={<Text>Efficiency</Text>}
-                footer={
-                  <Text>
-                    {isAddMode
-                      ? 'Set the expected efficiency for this micro-inverter.'
-                      : 'Adjust for shading, dirt, or other obstructions.'}
-                  </Text>
-                }
-              >
-                <LabeledContent label="Current">
-                  <Text modifiers={[bold()]}>{Math.round(efficiency)}%</Text>
-                </LabeledContent>
-                <Slider
-                  value={efficiency / 100}
-                  onValueChange={(val) => setEfficiency(val * 100)}
-                  min={0}
-                  max={1}
-                />
-              </Section>
-            </Form>
-          </Host>
-        </View>
+          <InverterDetailsForm
+            isAddMode={isAddMode}
+            serial={serial}
+            setSerial={setSerial}
+            efficiency={efficiency}
+            setEfficiency={setEfficiency}
+            modifiers={[scrollDismissesKeyboard("immediately")]}
+          />
+        </Host>
+      </View>
     </>
   );
 }

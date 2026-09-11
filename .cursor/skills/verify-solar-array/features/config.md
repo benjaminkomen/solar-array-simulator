@@ -18,7 +18,7 @@ Product UI is one `FieldGroup` in `src/app/config.tsx` (web stub is `config.web.
 - Welcome → Get Started (`/config?wizard=true`).
 - Production → Production menu → Edit Configuration (also `wizard=true`).
 - Panel Details → Add Inverter (pushes `/config` without requiring wizard chrome).
-- Config toolbar plus → Inverter Details (`/inverter-details?mode=add`). Tap a row → `mode=edit`.
+- Config toolbar plus → Inverter Details (`/inverter-details?mode=add`). Tap a row → `mode=edit`. Sheet body is shared `InverterDetailsForm` (`FieldGroup`); presentation stays in `_layout` / platform chrome.
 
 ## Driving it with the harness
 
@@ -38,6 +38,7 @@ Preconditions:
 
 - Product UI is `src/app/config.tsx` (`FieldGroup` + `Host`). `config.web.tsx` is the web stub. Do not add `config.ios.tsx` / `config.android.tsx` back.
 - Header options for Config and Upload live in `_layout` (`headerBackButtonDisplayMode: "minimal"`). Do not set `Stack.Screen` options from Config, and do not put `Host` on Upload first paint — that is the Config→Upload LogBox race.
+- Inverter Details body is `src/components/InverterDetailsForm.tsx` (`FieldGroup` from `@expo/ui`). Save persists serial / efficiency; Cancel / back must not LogBox.
 - SwiftUI section headers may be invisible to Maestro — assert "Default Production", not the header node.
 - Location search hits the network. An empty result list is not a product bug if the query is garbage or the geocoder is down; say so.
 - Seeded config ships **14** inverters. Do not assume an empty list on first launch.
