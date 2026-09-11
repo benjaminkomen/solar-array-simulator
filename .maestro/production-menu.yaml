@@ -7,7 +7,7 @@ appId: com.bkomen.solararraysimulator
 - runFlow: shared/wizard-to-production.yaml
 
 # Test "Edit Configuration" menu action.
-# Android: in-content "Configuration options" — must not open Dev Client.
+# Android header "Configuration options" — Tools overlay off via launch-fresh.
 - runFlow: shared/tap-more-options.yaml
 - extendedWaitUntil:
     visible: "Edit Configuration"

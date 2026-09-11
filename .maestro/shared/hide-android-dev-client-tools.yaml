@@ -1,0 +1,12 @@
+appId: com.bkomen.solararraysimulator
+---
+# Turn off Expo Dev Client's Tools overlay so the Production header ⋮
+# (Configuration options, sibling of Simulate) keeps its hit target.
+# The Dev Menu row label is "Tools button"; after clearState the toggle is ON.
+# Tapping the row flips it off. No-op when the Dev Menu is not showing.
+
+- runFlow:
+    when:
+      visible: "Tools button"
+    commands:
+      - tapOn: "Tools button"

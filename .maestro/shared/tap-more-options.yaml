@@ -1,9 +1,10 @@
 appId: com.bkomen.solararraysimulator
 ---
-# Production overflow menu.
-# iOS: accessibilityLabel "More options" (right toolbar — works in iOS Dev Client).
-# Android: in-content "Configuration options" on the output card. Do not tap the
-# header-right overflow — that is Expo Dev Client Tools (Reload / Go home).
+# Production overflow menu (header-right, sibling of Simulate).
+# iOS: accessibilityLabel "More options"
+# Android: "Configuration options" — must not share the Dev Client AppBar
+# overflow contentDescription ("More options" → Reload / Go home / Tools).
+# launch-fresh.android turns off the Dev Client Tools overlay first.
 
 - runFlow:
     when:

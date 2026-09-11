@@ -24,14 +24,14 @@ Preconditions:
 
 - **Arrive via wizard.** `run-flow wizard-happy-path` ends on "Total Array Output".
 - **Simulate.** `run-flow simulation-nav` taps "Simulate" (`tap-simulate.yaml`), waits for "Simulation".
-- **Edit / delete.** `run-flow production-menu`: tap the Production menu (`tap-more-options.yaml`: iOS "More options", Android in-content "Configuration options" on the output card — not the header-right Dev Client Tools control), "Edit Configuration" → "Panel Settings" / "Default Production" (and not Reload / Go home); resume to Production via `wizard-resume-to-production.yaml`; then "Delete Configuration" → "Solar Array Simulator" + `get-started-button`.
+- **Edit / delete.** `run-flow production-menu`: tap the Production menu (`tap-more-options.yaml`: iOS "More options", Android header "Configuration options" next to Simulate — `launch-fresh.android` must have turned off the Dev Client Tools overlay first), "Edit Configuration" → "Panel Settings" / "Default Production" (and not Reload / Go home); resume to Production via `wizard-resume-to-production.yaml`; then "Delete Configuration" → "Solar Array Simulator" + `get-started-button`.
 - **Returning launch.** After Finish, kill and relaunch **without** `clearState`. Production must show, not Welcome.
 - **Proof.** "Total Array Output" visible after Finish, plus the menu or Simulate path you changed. Wattage text is selectable; asserting the label is enough unless the change is the formatter.
 
 ## Gotchas
 
 - Simulate = iOS `accessibilityLabel="Simulate"` / Android Icon `contentDescription="Simulate"`.
-- Menu = iOS `accessibilityLabel="More options"` on `Stack.Toolbar.Menu` (right). Android is an in-content Jetpack `DropdownMenu` on the **leading** edge of the Total Array Output card (`contentDescription="Configuration options"`). Do not put the Android menu in `Stack.Toolbar placement="right"` / `headerRight` — Expo Dev Client Tools occupies that corner and wins the tap (Reload / Go home) even with a distinct a11y string. Same action titles: "Edit Configuration", "Delete Configuration".
+- Menu = iOS `accessibilityLabel="More options"` / Android `accessibilityLabel="Configuration options"` on `Stack.Toolbar.Menu` in the right header (sibling of Simulate). Dev Client AppBar overflow is also "More options" — do not reuse that string. If the header ⋮ opens Reload / Go home / Tools, the Dev Client **Tools button** toggle is still on — turn it off (Dev Menu row or `hideDevClientToolsButton`), do not move the menu onto the card. Same action titles: "Edit Configuration", "Delete Configuration".
 - Delete calls `resetAllData` + `clearPanels` + `replace("/")`. Subsequent launches show Welcome.
 - Edit Configuration pushes `/config?wizard=true`, so Continue/Skip/Finish are back. `wizard-resume-to-production.yaml` assumes you are already on Config and does **not** re-add a panel (Finish is already available).
 - Tapping an **unlinked** panel does nothing. View sheet only opens when `inverterId` is set.

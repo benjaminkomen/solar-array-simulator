@@ -13,8 +13,10 @@ env:
 #
 # After Metro attaches, SDK 56 shows either the first-run Continue sheet or the
 # full Dev Menu (Reload / Go home / Close) over Welcome. Dev Menu is already
-# attached — dismiss it (Close or 50%,15%). Do not wait 90s for Continue, and
-# do not tap Go home (that returns to the launcher).
+# attached — turn off the Tools overlay (Dev Menu "Tools button" toggle), then
+# dismiss (Close or 50%,15%). Do not wait 90s for Continue, and do not tap
+# Go home (that returns to the launcher). The Tools overlay steals the
+# Production header overflow hit target if left on.
 
 - launchApp:
     clearState: true
@@ -44,6 +46,9 @@ env:
       - inputText: ${METRO_URL_PLAIN}
       - hideKeyboard
       - tapOn: "Connect"
+# One-shot: if Dev Menu is already up, flip Tools off before dismiss.
+# Do not put this inside the poll — a second tap would turn the overlay back on.
+- runFlow: hide-android-dev-client-tools.yaml
 # Poll for Welcome. Each pass: dismiss Dev Menu, or tap Continue, then peek.
 - repeat:
     times: 18
@@ -80,3 +85,30 @@ env:
 - extendedWaitUntil:
     visible: "Solar Array Simulator"
     timeout: 120000
+# Menu still up (dismiss missed): toggle once. Continue-sheet path: open the
+# floating Tools FAB, flip the toggle off, dismiss.
+- runFlow: hide-android-dev-client-tools.yaml
+- runFlow:
+    when:
+      visible: "Tools"
+      notVisible: "Tools button"
+    commands:
+      - tapOn: "Tools"
+      - runFlow: hide-android-dev-client-tools.yaml
+      - runFlow:
+          when:
+            visible: "Close"
+          commands:
+            - tapOn: "Close"
+      - runFlow:
+          when:
+            visible: "Go home"
+          commands:
+            - tapOn:
+                point: "50%,15%"
+      - runFlow:
+          when:
+            visible: "Reload"
+          commands:
+            - tapOn:
+                point: "50%,15%"

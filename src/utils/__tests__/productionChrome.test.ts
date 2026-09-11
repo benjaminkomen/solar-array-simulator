@@ -11,10 +11,20 @@ const androidSrc = readFileSync(
   resolve(import.meta.dir, "../../app/production.android.tsx"),
   "utf8",
 );
+const iosSrc = readFileSync(
+  resolve(import.meta.dir, "../../app/production.ios.tsx"),
+  "utf8",
+);
+const layoutSrc = readFileSync(
+  resolve(import.meta.dir, "../../app/_layout.tsx"),
+  "utf8",
+);
 
 describe("production menu a11y", () => {
   it("keeps iOS on More options", () => {
     expect(PRODUCTION_MENU_A11Y_IOS).toBe("More options");
+    expect(iosSrc).toContain("Stack.Toolbar.Menu");
+    expect(iosSrc).toContain("PRODUCTION_MENU_A11Y_IOS");
   });
 
   it("does not share Android Dev Client overflow label", () => {
@@ -23,15 +33,20 @@ describe("production menu a11y", () => {
     expect(PRODUCTION_MENU_A11Y_ANDROID).not.toBe("More options");
   });
 
-  it("keeps the Android menu out of the headerRight / Dev Client Tools slot", () => {
-    expect(PRODUCTION_MENU_ANDROID_SLOT).toBe("content");
+  it("keeps the Android menu in the header-right slot next to Simulate", () => {
+    expect(PRODUCTION_MENU_ANDROID_SLOT).toBe("header");
     const rightToolbar =
       androidSrc.match(/<Stack\.Toolbar placement="right">[\s\S]*?<\/Stack\.Toolbar>/)?.[0] ?? "";
     expect(rightToolbar).toContain("Simulate");
-    expect(rightToolbar).not.toContain("Toolbar.Menu");
-    expect(androidSrc).toContain("DropdownMenu");
-    expect(androidSrc).toContain("PRODUCTION_MENU_A11Y_ANDROID");
-    expect(androidSrc).not.toMatch(/\bheaderRight\s*:/);
-    expect(androidSrc).not.toMatch(/placement="right"[\s\S]*Toolbar\.Menu/);
+    expect(rightToolbar).toContain("Toolbar.Menu");
+    expect(rightToolbar).toContain("PRODUCTION_MENU_A11Y_ANDROID");
+    expect(rightToolbar).toContain("Edit Configuration");
+    expect(rightToolbar).toContain("Delete Configuration");
+    expect(androidSrc).not.toContain("DropdownMenu");
+    expect(androidSrc).not.toContain("cardMenu");
+  });
+
+  it("hides the Dev Client Tools overlay from the root layout", () => {
+    expect(layoutSrc).toContain("hideDevClientToolsButton");
   });
 });

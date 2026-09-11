@@ -76,6 +76,10 @@ describe("verify-solar-array CLI", () => {
     const dispatcher = readFileSync(join(repoRoot, ".maestro/shared/launch-fresh.yaml"), "utf8");
     const ios = readFileSync(join(repoRoot, ".maestro/shared/launch-fresh.ios.yaml"), "utf8");
     const android = readFileSync(join(repoRoot, ".maestro/shared/launch-fresh.android.yaml"), "utf8");
+    const hideToolsYaml = readFileSync(
+      join(repoRoot, ".maestro/shared/hide-android-dev-client-tools.yaml"),
+      "utf8",
+    );
     expect(dispatcher).toContain("platform: iOS");
     expect(dispatcher).toContain("platform: Android");
     expect(ios).toContain("127.0.0.1");
@@ -97,6 +101,14 @@ describe("verify-solar-array CLI", () => {
     expect(android).toContain("Close");
     expect(android).toContain('tapOn: "Continue"');
     expect(android).toContain("repeat:");
+    expect(android).toContain("hide-android-dev-client-tools.yaml");
+    expect(android).toContain("Tools button");
+    const hideTools = android.indexOf("hide-android-dev-client-tools.yaml");
+    const goHomeVisible = android.indexOf('visible: "Go home"');
+    expect(hideTools).toBeGreaterThan(-1);
+    expect(hideTools).toBeLessThan(goHomeVisible);
+    expect(hideToolsYaml).toContain('tapOn: "Tools button"');
+    expect(hideToolsYaml).toContain('visible: "Tools button"');
     expect(android).not.toMatch(/extendedWaitUntil:[\s\S]*visible: \"Continue\"[\s\S]*timeout: 90000/);
     expect(android.indexOf("Go home")).toBeLessThan(android.lastIndexOf("Continue"));
   });
@@ -128,8 +140,10 @@ describe("verify-solar-array CLI", () => {
     expect(menu).toContain('assertNotVisible: "Go home"');
     expect(menu.indexOf("tap-more-options")).toBeLessThan(menu.indexOf('assertNotVisible: "Reload"'));
     expect(menu.indexOf('assertNotVisible: "Reload"')).toBeLessThan(menu.indexOf('tapOn: "Edit Configuration"'));
-    expect(androidScreen).toContain("DropdownMenu");
-    expect(androidScreen).not.toMatch(/placement="right"[\s\S]*Toolbar\.Menu/);
+    expect(androidScreen).toContain("Toolbar.Menu");
+    expect(androidScreen).toMatch(/placement="right"[\s\S]*Toolbar\.Menu/);
+    expect(androidScreen).not.toContain("DropdownMenu");
+    expect(more).toContain("header-right");
     expect(wizard).toContain('assertNotVisible: "Finish"');
     expect(wizard.indexOf('assertNotVisible: "Finish"')).toBeLessThan(wizard.indexOf("tap-add-panel"));
     expect(happy).toContain('assertNotVisible: "Finish"');
