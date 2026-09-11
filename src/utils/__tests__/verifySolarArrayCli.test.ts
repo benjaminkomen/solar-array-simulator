@@ -85,7 +85,7 @@ describe("verify-solar-array CLI", () => {
     expect(android).toContain("10.0.2.2");
     expect(android).toContain("disableOnboarding=1");
     // Android: wait for Home before openLink, then Recently Opened / typed Connect,
-    // then wait for Continue (not a one-shot optional check).
+    // then dismiss Dev Menu (Go home / Close) or tap Continue — do not block on Continue.
     expect(android.indexOf("DEVELOPMENT SERVERS")).toBeLessThan(android.indexOf("openLink:"));
     expect(android).toContain("METRO_URL_PLAIN");
     expect(android).toContain("http://10.0.2.2:8081");
@@ -93,8 +93,12 @@ describe("verify-solar-array CLI", () => {
     expect(android).toContain("inputText:");
     expect(android).toContain("Connect");
     expect(android).toContain("notVisible: ${METRO_URL_PLAIN}");
-    expect(android).toContain("notVisible: \"Solar Array Simulator\"");
-    expect(android).toMatch(/extendedWaitUntil:[\s\S]*visible: \"Continue\"[\s\S]*timeout: 90000/);
+    expect(android).toContain("Go home");
+    expect(android).toContain("Close");
+    expect(android).toContain('tapOn: "Continue"');
+    expect(android).toContain("repeat:");
+    expect(android).not.toMatch(/extendedWaitUntil:[\s\S]*visible: \"Continue\"[\s\S]*timeout: 90000/);
+    expect(android.indexOf("Go home")).toBeLessThan(android.lastIndexOf("Continue"));
   });
 
   it("simulation-nav settles Android WebGPU before 3D proof", () => {
