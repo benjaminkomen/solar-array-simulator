@@ -1,0 +1,32 @@
+appId: com.bkomen.solararraysimulator
+env:
+  # AVD host loopback. Override for a physical device or adb reverse:
+  #   maestro test -e METRO_URL=http%3A%2F%2F127.0.0.1%3A8081 …
+  METRO_URL: http%3A%2F%2F10.0.2.2%3A8081
+---
+# Android emulator: Launch with clear state, deep-link Metro via Dev Client
+# 10.0.2.2 is the AVD alias for the host (127.0.0.1 inside the emulator is the guest).
+# Maestro openLink uses ACTION_VIEW — same intent as:
+#   adb shell am start -a android.intent.action.VIEW -d "<this URL>"
+# Ends on Welcome with "Solar Array Simulator" visible
+
+- launchApp:
+    clearState: true
+- openLink: solararraysimulator://expo-development-client/?url=${METRO_URL}&disableOnboarding=1
+# Dev Tools onboarding may still appear on older clients — do not tap Cancel
+- waitForAnimationToEnd:
+    timeout: 15000
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+- runFlow:
+    when:
+      visible: "Reload"
+    commands:
+      - tapOn:
+          point: "50%,15%"
+- extendedWaitUntil:
+    visible: "Solar Array Simulator"
+    timeout: 120000

@@ -1,30 +1,14 @@
 appId: com.bkomen.solararraysimulator
 ---
-# Shared: Launch app with clear state, connect to local Metro via Dev Client deep link
+# Shared: Launch with clear state and connect the Expo Dev Client to local Metro
+# iOS sim: 127.0.0.1:8081 (shares the Mac loopback). Android AVD: 10.0.2.2:8081.
 # Ends on the Welcome screen with "Solar Array Simulator" visible
 
-- launchApp:
-    clearState: true
-# Deep-link the Expo Dev Client at local Metro (Bonjour discovery is flaky on sim)
-- openLink: solararraysimulator://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081
-# iOS "Open in 'app'?" confirmation (appears after openLink)
 - runFlow:
     when:
-      visible: "Open"
-    commands:
-      - tapOn: "Open"
-# Expo SDK 56 Dev Tools onboarding — wait; do NOT tap Cancel first
-- extendedWaitUntil:
-    visible: "Continue"
-    timeout: 90000
-- tapOn: "Continue"
-# Optional: dismiss Reload / Dev Menu chrome if it appears
+      platform: iOS
+    file: launch-fresh.ios.yaml
 - runFlow:
     when:
-      visible: "Reload"
-    commands:
-      - tapOn:
-          point: "50%,15%"
-- extendedWaitUntil:
-    visible: "Solar Array Simulator"
-    timeout: 120000
+      platform: Android
+    file: launch-fresh.android.yaml

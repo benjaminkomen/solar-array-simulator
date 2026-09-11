@@ -41,8 +41,8 @@ appId: com.bkomen.solararraysimulator
         id: "canvas-container"
     timeout: 10000
 
-# Add a panel using the "+" bottom toolbar button
-- tapOn: "add"
+# Add a panel (iOS "add", Android "Add panel")
+- runFlow: shared/tap-add-panel.yaml
 - waitForAnimationToEnd
 
 # Verify "Finish" appears (only when panels > 0 in wizard mode)

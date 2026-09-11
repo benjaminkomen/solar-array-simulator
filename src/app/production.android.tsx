@@ -65,12 +65,12 @@ export default function ProductionScreen() {
             <Host matchContents>
               <Row>
                 <IconButton onClick={handleSimulate}>
-                  <Icon source={WbSunny} tint={colors.text.primary} />
+                  <Icon source={WbSunny} tint={colors.text.primary} contentDescription="Simulate" />
                 </IconButton>
                 <DropdownMenu expanded={menuVisible} onDismissRequest={() => setMenuVisible(false)}>
                   <DropdownMenu.Trigger>
                     <IconButton onClick={() => setMenuVisible(true)}>
-                      <Icon source={MoreVert} tint={colors.text.primary} />
+                      <Icon source={MoreVert} tint={colors.text.primary} contentDescription="More options" />
                     </IconButton>
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Items>

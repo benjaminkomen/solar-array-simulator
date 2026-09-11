@@ -23,7 +23,7 @@ Wizard step 1 (`/config?wizard=true`) and later "Edit Configuration". Sets defau
 Preconditions:
 
 - On Welcome (cleared) or on Production (for the edit entry).
-- iOS Maestro is the documented path; Android uses Jetpack Compose chrome with the same body copy.
+- Drive iOS Simulator or Android emulator. Android uses Jetpack Compose chrome with the same body copy (`Panel Settings`, `Continue`).
 
 - **Enter from Welcome.** `smoke` or `run-flow wizard-happy-path`: tap `id: get-started-button`, wait for "Panel Settings". Assert "Configure", "Photo", "Layout", and "Default Production".
 - **Continue.** Tap "Continue". Upload ("Take or Select Photo") is the success state. Do not skip this if you changed the toolbar.

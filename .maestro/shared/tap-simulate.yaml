@@ -1,0 +1,14 @@
+appId: com.bkomen.solararraysimulator
+---
+# Production → Simulation (iOS accessibilityLabel, Android Icon contentDescription)
+
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn: "Simulate"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn: "Simulate"

@@ -2,6 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { parseAdbDevices, parseBootedSimulators } from "../../../.cursor/skills/verify-solar-array/control.mjs";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
 const cli = join(repoRoot, ".cursor/skills/verify-solar-array/control.mjs");
@@ -41,6 +42,46 @@ describe("verify-solar-array CLI", () => {
     if (!report.device.available) {
       expect(report.warnings.some((w: string) => w.includes("no device"))).toBe(true);
     }
+    expect(report.device.ios).toBeDefined();
+    expect(report.device.android).toBeDefined();
+    expect(typeof report.device.ios.available).toBe("boolean");
+    expect(typeof report.device.android.available).toBe("boolean");
+    expect(report.eas.androidDevelopment.present).toBe(true);
+    expect(report.eas.androidDevelopment.developmentClient).toBe(true);
+  });
+
+  it("parses adb devices and booted simctl lines", () => {
+    const android = parseAdbDevices(
+      "List of devices attached\nemulator-5554\tdevice\nR58M123\toffline\n",
+    );
+    expect(android).toEqual([
+      { serial: "emulator-5554", state: "device", emulator: true },
+      { serial: "R58M123", state: "offline", emulator: false },
+    ]);
+    const ios = parseBootedSimulators(
+      "== Devices ==\n-- iOS 26.0 --\n    iPhone 17 (A1B2C3D4-E5F6-7890-ABCD-EF1234567890) (Booted)\n",
+    );
+    expect(ios).toEqual([
+      { name: "iPhone 17", udid: "A1B2C3D4-E5F6-7890-ABCD-EF1234567890" },
+    ]);
+  });
+
+  it("rejects an unknown --platform", () => {
+    const result = run(["smoke", "--platform=blackberry"]);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Unknown platform");
+  });
+
+  it("launch-fresh branches iOS 127.0.0.1 and Android 10.0.2.2", () => {
+    const dispatcher = readFileSync(join(repoRoot, ".maestro/shared/launch-fresh.yaml"), "utf8");
+    const ios = readFileSync(join(repoRoot, ".maestro/shared/launch-fresh.ios.yaml"), "utf8");
+    const android = readFileSync(join(repoRoot, ".maestro/shared/launch-fresh.android.yaml"), "utf8");
+    expect(dispatcher).toContain("platform: iOS");
+    expect(dispatcher).toContain("platform: Android");
+    expect(ios).toContain("127.0.0.1");
+    expect(ios).not.toContain("DEVELOPMENT SERVERS");
+    expect(android).toContain("10.0.2.2");
+    expect(android).toContain("disableOnboarding=1");
   });
 
   it("features lists the Feature Map", () => {

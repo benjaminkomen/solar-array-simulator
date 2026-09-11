@@ -1,0 +1,14 @@
+appId: com.bkomen.solararraysimulator
+---
+# Custom canvas: add a panel (iOS SF Symbol "add", Android accessibilityLabel "Add panel")
+
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn: "add"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn: "Add panel"

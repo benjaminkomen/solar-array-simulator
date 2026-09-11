@@ -7,7 +7,7 @@ appId: com.bkomen.solararraysimulator
 - runFlow: shared/wizard-to-production.yaml
 
 # Test "Edit Configuration" menu action
-- tapOn: "More options"
+- runFlow: shared/tap-more-options.yaml
 - extendedWaitUntil:
     visible: "Edit Configuration"
     timeout: 5000
@@ -23,7 +23,7 @@ appId: com.bkomen.solararraysimulator
 - runFlow: shared/wizard-resume-to-production.yaml
 
 # Test "Delete Configuration" menu action
-- tapOn: "More options"
+- runFlow: shared/tap-more-options.yaml
 - extendedWaitUntil:
     visible: "Delete Configuration"
     timeout: 5000
