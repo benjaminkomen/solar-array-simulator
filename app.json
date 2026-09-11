@@ -61,6 +61,7 @@
           }
         }
       ],
+      "react-native-webgpu",
       "expo-sqlite",
       "expo-status-bar"
     ],

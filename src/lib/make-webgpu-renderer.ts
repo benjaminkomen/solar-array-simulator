@@ -1,4 +1,4 @@
-import type { NativeCanvas } from "react-native-wgpu";
+import type { NativeCanvas } from "react-native-webgpu";
 import * as THREE from "three/webgpu";
 
 export class ReactNativeCanvas {
