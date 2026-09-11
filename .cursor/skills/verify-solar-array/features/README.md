@@ -9,7 +9,7 @@ Surface: iOS and Android development builds. Maestro YAML in `.maestro/` is writ
 - Installed development client (EAS profile `development` or `development-simulator`). Production/TestFlight binaries will not reconnect to Metro the way `launch-fresh` expects.
 - Metro running (`bun start`) unless you are driving a fully bundled preview build.
 - `node .cursor/skills/verify-solar-array/control.mjs doctor` has run. No device is OK for doctor; it is **not** OK for a claimed UI proof.
-- Start recipes from a cleared app unless the file says otherwise. `.maestro/shared/launch-fresh.yaml` is the reset: `clearState: true`, then Expo dev-client chrome, then "Solar Array Simulator".
+- Start recipes from a cleared app unless the file says otherwise. `.maestro/shared/launch-fresh.yaml` is the reset: `clearState: true`, deep-link local Metro, then Expo Dev Client chrome, then "Solar Array Simulator".
 - Prefer testIDs and visible text already used by Maestro. Do not tap Skia/WebGPU canvas coordinates as the primary proof.
 - `--backend=maestro` is the only implemented driver. `--backend=eas` and `--backend=mac` are stubs.
 

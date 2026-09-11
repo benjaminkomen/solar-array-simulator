@@ -31,5 +31,5 @@ Preconditions:
 ## Gotchas
 
 - `getWizardCompleted()` true → `<Redirect href="/production" />`. If smoke cannot find Get Started, state was not cleared.
-- `launch-fresh` waits up to 90s for "Solar Array Simulator" after tapping through DEVELOPMENT SERVERS / Continue / Reload. Coordinate taps (`50%,22%`, `50%,15%`) are Expo dev-client chrome, not app UI.
+- `launch-fresh` deep-links local Metro, waits for Continue (do not tap Cancel), optionally dismisses Reload at `50%,15%`, then waits up to 120s for "Solar Array Simulator". Those taps are Expo Dev Client chrome, not app UI.
 - There is no web-first verification path. `src/app/index.tsx` is the shared Welcome for iOS and Android.

@@ -26,7 +26,7 @@ node .cursor/skills/verify-solar-array/control.mjs doctor
 node .cursor/skills/verify-solar-array/control.mjs smoke
 ```
 
-Ready means the Expo dev client shows the app (Welcome: "Solar Array Simulator", or Production if the wizard already completed). `.maestro/shared/launch-fresh.yaml` clears state, dismisses the "Open in app?" / DEVELOPMENT SERVERS / Continue / Reload chrome, and waits for "Solar Array Simulator".
+Ready means the Expo dev client shows the app (Welcome: "Solar Array Simulator", or Production if the wizard already completed). Bonjour ("DEVELOPMENT SERVERS") is flaky on sim, so `.maestro/shared/launch-fresh.yaml` clears state, deep-links `http://127.0.0.1:8081`, then handles optional Open, required Continue, optional Reload, and waits for "Solar Array Simulator".
 
 On this Cloud VM there is usually **no Xcode, no simulator, and no Maestro**. That is expected. `doctor` must still run and say so honestly. Do not start an EAS Simulator session or require Expo login from this skill.
 
@@ -91,7 +91,7 @@ Maestro notes (from the repo, not folklore):
 - Skia canvas nodes are **not** Maestro-accessible — assert toolbar side effects (`Finish` appears after `add`).
 - SwiftUI section headers may be invisible to Maestro; assert body copy (`Default Production`, `Panel Settings`).
 - `extendedWaitUntil` with an id must nest: `visible: { id: "canvas-container" }`.
-- `launch-fresh` uses coordinate taps on the Expo dev-client chrome (`50%,22%` server row, `50%,15%` to dismiss Reload). Fragile; do not "simplify" those points without a device.
+- `launch-fresh` deep-links Metro (`http://127.0.0.1:8081`). Tap **Open**, not Cancel, on the iOS sheet; wait for **Continue** (do not skip it). Optional Reload dismiss still uses `50%,15%`.
 
 Android gotchas: Production's sun button has **no** `Simulate` accessibility label (iOS does). Analyze header is `SELECT AI MODEL`, not `Select AI Model`. Custom add control is `Add panel`, not `add`. Existing Maestro YAML is written for the iOS dev client.
 
