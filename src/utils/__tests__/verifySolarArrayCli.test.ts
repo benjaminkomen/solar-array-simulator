@@ -131,7 +131,7 @@ describe("verify-solar-array CLI", () => {
     const menu = readFileSync(join(repoRoot, ".maestro/production-menu.yaml"), "utf8");
     const wizard = readFileSync(join(repoRoot, ".maestro/shared/wizard-to-production.yaml"), "utf8");
     const happy = readFileSync(join(repoRoot, ".maestro/wizard-happy-path.yaml"), "utf8");
-    const androidScreen = readFileSync(join(repoRoot, "src/app/production.android.tsx"), "utf8");
+    const productionScreen = readFileSync(join(repoRoot, "src/app/production.tsx"), "utf8");
     expect(more).toContain("platform: Android");
     expect(more).toContain('tapOn: "Configuration options"');
     expect(more.indexOf("platform: Android")).toBeLessThan(more.lastIndexOf("Configuration options"));
@@ -140,9 +140,10 @@ describe("verify-solar-array CLI", () => {
     expect(menu).toContain('assertNotVisible: "Go home"');
     expect(menu.indexOf("tap-more-options")).toBeLessThan(menu.indexOf('assertNotVisible: "Reload"'));
     expect(menu.indexOf('assertNotVisible: "Reload"')).toBeLessThan(menu.indexOf('tapOn: "Edit Configuration"'));
-    expect(androidScreen).toContain("Toolbar.Menu");
-    expect(androidScreen).toMatch(/placement="right"[\s\S]*Toolbar\.Menu/);
-    expect(androidScreen).not.toContain("DropdownMenu");
+    expect(productionScreen).toContain("Toolbar.Menu");
+    expect(productionScreen).toMatch(/placement="right"[\s\S]*Toolbar\.Menu/);
+    expect(productionScreen).not.toContain("DropdownMenu");
+    expect(productionScreen).toContain("productionMenuA11y");
     expect(more).toContain("header-right");
     expect(wizard).toContain('assertNotVisible: "Finish"');
     expect(wizard.indexOf('assertNotVisible: "Finish"')).toBeLessThan(wizard.indexOf("tap-add-panel"));

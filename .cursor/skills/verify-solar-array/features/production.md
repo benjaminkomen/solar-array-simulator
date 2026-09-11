@@ -30,6 +30,7 @@ Preconditions:
 
 ## Gotchas
 
+- One universal route: `src/app/production.tsx` (no `production.ios.tsx` / `production.android.tsx`). Icons, a11y, and the output-card inset fork via `Platform` / `productionChrome` helpers. Do not wrap this screen in `@expo/ui` `Host`.
 - Simulate = iOS `accessibilityLabel="Simulate"` / Android Icon `contentDescription="Simulate"`.
 - Menu = iOS `accessibilityLabel="More options"` / Android `accessibilityLabel="Configuration options"` on `Stack.Toolbar.Menu` in the right header (sibling of Simulate). Dev Client AppBar overflow is also "More options" — do not reuse that string. If the header ⋮ opens Reload / Go home / Tools, the Dev Client **Tools button** toggle is still on — turn it off (Dev Menu row or `hideDevClientToolsButton`), do not move the menu onto the card. Same action titles: "Edit Configuration", "Delete Configuration".
 - Delete calls `resetAllData` + `clearPanels` + `replace("/")`. Subsequent launches show Welcome.
