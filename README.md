@@ -61,6 +61,13 @@ node .cursor/skills/verify-solar-array/control.mjs smoke
 
 EAS Simulator and Mac/`serve-sim` backends are stubbed (`--backend=eas|mac`) for a later PR.
 
+After native WebGPU changes (`react-native-webgpu` / Expo plugin / `react-native.config.js`), rebuild the development clients — Metro JS cannot add Dawn to an existing `.app`:
+
+```bash
+eas build --profile development-simulator --platform ios
+eas build --profile development --platform android
+```
+
 ## License
 
 MIT

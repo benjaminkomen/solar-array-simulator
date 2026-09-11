@@ -9,7 +9,8 @@ import {
 } from "@react-three/fiber";
 import type { ViewProps } from "react-native";
 import { PixelRatio } from "react-native";
-import { Canvas, type CanvasRef } from "react-native-wgpu";
+// Import only after tryEnableWebGPU() — 0.4.x throws if RNWebGPU is missing.
+import { Canvas, type CanvasRef, type RNCanvasContext } from "react-native-webgpu";
 
 import {
   makeWebGPURenderer,
@@ -55,68 +56,89 @@ export const FiberCanvas = ({
   const canvasRef = useRef<CanvasRef>(null);
 
   useEffect(() => {
-    const context = canvasRef.current!.getContext("webgpu")!;
-    const renderer = makeWebGPURenderer(context);
-
-    // @ts-expect-error - ReactNativeCanvas wraps native canvas
-    const canvas = new ReactNativeCanvas(context.canvas) as HTMLCanvasElement;
-    canvas.width = canvas.clientWidth * PixelRatio.get();
-    canvas.height = canvas.clientHeight * PixelRatio.get();
-    const size = {
-      top: 0,
-      left: 0,
-      width: canvas.clientWidth,
-      height: canvas.clientHeight,
-    };
-
-    if (!root.current) {
-      root.current = createRoot(canvas);
+    const canvasNode = canvasRef.current;
+    if (canvasNode == null) {
+      return;
     }
-    root.current.configure({
-      size,
-      events,
-      scene,
-      camera,
-      gl: renderer,
-      frameloop: "always",
-      dpr: 1,
-      onCreated: async (state: RootState) => {
-        // @ts-expect-error - WebGPU renderer has init method
-        await state.gl.init();
 
-        // Set up post-processing with bloom
-        // @ts-expect-error - state.gl is typed as WebGLRenderer by R3F but is actually a WebGPURenderer
-        const postProcessing = new THREE.PostProcessing(state.gl);
-        const scenePass = pass(state.scene, state.camera);
-        const sceneColor = scenePass.getTextureNode("output");
-        postProcessing.outputNode = sceneColor.add(
-          bloom(sceneColor, 1.5, 0.4, 0.85),
-        );
+    let context: RNCanvasContext | null = null;
+    try {
+      context = canvasNode.getContext("webgpu");
+    } catch (error) {
+      console.error("FiberCanvas: failed to get WebGPU context", error);
+      return;
+    }
+    if (context == null) {
+      console.error("FiberCanvas: WebGPU context is not available");
+      return;
+    }
 
-        let renderingPostProcess = false;
-        const originalRender = state.gl.render.bind(state.gl);
+    let canvas: HTMLCanvasElement | undefined;
+    try {
+      const renderer = makeWebGPURenderer(context);
 
-        state.gl.render = (scene: THREE.Scene, camera: THREE.Camera) => {
-          if (renderingPostProcess) {
-            // Called internally by PostProcessing — use original renderer
-            return originalRender(scene, camera);
-          }
-          // Called by R3F frame loop — use post-processing pipeline
-          renderingPostProcess = true;
-          try {
-            postProcessing.render();
-            renderingPostProcess = false;
-          } catch (e) {
-            renderingPostProcess = false;
-            console.error("PostProcessing render error:", e);
-          }
-          context?.present();
-        };
-      },
-    });
+      // @ts-expect-error - ReactNativeCanvas wraps native canvas
+      canvas = new ReactNativeCanvas(context.canvas) as HTMLCanvasElement;
+      canvas.width = canvas.clientWidth * PixelRatio.get();
+      canvas.height = canvas.clientHeight * PixelRatio.get();
+      const size = {
+        top: 0,
+        left: 0,
+        width: canvas.clientWidth,
+        height: canvas.clientHeight,
+      };
+
+      if (!root.current) {
+        root.current = createRoot(canvas);
+      }
+      root.current.configure({
+        size,
+        events,
+        scene,
+        camera,
+        gl: renderer,
+        frameloop: "always",
+        dpr: 1,
+        onCreated: async (state: RootState) => {
+          // @ts-expect-error - WebGPU renderer has init method
+          await state.gl.init();
+
+          // Set up post-processing with bloom
+          // @ts-expect-error - state.gl is typed as WebGLRenderer by R3F but is actually a WebGPURenderer
+          const postProcessing = new THREE.PostProcessing(state.gl);
+          const scenePass = pass(state.scene, state.camera);
+          const sceneColor = scenePass.getTextureNode("output");
+          postProcessing.outputNode = sceneColor.add(
+            bloom(sceneColor, 1.5, 0.4, 0.85),
+          );
+
+          let renderingPostProcess = false;
+          const originalRender = state.gl.render.bind(state.gl);
+
+          state.gl.render = (scene: THREE.Scene, camera: THREE.Camera) => {
+            if (renderingPostProcess) {
+              // Called internally by PostProcessing — use original renderer
+              return originalRender(scene, camera);
+            }
+            // Called by R3F frame loop — use post-processing pipeline
+            renderingPostProcess = true;
+            try {
+              postProcessing.render();
+              renderingPostProcess = false;
+            } catch (e) {
+              renderingPostProcess = false;
+              console.error("PostProcessing render error:", e);
+            }
+            context.present();
+          };
+        },
+      });
+    } catch (error) {
+      console.error("FiberCanvas: failed to initialize WebGPU renderer", error);
+    }
     return () => {
       if (canvas != null) {
-        unmountComponentAtNode(canvas!);
+        unmountComponentAtNode(canvas);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
