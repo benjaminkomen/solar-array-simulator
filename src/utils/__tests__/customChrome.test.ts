@@ -16,12 +16,8 @@ const androidSrc = readFileSync(
   resolve(import.meta.dir, "../../app/custom.android.tsx"),
   "utf8",
 );
-const productionIosSrc = readFileSync(
-  resolve(import.meta.dir, "../../app/production.ios.tsx"),
-  "utf8",
-);
-const productionAndroidSrc = readFileSync(
-  resolve(import.meta.dir, "../../app/production.android.tsx"),
+const productionSrc = readFileSync(
+  resolve(import.meta.dir, "../../app/production.tsx"),
   "utf8",
 );
 const configIosSrc = readFileSync(
@@ -30,6 +26,13 @@ const configIosSrc = readFileSync(
 );
 const configAndroidSrc = readFileSync(
   resolve(import.meta.dir, "../../app/config.android.tsx"),
+  "utf8",
+);
+const expoToolbarButtonAndroid = readFileSync(
+  resolve(
+    import.meta.dir,
+    "../../../node_modules/expo-router/build/layouts/stack-utils/toolbar/StackToolbarButton/native.android.js",
+  ),
   "utf8",
 );
 
@@ -64,19 +67,20 @@ describe("Custom chrome tree", () => {
 
     expect(iosSrc).not.toContain("Stack.Toolbar.Badge");
     expect(androidSrc).not.toContain("Stack.Toolbar.Badge");
-    expect(productionIosSrc).not.toContain("Stack.Toolbar.Badge");
-    expect(productionAndroidSrc).not.toContain("Stack.Toolbar.Badge");
+    expect(productionSrc).not.toContain("Stack.Toolbar.Badge");
     expect(configIosSrc).not.toContain("Stack.Toolbar.Badge");
     expect(configAndroidSrc).not.toContain("Stack.Toolbar.Badge");
   });
 
-  it("keeps Add panel and Finish gates Maestro can drive", () => {
+  it("keeps Add panel on a clickable RN Pressable because Android Toolbar.Button a11y is dead", () => {
+    expect(expoToolbarButtonAndroid).toContain("IconButton");
+    expect(expoToolbarButtonAndroid).toMatch(/Icon[\s\S]*contentDescription/);
     expect(CUSTOM_ADD_PANEL_A11Y).toBe("Add panel");
     expect(chromeSrc).toContain("CUSTOM_ADD_PANEL_A11Y");
+    expect(chromeSrc).toContain('accessibilityRole="button"');
+    expect(chromeSrc).toContain("CustomToolbarAndroidIcon");
     expect(chromeSrc).toContain("shouldShowWizardFinish");
     expect(chromeSrc).toContain("Finish");
-    expect(chromeSrc).toContain('Platform.OS === "ios"');
-    expect(chromeSrc).toContain('Platform.OS === "android"');
     expect(shouldShowWizardFinish(true, 0)).toBe(false);
     expect(shouldShowWizardFinish(true, 1)).toBe(true);
     expect(iosSrc).toContain("SolarPanelCanvas");

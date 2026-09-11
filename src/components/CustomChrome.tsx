@@ -7,6 +7,7 @@ import LinkIcon from "@expo/material-symbols/link.xml";
 import MyLocation from "@expo/material-symbols/my_location.xml";
 import Navigation from "@expo/material-symbols/navigation.xml";
 import RotateRight from "@expo/material-symbols/rotate_right.xml";
+import { CustomToolbarAndroidIcon } from "@/components/CustomToolbarAndroidIcon";
 import {
   CUSTOM_ADD_PANEL_A11Y,
   CUSTOM_HEADER_LINK_A11Y,
@@ -55,31 +56,81 @@ export type CustomBottomToolbarProps = {
   onFinish: () => void;
 };
 
+type ToolbarIconButtonProps = {
+  name: ToolbarIconName;
+  onPress: () => void;
+  accessibilityLabel: string;
+  tint: string;
+};
+
+/**
+ * Android Stack.Toolbar.Button puts accessibilityLabel on a Compose Icon
+ * (android.view.View, clickable=false). Maestro then taps a dead node.
+ * Keep the label on a RN Pressable so Add panel / header actions are real buttons.
+ */
+function ToolbarIconButton({
+  name,
+  onPress,
+  accessibilityLabel,
+  tint,
+}: ToolbarIconButtonProps) {
+  if (Platform.OS === "android") {
+    return (
+      <Stack.Toolbar.View>
+        <Pressable
+          onPress={onPress}
+          accessibilityLabel={accessibilityLabel}
+          accessibilityRole="button"
+          style={styles.toolbarIconButton}
+        >
+          <CustomToolbarAndroidIcon
+            source={CUSTOM_TOOLBAR_ICONS[name] as ImageSourcePropType}
+            tint={tint}
+          />
+        </Pressable>
+      </Stack.Toolbar.View>
+    );
+  }
+
+  return (
+    <Stack.Toolbar.Button
+      icon={CUSTOM_TOOLBAR_ICONS[name]}
+      onPress={onPress}
+      accessibilityLabel={accessibilityLabel}
+    />
+  );
+}
+
 export function CustomHeaderToolbar({
   unlinkedCount,
   onCompassToggle,
   onSnapToOrigin,
 }: CustomHeaderToolbarProps) {
+  const colors = useColors();
+  const headerTint = colors.text.primary as string;
+
   return (
     <Stack.Toolbar placement="right">
-      <Stack.Toolbar.Button
-        icon={CUSTOM_TOOLBAR_ICONS.compass}
+      <ToolbarIconButton
+        name="compass"
         onPress={onCompassToggle}
         accessibilityLabel="Toggle compass"
+        tint={headerTint}
       />
       <Stack.Toolbar.Button
         icon={CUSTOM_TOOLBAR_ICONS.link}
         onPress={ignoreHeaderLinkPress}
-        accessibilityLabel={CUSTOM_HEADER_LINK_A11Y}
+        accessibilityLabel={Platform.OS === "ios" ? CUSTOM_HEADER_LINK_A11Y : undefined}
       >
         {unlinkedCount > 0 && (
           <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
         )}
       </Stack.Toolbar.Button>
-      <Stack.Toolbar.Button
-        icon={CUSTOM_TOOLBAR_ICONS.snap}
+      <ToolbarIconButton
+        name="snap"
         onPress={onSnapToOrigin}
         accessibilityLabel="Snap to origin"
+        tint={headerTint}
       />
     </Stack.Toolbar>
   );
@@ -91,7 +142,12 @@ function WizardFinishButton({ onFinish }: { onFinish: () => void }) {
   if (Platform.OS === "android") {
     return (
       <Stack.Toolbar.View>
-        <Pressable style={styles.toolbarTextButton} onPress={onFinish}>
+        <Pressable
+          style={styles.toolbarTextButton}
+          onPress={onFinish}
+          accessibilityRole="button"
+          accessibilityLabel="Finish"
+        >
           <Text style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}>
             Finish
           </Text>
@@ -117,29 +173,36 @@ export function CustomBottomToolbar({
   onDeletePanel,
   onFinish,
 }: CustomBottomToolbarProps) {
+  const colors = useColors();
+  const actionTint = colors.primary as string;
+
   return (
     <Stack.Toolbar placement="bottom">
-      <Stack.Toolbar.Button
-        icon={CUSTOM_TOOLBAR_ICONS.add}
+      <ToolbarIconButton
+        name="add"
         onPress={onAddPanel}
         accessibilityLabel={CUSTOM_ADD_PANEL_A11Y}
+        tint={actionTint}
       />
       {selectedId && (
         <>
-          <Stack.Toolbar.Button
-            icon={CUSTOM_TOOLBAR_ICONS.link}
+          <ToolbarIconButton
+            name="link"
             onPress={onLinkInverter}
             accessibilityLabel="Link inverter"
+            tint={actionTint}
           />
-          <Stack.Toolbar.Button
-            icon={CUSTOM_TOOLBAR_ICONS.rotate}
+          <ToolbarIconButton
+            name="rotate"
             onPress={onRotatePanel}
             accessibilityLabel="Rotate panel"
+            tint={actionTint}
           />
-          <Stack.Toolbar.Button
-            icon={CUSTOM_TOOLBAR_ICONS.delete}
+          <ToolbarIconButton
+            name="delete"
             onPress={onDeletePanel}
             accessibilityLabel="Delete panel"
+            tint={actionTint}
           />
         </>
       )}
@@ -151,6 +214,12 @@ export function CustomBottomToolbar({
 }
 
 const styles = StyleSheet.create({
+  toolbarIconButton: {
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   toolbarTextButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
