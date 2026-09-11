@@ -6,11 +6,14 @@ appId: com.bkomen.solararraysimulator
 - runFlow: shared/launch-fresh.yaml
 - runFlow: shared/wizard-to-production.yaml
 
-# Test "Edit Configuration" menu action
+# Test "Edit Configuration" menu action.
+# Android: in-content "Configuration options" — must not open Dev Client.
 - runFlow: shared/tap-more-options.yaml
 - extendedWaitUntil:
     visible: "Edit Configuration"
     timeout: 5000
+- assertNotVisible: "Reload"
+- assertNotVisible: "Go home"
 - tapOn: "Edit Configuration"
 - extendedWaitUntil:
     visible: "Panel Settings"
@@ -27,6 +30,8 @@ appId: com.bkomen.solararraysimulator
 - extendedWaitUntil:
     visible: "Delete Configuration"
     timeout: 5000
+- assertNotVisible: "Reload"
+- assertNotVisible: "Go home"
 - tapOn: "Delete Configuration"
 
 # Verify we're back on Welcome screen

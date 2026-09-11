@@ -74,7 +74,7 @@ Prefer existing Maestro YAML over rewriting flows. Stable handles already used b
 | Add panel | toolbar | `add` (SF Symbol `plus`) | `Add panel` |
 | `Finish` / `Continue` / `Skip` | toolbar text | wizard | wizard |
 | `Simulate` | a11y | Production sun | Production sun (`contentDescription`) |
-| `More options` / `Configuration options` | a11y | Production menu (`More options`) | Production menu (`Configuration options` — not Dev Client overflow) |
+| `More options` / `Configuration options` | a11y | Production menu (`More options`) | Production in-content card menu (`Configuration options` — not header-right Dev Client Tools) |
 
 ```bash
 # Welcome launch + Get Started → Config

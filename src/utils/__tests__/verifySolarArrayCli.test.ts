@@ -116,12 +116,20 @@ describe("verify-solar-array CLI", () => {
 
   it("Android Production menu and empty-canvas Finish match iOS product rules", () => {
     const more = readFileSync(join(repoRoot, ".maestro/shared/tap-more-options.yaml"), "utf8");
+    const menu = readFileSync(join(repoRoot, ".maestro/production-menu.yaml"), "utf8");
     const wizard = readFileSync(join(repoRoot, ".maestro/shared/wizard-to-production.yaml"), "utf8");
     const happy = readFileSync(join(repoRoot, ".maestro/wizard-happy-path.yaml"), "utf8");
+    const androidScreen = readFileSync(join(repoRoot, "src/app/production.android.tsx"), "utf8");
     expect(more).toContain("platform: Android");
     expect(more).toContain('tapOn: "Configuration options"');
     expect(more.indexOf("platform: Android")).toBeLessThan(more.lastIndexOf("Configuration options"));
     expect(more.slice(more.indexOf("platform: Android"))).not.toMatch(/tapOn:\s*"More options"/);
+    expect(menu).toContain('assertNotVisible: "Reload"');
+    expect(menu).toContain('assertNotVisible: "Go home"');
+    expect(menu.indexOf("tap-more-options")).toBeLessThan(menu.indexOf('assertNotVisible: "Reload"'));
+    expect(menu.indexOf('assertNotVisible: "Reload"')).toBeLessThan(menu.indexOf('tapOn: "Edit Configuration"'));
+    expect(androidScreen).toContain("DropdownMenu");
+    expect(androidScreen).not.toMatch(/placement="right"[\s\S]*Toolbar\.Menu/);
     expect(wizard).toContain('assertNotVisible: "Finish"');
     expect(wizard.indexOf('assertNotVisible: "Finish"')).toBeLessThan(wizard.indexOf("tap-add-panel"));
     expect(happy).toContain('assertNotVisible: "Finish"');
