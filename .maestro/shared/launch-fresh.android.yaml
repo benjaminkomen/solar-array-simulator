@@ -1,25 +1,57 @@
 appId: com.bkomen.solararraysimulator
 env:
-  # AVD host loopback. Override for a physical device or adb reverse:
-  #   maestro test -e METRO_URL=http%3A%2F%2F127.0.0.1%3A8081 …
+  # AVD host loopback. Override both for a physical device or adb reverse:
+  #   maestro test -e METRO_URL=http%3A%2F%2F127.0.0.1%3A8081 -e METRO_URL_PLAIN=http://127.0.0.1:8081 …
   METRO_URL: http%3A%2F%2F10.0.2.2%3A8081
+  METRO_URL_PLAIN: http://10.0.2.2:8081
 ---
-# Android emulator: Launch with clear state, deep-link Metro via Dev Client
+# Android emulator: Launch with clear state, connect Dev Client to Metro.
 # 10.0.2.2 is the AVD alias for the host (127.0.0.1 inside the emulator is the guest).
 # Maestro openLink uses ACTION_VIEW — same intent as:
 #   adb shell am start -a android.intent.action.VIEW -d "<this URL>"
 # Ends on Welcome with "Solar Array Simulator" visible
+#
+# Race: openLink before Dev Client Home is up is dropped; the emulator stays on
+# Home (empty exp://, Connect disabled until the field has text). Wait for Home,
+# deep-link, then fall back to Recently Opened / typed Connect. Continue appears
+# after Metro attaches — wait for it like iOS; do not one-shot optional-check.
 
 - launchApp:
     clearState: true
+# Home chrome is up only after the launcher Compose tree is ready.
+- extendedWaitUntil:
+    visible: "DEVELOPMENT SERVERS"
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 5000
 - openLink: solararraysimulator://expo-development-client/?url=${METRO_URL}&disableOnboarding=1
-# Dev Tools onboarding may still appear on older clients — do not tap Cancel
 - waitForAnimationToEnd:
     timeout: 15000
+# Deep-link may leave us on Home. Recently Opened / packager cards show the plain URL.
 - runFlow:
     when:
-      visible: "Continue"
+      visible: ${METRO_URL_PLAIN}
     commands:
+      - tapOn: ${METRO_URL_PLAIN}
+# Connect is disabled while the URL field is empty — type, then submit.
+# Skip if the URL is already on screen (we just tapped Recently Opened).
+- runFlow:
+    when:
+      visible: "Connect"
+      notVisible: ${METRO_URL_PLAIN}
+    commands:
+      - tapOn: "exp://"
+      - inputText: ${METRO_URL_PLAIN}
+      - hideKeyboard
+      - tapOn: "Connect"
+# Continue appears after Metro attaches (same as iOS). Skip if Welcome already up.
+- runFlow:
+    when:
+      notVisible: "Solar Array Simulator"
+    commands:
+      - extendedWaitUntil:
+          visible: "Continue"
+          timeout: 90000
       - tapOn: "Continue"
 - runFlow:
     when:
