@@ -115,15 +115,16 @@ describe("verify-solar-array CLI", () => {
 
   it("simulation-nav takes 3D proof while Simulation chrome is visible", () => {
     const flow = readFileSync(join(repoRoot, ".maestro/simulation-nav.yaml"), "utf8");
-    const winter = flow.indexOf('assertVisible: "Winter"');
+    const totalOutput = flow.indexOf('assertVisible: "Total Output"');
     const screenshot = flow.indexOf("takeScreenshot: sim-3d-proof");
-    const reassert = flow.indexOf('assertVisible: "Simulation"', flow.indexOf("Winter"));
-    expect(winter).toBeGreaterThan(-1);
-    expect(screenshot).toBeGreaterThan(winter);
-    expect(reassert).toBeGreaterThan(winter);
+    const reassert = flow.indexOf('assertVisible: "Simulation"', flow.indexOf("Total Output"));
+    expect(totalOutput).toBeGreaterThan(-1);
+    expect(screenshot).toBeGreaterThan(totalOutput);
+    expect(reassert).toBeGreaterThan(totalOutput);
     expect(reassert).toBeLessThan(screenshot);
     expect(flow).not.toContain("webgpu-scene-painted");
     expect(flow).not.toMatch(/timeout: 90000/);
+    expect(flow).not.toContain('assertVisible: "Winter"');
   });
 
   it("Android Production menu and empty-canvas Finish match iOS product rules", () => {
