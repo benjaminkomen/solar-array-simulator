@@ -2,6 +2,8 @@
 
 Wizard step 1 (`/config?wizard=true`) and later "Edit Configuration". Sets default panel wattage, optional city, roof type/tilt, and the micro-inverter list (add/edit/delete sheets).
 
+Product UI is one `FieldGroup` in `src/app/config.tsx` (web stub is `config.web.tsx`). Roof type uses a documented platform segmented control (`RoofTypePicker.ios.tsx` / `.android.tsx`) because universal `Picker` has no `segmented` appearance. Inverter delete stays on platform swipe (`List.ForEach` / `SwipeToDismissBox`) because universal `List` has no swipe-delete.
+
 ## Sub-features
 
 - `config-wizard-chrome` shows wizard progress (Configure / Photo / Layout) and a Continue toolbar button.
@@ -34,8 +36,11 @@ Preconditions:
 
 ## Gotchas
 
-- Shared `src/app/config.tsx` is a stub ("Configuration is not yet implemented"). Product UI is `config.ios.tsx` / `config.android.tsx`.
+- Product UI is `src/app/config.tsx` (`FieldGroup` + `Host`). `config.web.tsx` is the web stub. Do not add `config.ios.tsx` / `config.android.tsx` back.
+- Header options for Config and Upload live in `_layout` (`headerBackButtonDisplayMode: "minimal"`). Do not set `Stack.Screen` options from Config, and do not put `Host` on Upload first paint — that is the Config→Upload LogBox race.
 - SwiftUI section headers may be invisible to Maestro — assert "Default Production", not the header node.
 - Location search hits the network. An empty result list is not a product bug if the query is garbage or the geocoder is down; say so.
 - Seeded config ships **14** inverters. Do not assume an empty list on first launch.
 - Continue is **wizard-only**. Edit-from-Production still uses `wizard=true`, so Continue is present; that is how `wizard-resume-to-production.yaml` works.
+- Roof chips are platform segmented controls, not universal `Picker appearance="segmented"` (that API does not exist).
+- Inverter swipe-delete is platform-only (`InverterSection.ios.tsx` / `.android.tsx`). Universal `List` has no `onDelete`.

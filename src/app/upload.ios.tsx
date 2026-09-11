@@ -27,7 +27,6 @@ export default function Upload() {
 
   return (
     <>
-      <Stack.Screen.BackButton displayMode="minimal" />
       {isWizardMode && <WizardProgress currentStep={2} />}
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
