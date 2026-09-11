@@ -101,14 +101,17 @@ describe("verify-solar-array CLI", () => {
     expect(android.indexOf("Go home")).toBeLessThan(android.lastIndexOf("Continue"));
   });
 
-  it("simulation-nav settles Android WebGPU before 3D proof", () => {
+  it("simulation-nav takes 3D proof while Simulation chrome is visible", () => {
     const flow = readFileSync(join(repoRoot, ".maestro/simulation-nav.yaml"), "utf8");
-    expect(flow).toContain("platform: Android");
-    expect(flow).toContain("webgpu-scene-painted");
-    expect(flow).toContain("timeout: 90000");
-    expect(flow).toContain("optional: true");
-    expect(flow).toContain("takeScreenshot: sim-3d-proof");
-    expect(flow).not.toMatch(/waitForAnimationToEnd:[\s\S]*timeout: 20000/);
+    const winter = flow.indexOf('assertVisible: "Winter"');
+    const screenshot = flow.indexOf("takeScreenshot: sim-3d-proof");
+    const reassert = flow.indexOf('assertVisible: "Simulation"', flow.indexOf("Winter"));
+    expect(winter).toBeGreaterThan(-1);
+    expect(screenshot).toBeGreaterThan(winter);
+    expect(reassert).toBeGreaterThan(winter);
+    expect(reassert).toBeLessThan(screenshot);
+    expect(flow).not.toContain("webgpu-scene-painted");
+    expect(flow).not.toMatch(/timeout: 90000/);
   });
 
   it("features lists the Feature Map", () => {
