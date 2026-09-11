@@ -42,6 +42,7 @@ function RootLayout() {
               options={{
                 title: "Configuration",
                 headerBackTitle: "",
+                headerBackButtonDisplayMode: "minimal",
                 headerTitleAlign: Platform.OS === "android" ? "center" : undefined,
               }}
             />
@@ -49,6 +50,8 @@ function RootLayout() {
               name="upload"
               options={{
                 title: "",
+                headerBackTitle: "",
+                headerBackButtonDisplayMode: "minimal",
               }}
             />
             <Stack.Screen

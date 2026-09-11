@@ -30,6 +30,7 @@ Preconditions:
 ## Gotchas
 
 - Shared `upload.tsx` is a stub. Drive `upload.ios.tsx` / `upload.android.tsx`.
+- Header back-button options live in `_layout`. Do not put `Host` (or Reanimated `entering` on Android) on Upload first paint — Config→Upload LogBox.
 - Skip exists only in wizard mode. Non-wizard `/upload` has no Skip toolbar.
 - `analyze-skip.yaml` depends on a seeded Photos library and a coordinate tap (iOS `Photos` + `17%,25%`). Android system picker is a different sheet — do not treat an iOS miss-tap recipe as Android proof. Empty library → timeout or a miss-tap.
 - Permission modal (`PermissionModal`) can intercept the first camera/gallery tap. Dismiss or Allow before asserting Analyze.
