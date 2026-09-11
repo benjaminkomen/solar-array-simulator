@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { Stack } from "expo-router";
-import Animated, { FadeIn } from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { PermissionModal } from "@/components/PermissionModal";
@@ -15,14 +13,6 @@ export default function Upload() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  // Reanimated `entering` schedules updates during the first render. On Android
-  // that races Config→Upload and trips LogBox ("state update on a component
-  // that hasn't mounted yet"). Enable the fade only after mount.
-  const [enterReady, setEnterReady] = useState(false);
-  useEffect(() => {
-    setEnterReady(true);
-  }, []);
-  const fadeIn = enterReady ? FadeIn.duration(300) : undefined;
 
   const {
     isWizardMode,
@@ -43,8 +33,7 @@ export default function Upload() {
         style={{ backgroundColor: colors.background.primary }}
         contentContainerStyle={[styles.scrollContent, isWizardMode && styles.scrollContentWithToolbar]}
       >
-        <Animated.View
-          entering={fadeIn}
+        <View
           style={[
             styles.iconContainer,
             {
@@ -56,62 +45,51 @@ export default function Upload() {
           ]}
         >
           <MaterialIcons name="photo-library" size={80} color={colors.primary} />
-        </Animated.View>
+        </View>
 
-        <Animated.Text
-          entering={fadeIn?.delay(100)}
-          style={[styles.title, { color: colors.text.primary }]}
-        >
+        <Text style={[styles.title, { color: colors.text.primary }]}>
           Take or Select Photo
-        </Animated.Text>
+        </Text>
 
-        <Animated.Text
-          entering={fadeIn?.delay(150)}
-          style={[styles.subtitle, { color: colors.text.secondary }]}
-        >
+        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
           Photograph your solar panel array with visible serial numbers
-        </Animated.Text>
+        </Text>
 
         <View style={styles.buttonsContainer}>
-          <Animated.View entering={fadeIn?.delay(200)}>
-            <Pressable
-              testID="take-photo-button"
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                pickFromCamera();
-              }}
-              style={[styles.button, { backgroundColor: colors.primary }]}
-            >
-              <MaterialIcons name="camera-alt" size={22} color={colors.text.inverse} />
-              <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
-                Take Photo
-              </Text>
-            </Pressable>
-          </Animated.View>
+          <Pressable
+            testID="take-photo-button"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              pickFromCamera();
+            }}
+            style={[styles.button, { backgroundColor: colors.primary }]}
+          >
+            <MaterialIcons name="camera-alt" size={22} color={colors.text.inverse} />
+            <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
+              Take Photo
+            </Text>
+          </Pressable>
 
-          <Animated.View entering={fadeIn?.delay(300)}>
-            <Pressable
-              testID="choose-gallery-button"
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                pickFromGallery();
-              }}
-              style={[
-                styles.button,
-                styles.buttonOutline,
-                {
-                  backgroundColor: colors.background.primary,
-                  borderColor: colors.border.light,
-                },
-              ]}
-            >
-              <MaterialIcons name="photo-library" size={22} color={colors.primary} />
-              <Text style={[styles.buttonText, { color: colors.primary }]}>
-                Choose from Gallery
-              </Text>
-            </Pressable>
-          </Animated.View>
-
+          <Pressable
+            testID="choose-gallery-button"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              pickFromGallery();
+            }}
+            style={[
+              styles.button,
+              styles.buttonOutline,
+              {
+                backgroundColor: colors.background.primary,
+                borderColor: colors.border.light,
+              },
+            ]}
+          >
+            <MaterialIcons name="photo-library" size={22} color={colors.primary} />
+            <Text style={[styles.buttonText, { color: colors.primary }]}>
+              Choose from Gallery
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
 
