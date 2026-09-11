@@ -2,15 +2,20 @@
  * react-native-wgpu@0.4.x (and any binary still built with it) evaluates
  * `navigator.gpu = RNWebGPU.gpu` at import time. Hermes throws
  * `Property 'RNWebGPU' doesn't exist` when native `install()` did not
- * populate that global.
+ * populate that global — either because Dawn/`WebGPUModule` was never
+ * linked into the development-simulator .app, or because 0.4.x install()
+ * fails on Expo SDK 56 bridgeless (`RCTCxxBridge` / `getCatalystInstance()`).
  *
- * On Expo SDK 56 / RN 0.85 bridgeless, 0.4.x's iOS install() casts
- * `[RCTBridge currentBridge]` to RCTCxxBridge and bails. Android 0.4.x
- * calls `getCatalystInstance()`, which also fails in bridgeless.
- * react-native-webgpu@0.10+ installs via `self.bridge.runtime`.
+ * Dawn is a static `libwebgpu_dawn.a` (device + ios-simulator slices), not a
+ * named framework under the app Frameworks folder. A 124KB main binary with
+ * only Expo, React, and Hermes frameworks does not disprove autolinking after
+ * rebuild — look for the pod / static archive, not RNWebGPU.framework.
+ *
+ * react-native-webgpu@0.10+ installs via `self.bridge.runtime`. New
+ * Architecture is mandatory on SDK 56 (do not set `newArchEnabled`).
  *
  * Probe WebGPUModule and run `install()` *before* importing Canvas so
- * existing 0.4.x clients show a fallback instead of a redbox.
+ * existing clients show a fallback instead of a redbox.
  */
 
 export type WebGPUNativeModule = {
