@@ -1,14 +1,11 @@
 import { Text, ScrollView, Pressable, StyleSheet, View, useColorScheme } from "react-native";
 import { Stack } from "expo-router";
-import Animated, { FadeIn } from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { ElevatedButton, Host, Text as UIText } from "@expo/ui/jetpack-compose";
 import { PermissionModal } from "@/components/PermissionModal";
 import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useUpload } from "@/hooks/useUpload";
-import {paddingAll} from "@expo/ui/jetpack-compose/modifiers";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function Upload() {
@@ -29,7 +26,6 @@ export default function Upload() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "" }} />
       {isWizardMode && <WizardProgress currentStep={2} />}
       <View style={styles.outerContainer}>
       <ScrollView
@@ -37,8 +33,7 @@ export default function Upload() {
         style={{ backgroundColor: colors.background.primary }}
         contentContainerStyle={[styles.scrollContent, isWizardMode && styles.scrollContentWithToolbar]}
       >
-        <Animated.View
-          entering={FadeIn.duration(300)}
+        <View
           style={[
             styles.iconContainer,
             {
@@ -50,73 +45,63 @@ export default function Upload() {
           ]}
         >
           <MaterialIcons name="photo-library" size={80} color={colors.primary} />
-        </Animated.View>
+        </View>
 
-        <Animated.Text
-          entering={FadeIn.duration(300).delay(100)}
-          style={[styles.title, { color: colors.text.primary }]}
-        >
+        <Text style={[styles.title, { color: colors.text.primary }]}>
           Take or Select Photo
-        </Animated.Text>
+        </Text>
 
-        <Animated.Text
-          entering={FadeIn.duration(300).delay(150)}
-          style={[styles.subtitle, { color: colors.text.secondary }]}
-        >
+        <Text style={[styles.subtitle, { color: colors.text.secondary }]}>
           Photograph your solar panel array with visible serial numbers
-        </Animated.Text>
+        </Text>
 
         <View style={styles.buttonsContainer}>
-          <Animated.View entering={FadeIn.duration(300).delay(200)}>
-            <Pressable
-              testID="take-photo-button"
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                pickFromCamera();
-              }}
-              style={[styles.button, { backgroundColor: colors.primary }]}
-            >
-              <MaterialIcons name="camera-alt" size={22} color={colors.text.inverse} />
-              <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
-                Take Photo
-              </Text>
-            </Pressable>
-          </Animated.View>
+          <Pressable
+            testID="take-photo-button"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              pickFromCamera();
+            }}
+            style={[styles.button, { backgroundColor: colors.primary }]}
+          >
+            <MaterialIcons name="camera-alt" size={22} color={colors.text.inverse} />
+            <Text style={[styles.buttonText, { color: colors.text.inverse }]}>
+              Take Photo
+            </Text>
+          </Pressable>
 
-          <Animated.View entering={FadeIn.duration(300).delay(300)}>
-            <Pressable
-              testID="choose-gallery-button"
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                pickFromGallery();
-              }}
-              style={[
-                styles.button,
-                styles.buttonOutline,
-                {
-                  backgroundColor: colors.background.primary,
-                  borderColor: colors.border.light,
-                },
-              ]}
-            >
-              <MaterialIcons name="photo-library" size={22} color={colors.primary} />
-              <Text style={[styles.buttonText, { color: colors.primary }]}>
-                Choose from Gallery
-              </Text>
-            </Pressable>
-          </Animated.View>
-
+          <Pressable
+            testID="choose-gallery-button"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              pickFromGallery();
+            }}
+            style={[
+              styles.button,
+              styles.buttonOutline,
+              {
+                backgroundColor: colors.background.primary,
+                borderColor: colors.border.light,
+              },
+            ]}
+          >
+            <MaterialIcons name="photo-library" size={22} color={colors.primary} />
+            <Text style={[styles.buttonText, { color: colors.primary }]}>
+              Choose from Gallery
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
 
-        {isWizardMode && (
-          <View style={styles.floatingToolbarContainer} pointerEvents="box-none">
-            <Host matchContents colorScheme={colorScheme ?? undefined}>
-              <ElevatedButton onClick={handleSkip} modifiers={[paddingAll(8)]}><UIText>Skip</UIText></ElevatedButton>
-            </Host>
-          </View>
-        )}
       </View>
+
+      <Stack.Toolbar placement="bottom">
+        <Stack.Toolbar.View hidden={!isWizardMode}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleSkip}>
+            <Text style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}>Skip</Text>
+          </Pressable>
+        </Stack.Toolbar.View>
+      </Stack.Toolbar>
 
       {modalState && (
         <PermissionModal
@@ -185,12 +170,16 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
   },
-  floatingToolbarContainer: {
-    position: "absolute",
-    bottom: 30,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 20,
+  toolbarTextButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  toolbarTextButtonLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });

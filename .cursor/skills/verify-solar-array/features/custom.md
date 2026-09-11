@@ -24,7 +24,7 @@ Preconditions:
 - Wizard Custom via Skip (no photo) or after Analyze.
 - Skia nodes are **not** Maestro-accessible. Prove via toolbar side effects.
 
-- **Land on canvas.** `run-flow wizard-happy-path` after Upload Skip: `id: canvas-container` visible.
+- **Land on canvas.** `run-flow wizard-happy-path` after Upload Skip: `id: canvas-container` visible. Assert "Finish" is **not** visible on the empty canvas (Android used to show it anyway).
 - **Add panel.** `shared/tap-add-panel.yaml`: iOS `add`, Android `Add panel`. Wait for animation. Assert "Finish".
 - **Finish.** Tap "Finish". Wait for "Total Array Output".
 - **Link inverter.** After add, tap `link` / "Link inverter". Sheet: "Available Inverters" or "Linked Inverter" or "No Available Inverters". Link a serial, dismiss, reopen — the same serial is still linked. No committed Maestro flow; drive as a follow-up.

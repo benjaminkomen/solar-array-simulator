@@ -150,8 +150,12 @@ function updateConfig(newConfig: SystemConfig): void {
  * Update default wattage
  */
 export function updateDefaultWattage(wattage: number): void {
+  const next = Math.max(1, wattage); // Ensure positive
+  if (next === currentConfig.defaultMaxWattage) {
+    return;
+  }
   const newConfig = getConfig();
-  newConfig.defaultMaxWattage = Math.max(1, wattage); // Ensure positive
+  newConfig.defaultMaxWattage = next;
   updateConfig(newConfig);
 }
 

@@ -2,7 +2,7 @@
  * Business logic for the Config screen.
  * Handles location search, inverter management, and form state.
  */
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useConfigStore } from '@/hooks/useConfigStore';
@@ -34,6 +34,7 @@ export function useConfigForm() {
   const [locationResults, setLocationResults] = useState<GeocodingResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isMounted = useRef(true);
 
   const handleWattageChange = (text: string) => {
     const wattage = parseInt(text, 10);
@@ -57,10 +58,18 @@ export function useConfigForm() {
     router.push(`/inverter-details?mode=edit&inverterId=${inverter.id}`);
   };
 
-  const handleContinue = () => {
+  const handleContinue = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/upload?wizard=true');
-  };
+  }, [router]);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    };
+  }, []);
 
   const handleLocationSearch = useCallback((text: string) => {
     setLocationQuery(text);
@@ -68,6 +77,7 @@ export function useConfigForm() {
 
     if (text.trim().length < 2) {
       setLocationResults([]);
+      setIsSearching(false);
       return;
     }
 
@@ -76,9 +86,11 @@ export function useConfigForm() {
     searchTimeout.current = setTimeout(async () => {
       try {
         const results = await searchCity(text);
+        if (!isMounted.current) return;
         setLocationResults(results);
         setIsSearching(false);
       } catch {
+        if (!isMounted.current) return;
         setLocationResults([]);
         setIsSearching(false);
       }

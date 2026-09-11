@@ -11,7 +11,7 @@ First-run landing: title, three-step promise, and Get Started. Returning users w
 ## How to get to it (user POV)
 
 - Cold-launch the app with no completed wizard (fresh install or after Delete Configuration).
-- Finish the wizard, then Delete Configuration from Production → More options; land back here.
+- Finish the wizard, then Delete Configuration from Production → the Production menu (iOS "More options", Android "Configuration options"); land back here.
 
 ## Driving it with the harness
 

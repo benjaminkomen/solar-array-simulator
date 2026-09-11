@@ -65,12 +65,6 @@ export default function ConfigScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: "Configuration",
-          headerTitleAlign: 'center',
-        }}
-      />
       {isWizardMode && <WizardProgress currentStep={1}/>}
       <View style={styles.container}>
         <Host style={styles.host} colorScheme={colorScheme ?? undefined}>

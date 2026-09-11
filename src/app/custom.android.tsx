@@ -8,6 +8,7 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
+import { shouldShowWizardFinish } from "@/utils/wizardChrome";
 import Add from "@expo/material-symbols/add.xml";
 import Delete from "@expo/material-symbols/delete.xml";
 import MyLocation from "@expo/material-symbols/my_location.xml";
@@ -109,7 +110,7 @@ export default function Custom() {
       <Stack.Toolbar placement="bottom">
         <Stack.Toolbar.View>
           <View style={styles.bottomToolbar}>
-            {isWizardMode && (
+            {shouldShowWizardFinish(isWizardMode, panels.length) && (
               <Pressable style={styles.toolbarTextButton} onPress={handleFinish}>
                 <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Finish</Text>
               </Pressable>

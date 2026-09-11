@@ -7,6 +7,7 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
+import { shouldShowWizardFinish } from "@/utils/wizardChrome";
 
 export default function Custom() {
   useMarkInteractive();
@@ -97,7 +98,7 @@ export default function Custom() {
             <Stack.Toolbar.Button icon="trash" onPress={handleDeletePanel} accessibilityLabel="Delete panel" />
           </>
         )}
-        {isWizardMode && panels.length > 0 && (
+        {shouldShowWizardFinish(isWizardMode, panels.length) && (
           <Stack.Toolbar.Button onPress={handleFinish}>
             Finish
           </Stack.Toolbar.Button>

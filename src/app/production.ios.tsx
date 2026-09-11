@@ -7,6 +7,7 @@ import { Compass } from "@/components/Compass";
 import { useColors } from "@/utils/theme";
 import { useProductionMonitor } from "@/hooks/useProductionMonitor";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
+import { PRODUCTION_MENU_A11Y_IOS } from "@/utils/productionChrome";
 
 export default function ProductionScreen() {
   useMarkInteractive();
@@ -41,7 +42,7 @@ export default function ProductionScreen() {
     <>
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button icon="sun.max" onPress={handleSimulate} accessibilityLabel="Simulate" />
-        <Stack.Toolbar.Menu icon="ellipsis.circle" accessibilityLabel="More options">
+        <Stack.Toolbar.Menu icon="ellipsis.circle" accessibilityLabel={PRODUCTION_MENU_A11Y_IOS}>
           <Stack.Toolbar.MenuAction icon="pencil" onPress={handleEditConfiguration}>
             Edit Configuration
           </Stack.Toolbar.MenuAction>

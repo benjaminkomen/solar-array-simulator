@@ -39,6 +39,7 @@ function RootLayout() {
               options={{
                 title: "Configuration",
                 headerBackTitle: "",
+                headerTitleAlign: Platform.OS === "android" ? "center" : undefined,
               }}
             />
             <Stack.Screen
