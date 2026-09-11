@@ -114,6 +114,20 @@ describe("verify-solar-array CLI", () => {
     expect(flow).not.toMatch(/timeout: 90000/);
   });
 
+  it("Android Production menu and empty-canvas Finish match iOS product rules", () => {
+    const more = readFileSync(join(repoRoot, ".maestro/shared/tap-more-options.yaml"), "utf8");
+    const wizard = readFileSync(join(repoRoot, ".maestro/shared/wizard-to-production.yaml"), "utf8");
+    const happy = readFileSync(join(repoRoot, ".maestro/wizard-happy-path.yaml"), "utf8");
+    expect(more).toContain("platform: Android");
+    expect(more).toContain('tapOn: "Configuration options"');
+    expect(more.indexOf("platform: Android")).toBeLessThan(more.lastIndexOf("Configuration options"));
+    expect(more.slice(more.indexOf("platform: Android"))).not.toMatch(/tapOn:\s*"More options"/);
+    expect(wizard).toContain('assertNotVisible: "Finish"');
+    expect(wizard.indexOf('assertNotVisible: "Finish"')).toBeLessThan(wizard.indexOf("tap-add-panel"));
+    expect(happy).toContain('assertNotVisible: "Finish"');
+    expect(happy.indexOf('assertNotVisible: "Finish"')).toBeLessThan(happy.indexOf("tap-add-panel"));
+  });
+
   it("features lists the Feature Map", () => {
     const result = run(["features", "--json"]);
     expect(result.status).toBe(0);
