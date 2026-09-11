@@ -73,6 +73,10 @@ Required for the API route (`.env` for local dev, EAS Secrets for production):
 
 The Skia canvas (`SolarPanelCanvas` / `ProductionCanvas`) uses Reanimated SharedValues and worklet functions running on the UI thread. Panels snap to grid or neighbor edges on drag release. Collision detection uses AABB with 8px gap.
 
+## UI verification (agents)
+
+Before claiming screen, navigation, or interactive UI work is done, follow `.cursor/skills/verify-solar-array/SKILL.md` and drive the matching file under `.cursor/skills/verify-solar-array/features/`. Use `node .cursor/skills/verify-solar-array/control.mjs` (`doctor`, `features`, `smoke`, `run-flow`). Do not treat unit tests or HTTP 200 as UI proof. EAS Simulator / Mac `serve-sim` backends are not wired yet (`--backend=eas|mac`).
+
 ## Maestro E2E Tests
 
 Tests in `.maestro/` validate user-facing flows on a real simulator. Shared sub-flows in `.maestro/shared/` handle app launch and wizard navigation.

@@ -11,7 +11,8 @@
     "lint": "expo lint",
     "test": "bun test",
     "test:maestro": "maestro test .maestro",
-    "test:maestro:local": "maestro test .maestro --format junit"
+    "test:maestro:local": "maestro test .maestro --format junit",
+    "verify-solar-array": "node .cursor/skills/verify-solar-array/control.mjs"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^4.0.50",

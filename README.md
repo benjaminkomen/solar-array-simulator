@@ -48,6 +48,19 @@ Download the app from TestFlight [here](https://testflight.apple.com/join/uAT96P
 - I used
   this [open source](https://github.com/enzomanuelmangano/demos/blob/main/src/animations/fibonacci-shader-grid/index.tsx) [fibonacci shader grid](https://reactiive.io/demos/fibonacci-shader-grid)
 
+## Verification
+
+Coding agents should use the project-local `/verify-solar-array` skill (`.cursor/skills/verify-solar-array/`) before claiming UI or navigation work is done. The Feature Map and CLI drive real screens via Maestro; a compile or HTTP 200 is not proof.
+
+```bash
+node .cursor/skills/verify-solar-array/control.mjs doctor
+node .cursor/skills/verify-solar-array/control.mjs features
+# On a Mac with the development build + simulator:
+node .cursor/skills/verify-solar-array/control.mjs smoke
+```
+
+EAS Simulator and Mac/`serve-sim` backends are stubbed (`--backend=eas|mac`) for a later PR.
+
 ## License
 
 MIT
