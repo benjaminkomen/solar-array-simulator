@@ -8,18 +8,18 @@ function readJson(relativePath: string) {
   return JSON.parse(readFileSync(resolve(repoRoot, relativePath), "utf8"));
 }
 
-describe("WebGPU native linking (Expo SDK 56 / RN 0.85)", () => {
-  it("pins React Native 0.85.x and Expo SDK 56", () => {
+describe("WebGPU native linking (Expo SDK 57 / RN 0.86)", () => {
+  it("pins React Native 0.86.x and Expo SDK 57", () => {
     const pkg = readJson("package.json") as {
       dependencies: Record<string, string>;
     };
-    expect(pkg.dependencies["react-native"]).toMatch(/^0\.85\./);
-    expect(pkg.dependencies.expo).toMatch(/56/);
+    expect(pkg.dependencies["react-native"]).toMatch(/^0\.86\./);
+    expect(pkg.dependencies.expo).toMatch(/57/);
     expect(pkg.dependencies["react-native-webgpu"]).toBe("0.10.0");
     expect(pkg.dependencies["react-native-wgpu"]).toBeUndefined();
   });
 
-  it("does not set newArchEnabled — SDK 56 New Architecture is always on", () => {
+  it("does not set newArchEnabled — SDK 57 New Architecture is always on", () => {
     const appJson = readJson("app.json") as {
       expo: { newArchEnabled?: boolean; ios?: { newArchEnabled?: boolean } };
     };
