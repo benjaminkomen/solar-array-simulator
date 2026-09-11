@@ -2,8 +2,7 @@
 
 Behavior-level inventory for the Expo/React Native app (`com.bkomen.solararraysimulator`). Agents use this map to decide what to drive and what evidence counts. Humans use it as the regression checklist.
 
-Surface: iOS Simulator and Android emulator development builds. Maestro YAML in `.maestro/` branches by platform (`launch-fresh.ios.yaml` / `launch-fresh.android.yaml`, plus shared tap helpers). Remaining platform-stub routes (`src/app/*.tsx` without `.ios` / `.android`, except Production, compass-help, Config, and Simulation) show "not yet implemented" — do not treat those as the product. `src/app/production.tsx` is the universal Production route. `src/app/compass-help.tsx` is the universal help body (chrome stays in `_layout`). `src/app/config.tsx` is the shared FieldGroup form (`config.web.tsx` is the stub). `src/app/simulation.tsx` is the shared Simulation route (season chips are platform `SeasonPicker` files).
-
+Surface: iOS Simulator and Android emulator development builds. Maestro YAML in `.maestro/` branches by platform (`launch-fresh.ios.yaml` / `launch-fresh.android.yaml`, plus shared tap helpers). Remaining platform-stub routes (`src/app/*.tsx` without `.ios` / `.android`, except Production, compass-help, Config, Simulation, and Upload) show "not yet implemented" — do not treat those as the product. `src/app/production.tsx` is the universal Production route. `src/app/compass-help.tsx` is the universal help body (chrome stays in `_layout`). `src/app/config.tsx` is the shared FieldGroup form (`config.web.tsx` is the stub). `src/app/simulation.tsx` is the shared Simulation route (season chips are platform `SeasonPicker` files). `src/app/upload.tsx` is the shared Upload route.
 
 ## Baseline preconditions
 
