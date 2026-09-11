@@ -89,8 +89,11 @@ function RootLayout() {
                 presentation: Platform.OS === 'ios' ? "formSheet" : "transparentModal",
                 headerShown: false,
                 sheetGrabberVisible: Platform.OS === 'ios',
+                sheetAllowedDetents: Platform.OS === 'ios' ? [0.3] : undefined,
                 title: "",
-                contentStyle: Platform.OS === 'ios' ? { backgroundColor: "transparent" } : undefined,
+                contentStyle: Platform.OS === 'ios'
+                  ? { backgroundColor: "transparent" }
+                  : { backgroundColor: colors.background.primary },
               }}
             />
             <Stack.Screen

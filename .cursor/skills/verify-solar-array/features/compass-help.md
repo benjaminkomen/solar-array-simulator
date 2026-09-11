@@ -1,6 +1,6 @@
 # Compass help
 
-Form sheet explaining array orientation. Opened from the Custom canvas compass, not from a tab.
+Form sheet explaining array orientation. Opened from the Custom canvas compass, not from a tab. Body lives in one route file (`src/app/compass-help.tsx`). Native chrome stays in `_layout` (iOS `formSheet` detent `0.3` vs Android `transparentModal`).
 
 ## Sub-features
 
@@ -22,12 +22,13 @@ Preconditions:
 
 - **Open from toolbar.** From Custom, tap "Toggle compass" (iOS SF Symbol; accessibilityLabel). Sheet shows "Array Orientation".
 - **Open from compass.** If the sheet is dismissed and the overlay is still visible, tap the compass. Same sheet.
-- **Dismiss.** Swipe down / system close. Custom canvas remains; compass overlay stays if it was shown.
-- **Proof.** Visible "Array Orientation" (and the facing-direction paragraph) after a user tap from Custom. Screenshot the sheet. `src/app/compass-help.tsx` stub text ("Compass help is not yet implemented") is **not** success — that file is the non-iOS/Android fallback. Product copy is `compass-help.ios.tsx` (Android has `compass-help.android.tsx`).
+- **Dismiss.** Swipe down / system back. Custom canvas remains; compass overlay stays if it was shown.
+- **Proof.** Visible "Array Orientation" (and the facing-direction paragraph) after a user tap from Custom. Screenshot the sheet. Product copy is `src/app/compass-help.tsx`. Stub text ("Compass help is not yet implemented") and the old `compass-help.ios.tsx` / `compass-help.android.tsx` forks are gone.
 
 ## Gotchas
 
 - First toolbar tap both shows the overlay **and** pushes the sheet (`handleCompassToggle`). A second toolbar tap hides the overlay and does not reopen the sheet.
 - Production's compass is read-only and does **not** open this sheet.
-- iOS presents as `formSheet` with detent `0.3`. Android is a `transparentModal`. Assert copy, not the presentation style.
+- Presentation chrome stays in `_layout`: iOS `formSheet` + grabber + detent `0.3`; Android `transparentModal`. Do not put `ModalBottomSheet` / SwiftUI `Host` sheet chrome in the route body. Assert copy, not the presentation style.
 - No testID on the sheet. Use the heading text.
+- Drive both platforms: Custom → compass toggle → help → dismiss → back to canvas.
