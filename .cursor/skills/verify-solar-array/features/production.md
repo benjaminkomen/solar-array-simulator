@@ -6,8 +6,8 @@ Post-wizard home: live-ish total wattage, a read-only canvas, compass, Edit/Dele
 
 - `production-output` shows "Total Array Output" and a formatted wattage.
 - `production-simulate` header sun control → `/simulation`.
-- `production-edit` More options → Edit Configuration → Config (wizard).
-- `production-delete` More options → Delete Configuration → Welcome.
+- `production-edit` Production menu → Edit Configuration → Config (wizard).
+- `production-delete` Production menu → Delete Configuration → Welcome.
 - `production-panel-view` tap a linked panel → Panel Details `mode=view`.
 
 ## How to get to it (user POV)
@@ -24,14 +24,14 @@ Preconditions:
 
 - **Arrive via wizard.** `run-flow wizard-happy-path` ends on "Total Array Output".
 - **Simulate.** `run-flow simulation-nav` taps "Simulate" (`tap-simulate.yaml`), waits for "Simulation".
-- **Edit / delete.** `run-flow production-menu`: tap the Production menu (`tap-more-options.yaml`: iOS "More options", Android "Configuration options"), "Edit Configuration" → "Panel Settings" / "Default Production"; resume to Production via `wizard-resume-to-production.yaml`; then "Delete Configuration" → "Solar Array Simulator" + `get-started-button`.
+- **Edit / delete.** `run-flow production-menu`: tap the Production menu (`tap-more-options.yaml`: iOS "More options", Android in-content "Configuration options" on the output card — not the header-right Dev Client Tools control), "Edit Configuration" → "Panel Settings" / "Default Production" (and not Reload / Go home); resume to Production via `wizard-resume-to-production.yaml`; then "Delete Configuration" → "Solar Array Simulator" + `get-started-button`.
 - **Returning launch.** After Finish, kill and relaunch **without** `clearState`. Production must show, not Welcome.
 - **Proof.** "Total Array Output" visible after Finish, plus the menu or Simulate path you changed. Wattage text is selectable; asserting the label is enough unless the change is the formatter.
 
 ## Gotchas
 
 - Simulate = iOS `accessibilityLabel="Simulate"` / Android Icon `contentDescription="Simulate"`.
-- Menu = iOS `accessibilityLabel="More options"` / Android `accessibilityLabel="Configuration options"` (Dev Client AppBar overflow is also "More options" — do not reuse that string). Same action titles: "Edit Configuration", "Delete Configuration".
+- Menu = iOS `accessibilityLabel="More options"` on `Stack.Toolbar.Menu` (right). Android is an in-content Jetpack `DropdownMenu` on the **leading** edge of the Total Array Output card (`contentDescription="Configuration options"`). Do not put the Android menu in `Stack.Toolbar placement="right"` / `headerRight` — Expo Dev Client Tools occupies that corner and wins the tap (Reload / Go home) even with a distinct a11y string. Same action titles: "Edit Configuration", "Delete Configuration".
 - Delete calls `resetAllData` + `clearPanels` + `replace("/")`. Subsequent launches show Welcome.
 - Edit Configuration pushes `/config?wizard=true`, so Continue/Skip/Finish are back. `wizard-resume-to-production.yaml` assumes you are already on Config and does **not** re-add a panel (Finish is already available).
 - Tapping an **unlinked** panel does nothing. View sheet only opens when `inverterId` is set.
