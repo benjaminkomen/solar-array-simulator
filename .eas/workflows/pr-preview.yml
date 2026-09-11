@@ -13,6 +13,10 @@ jobs:
         run: bun install
       - name: Run unit tests
         run: bun test
+      - name: Verification skill CLI
+        run: |
+          node .cursor/skills/verify-solar-array/control.mjs doctor --json
+          node .cursor/skills/verify-solar-array/control.mjs features --json
       - name: Fetch main branch
         run: |
           git fetch --unshallow 2>/dev/null || true

@@ -51,6 +51,11 @@ terraform/backend.hcl
 # Claude
 settings.local.json
 
+# Verification skill (keep evidence README)
+.agents/evidence/verify-solar-array/*
+!.agents/evidence/verify-solar-array/README.md
+.agents/scratch/
+
 # Local app builds
 *.apk
 *.aab
