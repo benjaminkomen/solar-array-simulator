@@ -57,6 +57,7 @@
         {
           "useHermesV1": true,
           "android": {
+            "minSdkVersion": 26,
             "usePrecompiledHeaders": true
           }
         }
