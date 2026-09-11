@@ -12,7 +12,7 @@ appId: com.bkomen.solararraysimulator
       visible: "Open"
     commands:
       - tapOn: "Open"
-# Expo SDK 56 Dev Tools onboarding — wait; do NOT tap Cancel first
+# Expo SDK 57 Dev Tools onboarding — wait; do NOT tap Cancel first
 - extendedWaitUntil:
     visible: "Continue"
     timeout: 90000

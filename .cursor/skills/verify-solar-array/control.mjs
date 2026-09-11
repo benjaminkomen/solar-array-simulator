@@ -44,11 +44,14 @@ const BACKENDS = {
       'backend "eas" is not wired yet.',
       "",
       "This revision implements --backend=maestro only.",
+      "EAS Simulator is Generac-only / preview — not the personal",
+      "solar-array verify backend. Personal verify is Mac local Simulator",
+      "+ emulator-5554 via --backend=maestro.",
       "eas.json already has development-simulator and preview-simulator",
-      "(ios.simulator: true). Next PR should call `eas simulator:start` /",
+      "(ios.simulator: true). A later PR may call `eas simulator:start` /",
       "`eas simulator:exec` and drive the session with agent-device.",
       "",
-      `Re-run with --backend=maestro on a machine that has Maestro + a simulator.`,
+      `Re-run with --backend=maestro on a Mac that has Maestro + a simulator.`,
       `Local smoke: bun start, open the development build, then \`${CLI} smoke\`.`,
     ].join("\n"),
   },
@@ -60,10 +63,11 @@ const BACKENDS = {
       'backend "mac" is not wired yet.',
       "",
       "This revision implements --backend=maestro only.",
-      "Next PR should talk to a Mac worker running serve-sim",
-      "(Xcode Simulator + Metro tunnel) without rewriting this skill.",
+      "Personal verify today is Mac local Simulator + emulator-5554",
+      "via --backend=maestro. Next PR may talk to a Mac worker running",
+      "serve-sim (Xcode Simulator + Metro tunnel) without rewriting this skill.",
       "",
-      `Re-run with --backend=maestro on a machine that has Maestro + a simulator.`,
+      `Re-run with --backend=maestro on a Mac that has Maestro + a simulator.`,
       `Local smoke: bun start, open the development build, then \`${CLI} smoke\`.`,
     ].join("\n"),
   },
@@ -164,11 +168,21 @@ function which(cmd) {
   return null;
 }
 
+export const MAESTRO_DRIVER_STARTUP_TIMEOUT_MS = "180000";
+
+function maestroEnv() {
+  return {
+    ...process.env,
+    MAESTRO_DRIVER_STARTUP_TIMEOUT:
+      process.env.MAESTRO_DRIVER_STARTUP_TIMEOUT || MAESTRO_DRIVER_STARTUP_TIMEOUT_MS,
+  };
+}
+
 function runCapture(cmd, args, opts = {}) {
   const result = spawnSync(cmd, args, {
     encoding: "utf8",
     cwd: opts.cwd ?? REPO_ROOT,
-    env: process.env,
+    env: opts.env ?? process.env,
   });
   return {
     status: result.status ?? 1,
@@ -229,7 +243,7 @@ export function resolveFlow(name) {
         : candidate;
       if (rel.includes(".maestro/shared/")) {
         throw usageError(
-          `${rel} is a shared subflow, not a top-level drive. Use smoke-test, wizard-happy-path, analyze-skip, production-menu, or simulation-nav.`,
+          `${rel} is a shared subflow, not a top-level drive. Use smoke-test, wizard-happy-path, analyze-skip, production-menu, simulation-nav, or full-app-tour.`,
         );
       }
       return { id: basename(candidate).replace(/\.ya?ml$/, ""), path: candidate, rel };
@@ -265,7 +279,7 @@ function readEasSimulatorProfiles() {
       name: "development",
       present: Boolean(development),
       developmentClient: development?.developmentClient === true,
-      hint: "eas build --profile development --platform android — install the APK on an AVD (api35_test / bare-expo). development-simulator / preview-simulator are iOS-only (ios.simulator: true).",
+      hint: "eas build --profile development --platform android — install the APK on emulator-5554 (api35_test / bare-expo). development-simulator / preview-simulator are iOS-only (ios.simulator: true). EAS Simulator is Generac-only.",
     },
   };
 }
@@ -468,6 +482,7 @@ Examples:
   ${CLI} features
   ${CLI} run-flow wizard-happy-path --platform=ios
   ${CLI} run-flow simulation-nav --platform=android --json
+  ${CLI} run-flow full-app-tour --platform=ios
   ${CLI} smoke --backend=eas          # must print "not wired yet"
 `.trim();
 }
@@ -508,7 +523,7 @@ run-flow — run one top-level .maestro/*.yaml
 
   ${CLI} run-flow <name> [--backend=maestro] [--platform=ios|android] [--json]
 
-Names: smoke-test, wizard-happy-path, analyze-skip, production-menu, simulation-nav
+Names: smoke-test, wizard-happy-path, analyze-skip, production-menu, simulation-nav, full-app-tour
 Also accepts a path (.maestro/wizard-happy-path.yaml). Rejects shared/ subflows.
 `.trim(),
     screenshot: `
@@ -594,7 +609,7 @@ function buildDoctorReport(backend) {
       "1. On a Mac with Xcode and/or Android SDK, plus the matching development client.",
       "2. bun install && bun start",
       "3. iOS: open the development-simulator build on a booted Simulator (do not expo run:ios).",
-      "4. Android: install the `development` APK on an AVD (api35_test / bare-expo). Metro is 10.0.2.2:8081 from the guest.",
+      "4. Android: install the `development` APK on emulator-5554 (api35_test / bare-expo). Metro is 10.0.2.2:8081 from the guest.",
       `5. ${CLI} smoke --platform=ios   or   ${CLI} smoke --platform=android`,
     ],
   };
@@ -730,7 +745,7 @@ function runMaestroCommand(args, { json, kind, extra, platform = null }) {
   }
 
   mkdirSync(SCRATCH_DIR, { recursive: true });
-  const result = runCapture(maestro.bin, maestroArgs);
+  const result = runCapture(maestro.bin, maestroArgs, { env: maestroEnv() });
   const ok = result.status === 0;
   const receipt = writeReceipt(kind, {
     ok,

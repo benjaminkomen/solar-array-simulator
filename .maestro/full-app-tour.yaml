@@ -1,0 +1,103 @@
+appId: com.bkomen.solararraysimulator
+---
+# Full-app tour: Welcome → Config → Upload → Custom (compass + first panel)
+# → Production menu → Simulation chrome.
+#
+# Used to record the iPhone 17 walkthrough on a Mac Simulator.
+# The video itself is Mac-side (.agents/evidence/verify-solar-array/).
+# Do not invent or commit a recording from a Cloud VM.
+#
+# Honesty (do not paper over):
+# - Finish is NOT visible before the first panel (shouldShowWizardFinish).
+# - Production overflow: iOS "More options", Android "Configuration options".
+# - production-menu must not show Reload / Go home.
+# - sim-3d-proof is Simulation chrome (panel+sun or black canvas with chrome),
+#   not the launcher. GPU loads late; short settle only.
+# - Android Add panel can miss (#54) — this flow uses the same tap helper.
+
+- runFlow: shared/launch-fresh.yaml
+
+# Welcome
+- assertVisible: "Solar Array Simulator"
+- assertVisible: "Configure your solar panel array in 3 easy steps"
+- assertVisible:
+    id: "get-started-button"
+
+# Config
+- tapOn:
+    id: "get-started-button"
+- extendedWaitUntil:
+    visible: "Panel Settings"
+    timeout: 10000
+- assertVisible: "Configure"
+- assertVisible: "Photo"
+- assertVisible: "Layout"
+- assertVisible: "Default Production"
+
+# Upload (Skip — gallery/Analyze is analyze-skip.yaml)
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Take or Select Photo"
+    timeout: 10000
+- assertVisible:
+    id: "take-photo-button"
+- assertVisible:
+    id: "choose-gallery-button"
+- tapOn: "Skip"
+- extendedWaitUntil:
+    visible:
+        id: "canvas-container"
+    timeout: 10000
+
+# Custom: empty canvas hides Finish
+- assertNotVisible: "Finish"
+
+# Compass help sheet (first Toggle compass)
+- tapOn: "Toggle compass"
+- extendedWaitUntil:
+    visible: "Array Orientation"
+    timeout: 10000
+- swipe:
+    direction: DOWN
+- extendedWaitUntil:
+    visible:
+        id: "canvas-container"
+    timeout: 10000
+
+# Add a panel, then Finish is allowed
+- runFlow: shared/tap-add-panel.yaml
+- waitForAnimationToEnd
+- assertVisible: "Finish"
+- tapOn: "Finish"
+- extendedWaitUntil:
+    visible: "Total Array Output"
+    timeout: 10000
+
+# Production overflow — app menu, not Dev Client Reload / Go home
+- runFlow: shared/tap-more-options.yaml
+- extendedWaitUntil:
+    visible: "Edit Configuration"
+    timeout: 5000
+- assertVisible: "Delete Configuration"
+- assertNotVisible: "Reload"
+- assertNotVisible: "Go home"
+# Dismiss the menu without leaving Production
+- tapOn:
+    point: "50%,40%"
+- assertVisible: "Total Array Output"
+
+# Simulation chrome + 3D proof (GPU may still be black)
+- runFlow: shared/tap-simulate.yaml
+- extendedWaitUntil:
+    visible: "Simulation"
+    timeout: 15000
+- assertVisible: "Total Output"
+- assertVisible: "Spring"
+- assertVisible: "Summer"
+- assertVisible: "Fall"
+- assertVisible: "Winter"
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertVisible: "Simulation"
+- assertVisible: "Total Output"
+- takeScreenshot: sim-3d-proof

@@ -2,7 +2,12 @@ import { describe, it, expect } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseAdbDevices, parseBootedSimulators } from "../../../.cursor/skills/verify-solar-array/control.mjs";
+import {
+  MAESTRO_DRIVER_STARTUP_TIMEOUT_MS,
+  parseAdbDevices,
+  parseBootedSimulators,
+} from "../../../.cursor/skills/verify-solar-array/control.mjs";
+import { readAppRouteSource } from "./readAppRouteSource";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
 const cli = join(repoRoot, ".cursor/skills/verify-solar-array/control.mjs");
@@ -17,6 +22,29 @@ function run(args: string[]) {
 }
 
 describe("verify-solar-array CLI", () => {
+  it("route-source hook prefers remaining platform pairs and falls back after collapse", () => {
+    const upload = readAppRouteSource(repoRoot, "upload", "android");
+    expect(upload.file.endsWith("upload.android.tsx")).toBe(true);
+    const production = readAppRouteSource(repoRoot, "production", "android");
+    expect(production.file.endsWith("production.tsx")).toBe(true);
+    expect(production.src).toContain("Toolbar.Menu");
+    const config = readAppRouteSource(repoRoot, "config", "ios");
+    expect(config.file.endsWith("config.tsx")).toBe(true);
+    const compass = readAppRouteSource(repoRoot, "compass-help", "ios");
+    expect(compass.file.endsWith("compass-help.tsx")).toBe(true);
+  });
+
+  it("lists full-app-tour as a top-level flow", () => {
+    const result = run(["list-flows", "--json"]);
+    expect(result.status).toBe(0);
+    const payload = JSON.parse(result.stdout);
+    const ids = payload.flows.map((f: { id: string }) => f.id);
+    expect(ids).toContain("full-app-tour");
+    expect(ids).toContain("wizard-happy-path");
+    expect(ids).toContain("production-menu");
+    expect(ids).toContain("simulation-nav");
+  });
+
   it("prints a command surface on --help", () => {
     const result = run(["--help"]);
     expect(result.status).toBe(0);
@@ -37,6 +65,19 @@ describe("verify-solar-array CLI", () => {
     expect(report.backend.implemented).toBe(true);
     expect(report.featureMap.count).toBeGreaterThanOrEqual(8);
     expect(report.flows.names).toContain("smoke-test");
+    expect(report.flows.names).toContain("full-app-tour");
+    expect(report.featureMap.features).toEqual([
+      "analyze",
+      "compass-help",
+      "config",
+      "custom",
+      "production",
+      "simulation",
+      "upload",
+      "welcome",
+    ]);
+    expect(report.eas.androidDevelopment.hint).toContain("emulator-5554");
+    expect(report.eas.androidDevelopment.hint).toContain("Generac-only");
     expect(report.eas.profiles.every((p: { iosSimulator: boolean }) => p.iosSimulator)).toBe(true);
     expect(Array.isArray(report.howToSmokeLocally)).toBe(true);
     if (!report.device.available) {
@@ -191,6 +232,86 @@ describe("verify-solar-array CLI", () => {
     expect(ids).toContain("production");
     expect(ids).toContain("simulation");
     expect(ids).toContain("compass-help");
+    expect(payload.count).toBe(8);
+  });
+
+  it("feature map stays honest about current-main product diffs", () => {
+    const featuresDir = join(repoRoot, ".cursor/skills/verify-solar-array/features");
+    const readme = readFileSync(join(featuresDir, "README.md"), "utf8");
+    const production = readFileSync(join(featuresDir, "production.md"), "utf8");
+    const custom = readFileSync(join(featuresDir, "custom.md"), "utf8");
+    const analyze = readFileSync(join(featuresDir, "analyze.md"), "utf8");
+    const simulation = readFileSync(join(featuresDir, "simulation.md"), "utf8");
+    const welcome = readFileSync(join(featuresDir, "welcome.md"), "utf8");
+    const skill = readFileSync(
+      join(repoRoot, ".cursor/skills/verify-solar-array/SKILL.md"),
+      "utf8",
+    );
+
+    expect(readme).toContain("[Welcome](welcome.md)");
+    expect(readme).toContain("[Config](config.md)");
+    expect(readme).toContain("[Upload](upload.md)");
+    expect(readme).toContain("[Analyze](analyze.md)");
+    expect(readme).toContain("[Custom](custom.md)");
+    expect(readme).toContain("[Production](production.md)");
+    expect(readme).toContain("[Simulation](simulation.md)");
+    expect(readme).toContain("[Compass help](compass-help.md)");
+    expect(readme).toContain('Do **not** write "iOS-only route" or "Android-only route"');
+    expect(readme).toContain("Every listed screen exists on both platforms");
+    expect(readme).toContain("Configuration options");
+    expect(readme).toContain("More options");
+    expect(readme).toContain("emulator-5554");
+    expect(readme).toContain("Generac-only");
+    expect(readme).toContain("MAESTRO_DRIVER_STARTUP_TIMEOUT=180000");
+    expect(readme).toContain("full-app-tour");
+    expect(readme).toContain("Already universal");
+    expect(readme).toContain("Remaining platform stubs");
+    expect(readme).toContain("Hold #56");
+
+    expect(production).toContain("src/app/production.tsx");
+    expect(production).toContain("no `production.ios.tsx`");
+    expect(production).toContain("Configuration options");
+    expect(production).toContain("More options");
+    expect(production).toContain("Reload");
+    expect(production).toContain("Go home");
+    const config = readFileSync(join(featuresDir, "config.md"), "utf8");
+    const compass = readFileSync(join(featuresDir, "compass-help.md"), "utf8");
+    const upload = readFileSync(join(featuresDir, "upload.md"), "utf8");
+    expect(config).toContain("src/app/config.tsx");
+    expect(config).toContain("config.web.tsx");
+    expect(config).not.toContain("product UI is `src/app/config.ios.tsx`");
+    expect(compass).toContain("src/app/compass-help.tsx");
+    expect(compass).toContain("old `compass-help.ios.tsx`");
+    expect(upload).toContain("upload.ios.tsx");
+    expect(upload).toContain("Do not paper this as already collapsed");
+    expect(custom).toContain("shouldShowWizardFinish");
+    expect(custom).toContain('Assert "Finish" is **not** visible');
+    expect(analyze).toContain("SELECT AI MODEL");
+    expect(analyze).toContain("verified-unreachable");
+    expect(simulation).toContain("sim-3d-proof");
+    expect(simulation).toContain("Do not wait on `webgpu-scene-painted`");
+    expect(welcome).toContain("Tools button");
+    expect(welcome).toContain("10.0.2.2:8081");
+    expect(skill).toContain("MAESTRO_DRIVER_STARTUP_TIMEOUT=180000");
+    expect(skill).toContain("Generac-only");
+    expect(skill).toContain("emulator-5554");
+    expect(skill).toContain("Do not invent a video");
+  });
+
+  it("full-app-tour encodes the honesty facts and is a top-level flow", () => {
+    const tour = readFileSync(join(repoRoot, ".maestro/full-app-tour.yaml"), "utf8");
+    expect(tour).toContain("shared/launch-fresh.yaml");
+    expect(tour).toContain('assertNotVisible: "Finish"');
+    expect(tour.indexOf('assertNotVisible: "Finish"')).toBeLessThan(tour.indexOf("tap-add-panel"));
+    expect(tour).toContain("Toggle compass");
+    expect(tour).toContain("Array Orientation");
+    expect(tour).toContain("tap-more-options.yaml");
+    expect(tour).toContain('assertNotVisible: "Reload"');
+    expect(tour).toContain('assertNotVisible: "Go home"');
+    expect(tour).toContain("takeScreenshot: sim-3d-proof");
+    expect(tour).toContain("iPhone 17");
+    expect(tour).not.toContain("webgpu-scene-painted");
+    expect(MAESTRO_DRIVER_STARTUP_TIMEOUT_MS).toBe("180000");
   });
 
   it("eas and mac backends refuse drive commands with a plug-in hint", () => {
@@ -201,6 +322,9 @@ describe("verify-solar-array CLI", () => {
       expect(payload.ok).toBe(false);
       expect(payload.implemented).toBe(false);
       expect(payload.error).toContain("not wired yet");
+      if (backend === "eas") {
+        expect(payload.error).toContain("Generac-only");
+      }
     }
   });
 

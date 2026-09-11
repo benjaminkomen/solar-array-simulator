@@ -11,10 +11,10 @@ env:
 #   adb shell am start -a android.intent.action.VIEW -d "<this URL>"
 # Ends on Welcome with "Solar Array Simulator" visible
 #
-# After Metro attaches, SDK 56 shows either the first-run Continue sheet or the
+# After Metro attaches, SDK 57 shows either the first-run Continue sheet or the
 # full Dev Menu (Reload / Go home / Close) over Welcome. Dev Menu is already
-# attached — turn off the Tools overlay (Dev Menu "Tools button" toggle), then
-# dismiss (Close or 50%,15%). Do not wait 90s for Continue, and do not tap
+# attached — turn off the Tools overlay (Dev Menu "Tools button" toggle once),
+# then dismiss (Close or 50%,15%). Do not wait 90s for Continue, and do not tap
 # Go home (that returns to the launcher). The Tools overlay steals the
 # Production header overflow hit target if left on.
 
