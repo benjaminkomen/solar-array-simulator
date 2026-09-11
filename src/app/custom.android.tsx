@@ -1,6 +1,5 @@
 import { Pressable, View, StyleSheet, Text } from "react-native";
 import { Stack } from "expo-router";
-import { Badge, Host, Icon, Text as UIText } from "@expo/ui/jetpack-compose";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
@@ -15,6 +14,8 @@ import MyLocation from "@expo/material-symbols/my_location.xml";
 import Link from "@expo/material-symbols/link.xml";
 import Navigation from "@expo/material-symbols/navigation.xml";
 import RotateRight from "@expo/material-symbols/rotate_right.xml";
+
+function ignoreUnlinkedBadgePress() {}
 
 export default function Custom() {
   useMarkInteractive();
@@ -60,20 +61,11 @@ export default function Custom() {
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button icon={Navigation} onPress={handleCompassToggle} accessibilityLabel="Toggle compass" />
         <Stack.Toolbar.Button icon={MyLocation} onPress={handleSnapToOrigin} accessibilityLabel="Snap to origin" />
-        <Stack.Toolbar.View>
-          <View style={styles.badgedButton}>
-            <Host matchContents>
-              <Icon source={Link} tint={colors.text.primary} />
-            </Host>
-            {unlinkedCount > 0 && (
-              <Host matchContents style={styles.badge}>
-                <Badge containerColor={colors.system.red as string}>
-                  <UIText>{String(unlinkedCount)}</UIText>
-                </Badge>
-              </Host>
-            )}
-          </View>
-        </Stack.Toolbar.View>
+        <Stack.Toolbar.Button icon={Link} onPress={ignoreUnlinkedBadgePress} accessibilityLabel="Unlinked panels">
+          {unlinkedCount > 0 && (
+            <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
+          )}
+        </Stack.Toolbar.Button>
       </Stack.Toolbar>
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={styles.outerContainer}>
@@ -108,39 +100,17 @@ export default function Custom() {
       </View>
 
       <Stack.Toolbar placement="bottom">
-        <Stack.Toolbar.View>
-          <View style={styles.bottomToolbar}>
-            {shouldShowWizardFinish(isWizardMode, panels.length) && (
-              <Pressable style={styles.toolbarTextButton} onPress={handleFinish}>
-                <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Finish</Text>
-              </Pressable>
-            )}
-            <Pressable style={styles.toolbarIconButton} onPress={handleAddPanel} accessibilityLabel="Add panel">
-              <Host matchContents>
-                <Icon source={Add} tint={colors.primary} />
-              </Host>
-            </Pressable>
-            {selectedId && (
-              <>
-                <Pressable style={styles.toolbarIconButton} onPress={handleLinkInverter} accessibilityLabel="Link inverter">
-                  <Host matchContents>
-                    <Icon source={Link} tint={colors.primary} />
-                  </Host>
-                </Pressable>
-                <Pressable style={styles.toolbarIconButton} onPress={handleRotatePanel} accessibilityLabel="Rotate panel">
-                  <Host matchContents>
-                    <Icon source={RotateRight} tint={colors.primary} />
-                  </Host>
-                </Pressable>
-                <Pressable style={styles.toolbarIconButton} onPress={handleDeletePanel} accessibilityLabel="Delete panel">
-                  <Host matchContents>
-                    <Icon source={Delete} tint={colors.primary} />
-                  </Host>
-                </Pressable>
-              </>
-            )}
-          </View>
+        {/* Text-only Android toolbar items must stay Pressable+Text. IconButton requires a source. */}
+        <Stack.Toolbar.View hidden={!shouldShowWizardFinish(isWizardMode, panels.length)}>
+          <Pressable style={styles.toolbarTextButton} onPress={handleFinish}>
+            <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Finish</Text>
+          </Pressable>
         </Stack.Toolbar.View>
+        {/* Native IconButton — do not wrap icons in Host inside Toolbar.View; that Host eats taps (#54). */}
+        <Stack.Toolbar.Button icon={Add} onPress={handleAddPanel} accessibilityLabel="Add panel" />
+        <Stack.Toolbar.Button hidden={!selectedId} icon={Link} onPress={handleLinkInverter} accessibilityLabel="Link inverter" />
+        <Stack.Toolbar.Button hidden={!selectedId} icon={RotateRight} onPress={handleRotatePanel} accessibilityLabel="Rotate panel" />
+        <Stack.Toolbar.Button hidden={!selectedId} icon={Delete} onPress={handleDeletePanel} accessibilityLabel="Delete panel" />
       </Stack.Toolbar>
     </>
   );
@@ -159,32 +129,11 @@ const styles = StyleSheet.create({
     right: 48,
     zIndex: 10,
   },
-  badgedButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badge: {
-    position: "absolute",
-    top: 2,
-    right: 2,
-  },
-  bottomToolbar: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
   toolbarTextButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     minHeight: 36,
     justifyContent: "center",
-  },
-  toolbarIconButton: {
-    width: 48,
-    height: 48,
-    justifyContent: "center",
-    alignItems: "center",
   },
   toolbarTextButtonLabel: {
     fontSize: 14,

@@ -44,7 +44,8 @@ appId: com.bkomen.solararraysimulator
 # Empty canvas: Finish is hidden until a panel exists (iOS and Android)
 - assertNotVisible: "Finish"
 
-# Add a panel (iOS "add", Android "Add panel")
+# Add a panel (iOS "add", Android Toolbar.Button "Add panel"). Single tap — no retry.
+- waitForAnimationToEnd
 - runFlow: shared/tap-add-panel.yaml
 - waitForAnimationToEnd
 

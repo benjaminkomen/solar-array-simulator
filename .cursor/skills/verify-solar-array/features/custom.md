@@ -36,6 +36,8 @@ Preconditions:
 
 - Shared `custom.tsx` is a stub. Product UI is `custom.ios.tsx` / `custom.android.tsx`.
 - Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches.
+- Android Custom icons are `Stack.Toolbar.Button` (native Compose `IconButton`). Do not wrap those icons in `Host` inside `Stack.Toolbar.View` + `Pressable` — the View is already an `RNHostView`, and the inner Host eats the tap (Maestro reports success, handler never runs). Finish stays Pressable+Text because Android `Toolbar.Button` requires an icon source.
+- `wizard-happy-path` must pass on a single Add panel tap. Do not add a `repeat:` retry around `tap-add-panel`.
 - Finish is hidden when `panels.length === 0` or not in wizard mode. Adding then deleting the last panel hides it again.
 - Compass toggle is a different feature ([compass-help.md](compass-help.md)).
 - Collision uses an 8px gap. Overlap on drag-release is app behavior; Maestro cannot see it.

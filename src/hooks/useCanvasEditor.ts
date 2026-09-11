@@ -37,6 +37,7 @@ export function useCanvasEditor() {
   const { initialPanels, wizard } = useLocalSearchParams<{ initialPanels?: string; wizard?: string }>();
   const isWizardMode = wizard === 'true';
   const canvasSize = useRef({ width: 0, height: 0 });
+  const pendingAddPanel = useRef(false);
   const viewportX = useSharedValue(0);
   const viewportY = useSharedValue(0);
   const canvasWidth = useSharedValue(0);
@@ -66,6 +67,11 @@ export function useCanvasEditor() {
       canvasSize.current = { width, height };
 
       scheduleOnUI(setCanvasSize, canvasWidth, canvasHeight, width, height);
+
+      if (pendingAddPanel.current && width > 0 && height > 0) {
+        pendingAddPanel.current = false;
+        addPanel(width, height, -viewportX.value, -viewportY.value);
+      }
 
       // Initialize panels centered in the canvas after layout is known
       if (initialPanels && !hasInitialized.current && width > 0 && height > 0) {
@@ -98,14 +104,16 @@ export function useCanvasEditor() {
         }
       }
     },
-    [initialPanels, initializePanels, config.inverters, canvasWidth, canvasHeight],
+    [initialPanels, initializePanels, config.inverters, canvasWidth, canvasHeight, addPanel, viewportX, viewportY],
   );
 
   const handleAddPanel = useCallback(() => {
     const { width, height } = canvasSize.current;
     if (width > 0 && height > 0) {
       addPanel(width, height, -viewportX.value, -viewportY.value);
+      return;
     }
+    pendingAddPanel.current = true;
   }, [addPanel, viewportX, viewportY]);
 
   const handleRotatePanel = useCallback(() => {

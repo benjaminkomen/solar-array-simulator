@@ -18,6 +18,7 @@ appId: com.bkomen.solararraysimulator
         id: "canvas-container"
     timeout: 10000
 - assertNotVisible: "Finish"
+- waitForAnimationToEnd
 - runFlow: tap-add-panel.yaml
 - waitForAnimationToEnd
 - tapOn: "Finish"
