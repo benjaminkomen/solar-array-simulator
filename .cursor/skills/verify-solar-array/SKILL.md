@@ -70,7 +70,7 @@ Prefer existing Maestro YAML over rewriting flows. Stable handles already used b
 | `text-input-unit` | testID | Config wattage "W" | — |
 | `Panel Settings` | text | Config | Config |
 | `Take or Select Photo` | text | Upload | Upload |
-| Analyze header | text | `Select AI Model` | `SELECT AI MODEL` |
+| Analyze header | text | `Select AI Model` | `Select AI Model` |
 | Add panel | toolbar | `add` (SF Symbol `plus`) | `Add panel` |
 | `Finish` / `Continue` / `Skip` | toolbar text | wizard | wizard |
 | `Simulate` | a11y | Production sun | Production sun (`contentDescription`) |

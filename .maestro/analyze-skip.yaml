@@ -1,7 +1,7 @@
 appId: com.bkomen.solararraysimulator
 ---
-# Analyze Screen: Verify model selector UI and Skip action
-# Tests: Upload → pick photo from gallery → Analyze screen (model selector) → Skip → Custom
+# Analyze Screen: Verify model picker UI and Skip action
+# Tests: Upload → pick photo from gallery → Analyze (universal Picker) → change model → Skip → Custom
 
 - runFlow: shared/launch-fresh.yaml
 
@@ -31,13 +31,17 @@ appId: com.bkomen.solararraysimulator
       - tapOn:
           point: "17%,25%"
 
-# Verify we land on the Analyze screen with model selector
+# Verify we land on the Analyze screen with model picker
 - runFlow: shared/wait-analyze-header.yaml
 
-# Verify model list (Sonnet row includes "(Default)" in label text)
+# Selected value is visible before the menu opens
 - assertVisible: "Claude Sonnet 4.6 (Default)"
+
+# Open the menu and change selection (not an always-visible radio list)
+- tapOn: "Claude Sonnet 4.6 (Default)"
 - assertVisible: "Claude Opus 4.6"
 - assertVisible: "Amazon Nova Pro"
+- tapOn: "Claude Opus 4.6"
 
 # Skip to Custom screen instead of analyzing
 - tapOn: "Skip"
