@@ -25,7 +25,7 @@ Preconditions:
 - Skia nodes are **not** Maestro-accessible. Prove via toolbar side effects.
 
 - **Land on canvas.** `run-flow wizard-happy-path` after Upload Skip: `id: canvas-container` visible. Assert "Finish" is **not** visible on the empty canvas (Android used to show it anyway).
-- **Add panel.** `shared/tap-add-panel.yaml`: iOS `add`, Android `Add panel`. Wait for animation. Assert "Finish".
+- **Add panel.** `shared/tap-add-panel.yaml`: iOS `add` (SF `plus`), Android `Add panel` (`CUSTOM_ADD_PANEL_A11Y` on the shared bottom `Stack.Toolbar.Button`). Wait for animation. Assert "Finish".
 - **Finish.** Tap "Finish". Wait for "Total Array Output".
 - **Link inverter.** After add, tap `link` / "Link inverter". Sheet: "Available Inverters" or "Linked Inverter" or "No Available Inverters". Link a serial, dismiss, reopen — the same serial is still linked. No committed Maestro flow; drive as a follow-up.
 - **Empty inverters.** If every inverter is already linked, the sheet shows "No Available Inverters" and "Add Inverter" → Config.
@@ -34,8 +34,10 @@ Preconditions:
 
 ## Gotchas
 
-- Shared `custom.tsx` is a stub. Product UI is `custom.ios.tsx` / `custom.android.tsx`.
-- Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches.
-- Finish is hidden when `panels.length === 0` or not in wizard mode. Adding then deleting the last panel hides it again.
+- Shared `custom.tsx` is a stub. Product UI is `custom.ios.tsx` / `custom.android.tsx`, both mounting the same `CustomHeaderToolbar` / `CustomBottomToolbar` tree (`src/components/CustomChrome.tsx`). Icons are SF Symbol vs Material (`Platform` only).
+- Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches. Do not skip the Finish assert if Add misses (#54).
+- Finish is hidden when `panels.length === 0` or not in wizard mode (`shouldShowWizardFinish`). Adding then deleting the last panel hides it again.
+- `Stack.Toolbar.Badge` is only on the header-right link button when `unlinkedCount > 0`. Do not add Badge on Production / Config / bottom toolbar.
+- Android bottom `Stack.Toolbar.Button` requires an image source, so wizard Finish stays a text `Stack.Toolbar.View` on Android and a text `Stack.Toolbar.Button` on iOS. Maestro still asserts the string "Finish".
 - Compass toggle is a different feature ([compass-help.md](compass-help.md)).
 - Collision uses an 8px gap. Overlap on drag-release is app behavior; Maestro cannot see it.
