@@ -11,10 +11,10 @@ env:
 #   adb shell am start -a android.intent.action.VIEW -d "<this URL>"
 # Ends on Welcome with "Solar Array Simulator" visible
 #
-# Race: openLink before Dev Client Home is up is dropped; the emulator stays on
-# Home (empty exp://, Connect disabled until the field has text). Wait for Home,
-# deep-link, then fall back to Recently Opened / typed Connect. Continue appears
-# after Metro attaches — wait for it like iOS; do not one-shot optional-check.
+# After Metro attaches, SDK 56 shows either the first-run Continue sheet or the
+# full Dev Menu (Reload / Go home / Close) over Welcome. Dev Menu is already
+# attached — dismiss it (Close or 50%,15%). Do not wait 90s for Continue, and
+# do not tap Go home (that returns to the launcher).
 
 - launchApp:
     clearState: true
@@ -44,21 +44,39 @@ env:
       - inputText: ${METRO_URL_PLAIN}
       - hideKeyboard
       - tapOn: "Connect"
-# Continue appears after Metro attaches (same as iOS). Skip if Welcome already up.
-- runFlow:
-    when:
+# Poll for Welcome. Each pass: dismiss Dev Menu, or tap Continue, then peek.
+- repeat:
+    times: 18
+    while:
       notVisible: "Solar Array Simulator"
     commands:
+      - runFlow:
+          when:
+            visible: "Close"
+          commands:
+            - tapOn: "Close"
+      - runFlow:
+          when:
+            visible: "Go home"
+          commands:
+            - tapOn:
+                point: "50%,15%"
+      - runFlow:
+          when:
+            visible: "Reload"
+            notVisible: "Continue"
+          commands:
+            - tapOn:
+                point: "50%,15%"
+      - runFlow:
+          when:
+            visible: "Continue"
+          commands:
+            - tapOn: "Continue"
       - extendedWaitUntil:
-          visible: "Continue"
-          timeout: 90000
-      - tapOn: "Continue"
-- runFlow:
-    when:
-      visible: "Reload"
-    commands:
-      - tapOn:
-          point: "50%,15%"
+          visible: "Solar Array Simulator"
+          timeout: 5000
+          optional: true
 - extendedWaitUntil:
     visible: "Solar Array Simulator"
     timeout: 120000
