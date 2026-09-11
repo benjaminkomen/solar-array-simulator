@@ -100,13 +100,13 @@ export default function Custom() {
       </View>
 
       <Stack.Toolbar placement="bottom">
-        {/* Text-only Android toolbar items must stay Pressable+Text. IconButton requires a source. */}
+        {/* Text-only Android toolbar items stay Pressable+Text; IconButton requires a source. */}
         <Stack.Toolbar.View hidden={!shouldShowWizardFinish(isWizardMode, panels.length)}>
           <Pressable style={styles.toolbarTextButton} onPress={handleFinish}>
             <Text style={[styles.toolbarTextButtonLabel, {color: colors.primary as string}]}>Finish</Text>
           </Pressable>
         </Stack.Toolbar.View>
-        {/* Native IconButton — do not wrap icons in Host inside Toolbar.View; that Host eats taps (#54). */}
+        {/* Native IconButton. Nested Compose icon views inside Toolbar.View eat taps (#54). */}
         <Stack.Toolbar.Button icon={Add} onPress={handleAddPanel} accessibilityLabel="Add panel" />
         <Stack.Toolbar.Button hidden={!selectedId} icon={Link} onPress={handleLinkInverter} accessibilityLabel="Link inverter" />
         <Stack.Toolbar.Button hidden={!selectedId} icon={RotateRight} onPress={handleRotatePanel} accessibilityLabel="Rotate panel" />

@@ -1,7 +1,7 @@
 appId: com.bkomen.solararraysimulator
 ---
 # Custom canvas: add a panel (iOS SF Symbol "add", Android Toolbar.Button "Add panel").
-# One tap. Do not wrap this in repeat: — a missed handler is an app bug, not a flow flake.
+# One tap. A missed handler is an app bug, not a flow flake.
 
 - runFlow:
     when:

@@ -47,8 +47,8 @@ describe("Android Custom toolbar hits", () => {
     const bottom = toolbarBlock(customAndroid, "bottom");
     expect(bottom).toContain('accessibilityLabel="Add panel"');
     expect(bottom).toMatch(/Stack\.Toolbar\.Button[\s\S]*accessibilityLabel="Add panel"/);
-    expect(bottom).not.toContain("Host");
-    expect(bottom).not.toMatch(/<Pressable[\s\S]*Add panel/);
+    expect(bottom).not.toMatch(/<Host\b/);
+    expect(bottom).not.toMatch(/<Pressable[^>]*accessibilityLabel="Add panel"/);
   });
 
   it("keeps header-right compass, snap, and link as Toolbar.Button", () => {
@@ -59,7 +59,7 @@ describe("Android Custom toolbar hits", () => {
     expect(right).toContain("handleCompassToggle");
     expect(right).toContain("handleSnapToOrigin");
     expect(right).toContain("Toolbar.Badge");
-    expect(right).not.toContain("Host");
+    expect(right).not.toMatch(/<Host\b/);
     expect(right).not.toContain("Toolbar.View");
   });
 
@@ -101,7 +101,7 @@ describe("Android Production overflow stays in the header", () => {
 describe("Maestro Add panel is a single tap", () => {
   it("does not retry-storm tap-add-panel", () => {
     expect(tapAdd).toContain('tapOn: "Add panel"');
-    expect(tapAdd).not.toContain("repeat:");
+    expect(tapAdd).not.toMatch(/^(\s|-)*repeat:/m);
     expect(happy).toContain("tap-add-panel");
     expect(happy.indexOf('assertNotVisible: "Finish"')).toBeLessThan(happy.indexOf("tap-add-panel"));
     expect(happy.indexOf("tap-add-panel")).toBeLessThan(happy.indexOf('assertVisible: "Finish"'));
