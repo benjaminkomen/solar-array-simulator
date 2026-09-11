@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { View, Text, StyleSheet, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
@@ -9,14 +8,6 @@ import { useColors } from "@/utils/theme";
 import { useProductionMonitor } from "@/hooks/useProductionMonitor";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 import { PRODUCTION_MENU_A11Y_ANDROID } from "@/utils/productionChrome";
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  Host,
-  Icon,
-  IconButton,
-  Text as UIText,
-} from "@expo/ui/jetpack-compose";
 import Delete from "@expo/material-symbols/delete.xml";
 import Edit from "@expo/material-symbols/edit.xml";
 import MoreVert from "@expo/material-symbols/more_vert.xml";
@@ -30,7 +21,6 @@ export default function ProductionScreen() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [menuVisible, setMenuVisible] = useState(false);
 
   const {
     panels,
@@ -58,6 +48,14 @@ export default function ProductionScreen() {
     <>
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button icon={WbSunny} onPress={handleSimulate} accessibilityLabel="Simulate" />
+        <Stack.Toolbar.Menu icon={MoreVert} accessibilityLabel={PRODUCTION_MENU_A11Y_ANDROID}>
+          <Stack.Toolbar.MenuAction icon={Edit} onPress={handleEditConfiguration}>
+            Edit Configuration
+          </Stack.Toolbar.MenuAction>
+          <Stack.Toolbar.MenuAction icon={Delete} destructive onPress={handleDeleteConfiguration}>
+            Delete Configuration
+          </Stack.Toolbar.MenuAction>
+        </Stack.Toolbar.Menu>
       </Stack.Toolbar>
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]}>
         <View style={[cardStyle, {
@@ -68,57 +66,15 @@ export default function ProductionScreen() {
             : "0 2px 8px rgba(0, 0, 0, 0.08)",
           borderColor: colors.border.light,
         }]}>
-          <View style={styles.cardHeader}>
-            {/*
-              Leading in-content overflow — not the right toolbar slot. Dev
-              Client Tools occupies that header corner and wins the tap
-              (Reload / Go home) regardless of a11y label.
-            */}
-            <View style={styles.cardMenu} collapsable={false}>
-              <Host matchContents>
-                <DropdownMenu expanded={menuVisible} onDismissRequest={() => setMenuVisible(false)}>
-                  <DropdownMenu.Trigger>
-                    <IconButton onClick={() => setMenuVisible(true)}>
-                      <Icon
-                        source={MoreVert}
-                        tint={colors.text.primary}
-                        contentDescription={PRODUCTION_MENU_A11Y_ANDROID}
-                      />
-                    </IconButton>
-                  </DropdownMenu.Trigger>
-                  <DropdownMenu.Items>
-                    <DropdownMenuItem onClick={() => { setMenuVisible(false); handleEditConfiguration(); }}>
-                      <DropdownMenuItem.LeadingIcon>
-                        <Icon source={Edit} tint={colors.primary} />
-                      </DropdownMenuItem.LeadingIcon>
-                      <DropdownMenuItem.Text>
-                        <UIText>Edit Configuration</UIText>
-                      </DropdownMenuItem.Text>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setMenuVisible(false); handleDeleteConfiguration(); }}>
-                      <DropdownMenuItem.LeadingIcon>
-                        <Icon source={Delete} tint={colors.system.red} />
-                      </DropdownMenuItem.LeadingIcon>
-                      <DropdownMenuItem.Text>
-                        <UIText>Delete Configuration</UIText>
-                      </DropdownMenuItem.Text>
-                    </DropdownMenuItem>
-                  </DropdownMenu.Items>
-                </DropdownMenu>
-              </Host>
-            </View>
-            <View style={styles.cardTitles}>
-              <Text style={[styles.cardLabel, { color: colors.text.secondary }]}>
-                Total Array Output
-              </Text>
-              <Text
-                selectable
-                style={[styles.cardValue, { color: colors.text.primary }]}
-              >
-                {formatWattage(totalWattage)}
-              </Text>
-            </View>
-          </View>
+          <Text style={[styles.cardLabel, { color: colors.text.secondary }]}>
+            Total Array Output
+          </Text>
+          <Text
+            selectable
+            style={[styles.cardValue, { color: colors.text.primary }]}
+          >
+            {formatWattage(totalWattage)}
+          </Text>
         </View>
         <View style={styles.canvasContainer} onLayout={handleLayout}>
           <View style={styles.compassContainer}>
@@ -158,22 +114,6 @@ const styles = StyleSheet.create({
     top: 16,
     right: 16,
     zIndex: 10,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 4,
-  },
-  cardMenu: {
-    width: 48,
-    height: 48,
-    marginLeft: -8,
-    marginTop: -8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cardTitles: {
-    flex: 1,
   },
   cardLabel: {
     fontSize: 13,

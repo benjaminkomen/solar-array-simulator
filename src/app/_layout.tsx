@@ -4,12 +4,15 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PanelsProvider } from "@/contexts/PanelsContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useColors, useNavigationTheme } from "@/utils/theme";
+import { hideDevClientToolsButton } from "@/utils/hideDevClientToolsButton";
 import { Observe, ObserveRoot } from "expo-observe";
 
 Observe.configure({
   integrations: { "expo-router": true },
   dispatchInDebug: true,
 });
+
+hideDevClientToolsButton();
 
 function RootLayout() {
   const colors = useColors();
