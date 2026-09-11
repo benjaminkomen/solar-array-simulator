@@ -20,14 +20,15 @@ Preconditions:
 - Production reached via `shared/wizard-to-production.yaml`.
 - Chrome (title / Total Output / seasons) must appear even when WebGPU cannot start. A timeout on "Simulation" after tap is a product or navigation issue, not a missing testID. A redbox (`RNWebGPU`) is a regression.
 
-- **Navigate.** `run-flow simulation-nav`: tap "Simulate", wait up to 15s for "Simulation", assert "Total Output", "Spring", "Summer", "Fall", "Winter".
+- **Navigate.** `run-flow simulation-nav`: tap "Simulate", wait up to 15s for "Simulation", assert "Total Output", "Spring", "Summer", "Fall", "Winter". On Android, chrome is immediate but the WebGPU canvas can stay black for tens of seconds — the flow then settles (~90s, optional `webgpu-scene-painted`) and writes `sim-3d-proof`. Do not treat that black canvas as "WebGPU unavailable" when chrome is up.
 - **Season.** Tap "Winter" (or another segment). "Total Output" remains. Time bounds may change with season/location.
 - **Time slider.** Native slider — Maestro may not key it reliably. If you cannot drag it, prove the chrome and record the slider as `verified-unreachable` unless the change is the slider itself (then you need a device you can gesture).
-- **Proof.** Screenshot showing the Simulation title, Total Output, and season row. Do not treat a unit test of `getSolarPosition` as this screen.
+- **Proof.** Screenshot showing the Simulation title, Total Output, and season row. On Android, `sim-3d-proof` is taken after the WebGPU settle so the canvas is not still black. Do not treat a unit test of `getSolarPosition` as this screen.
 
 ## Gotchas
 
 - `simulation-nav.yaml` uses `tap-simulate.yaml` ("Simulate" on both platforms). Android needs the `development` APK + Metro at `10.0.2.2:8081`.
+- Skia/WebGPU pixels are not Maestro-accessible. A black canvas with "Simulation" / seasons / "Total Output" visible means Dawn has not painted yet, not that `RNWebGPU` is missing (`WebGPUUnavailable` shows "3D view unavailable"). Wait for the Android settle before taking 3D proof; `waitForAnimationToEnd` (~20s) returns immediately on a static black canvas.
 - Location defaults to null lat/long in config; Simulation still opens with hook fallbacks. Setting a city on Config is not required for chrome proof, but output numbers will differ.
 - "Loading 3D scene..." is a Suspense fallback. Waiting only for that string is incomplete — wait for "Total Output" / seasons.
 - Shared `simulation.tsx` exists; product UI is `simulation.ios.tsx` / `simulation.android.tsx`.

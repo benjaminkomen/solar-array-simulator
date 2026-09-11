@@ -9,7 +9,7 @@ Surface: iOS Simulator and Android emulator development builds. Maestro YAML in 
 - Installed development client: iOS `development-simulator`, Android `development` APK on an AVD. Production/TestFlight binaries will not reconnect to Metro the way `launch-fresh` expects.
 - Metro running (`bun start`) unless you are driving a fully bundled preview build.
 - `node .cursor/skills/verify-solar-array/control.mjs doctor` has run. It lists iOS sim and Android `adb` separately. No device is OK for doctor; it is **not** OK for a claimed UI proof.
-- Start recipes from a cleared app unless the file says otherwise. `.maestro/shared/launch-fresh.yaml` is the reset: `clearState: true`, platform deep-link (iOS `127.0.0.1:8081`, Android AVD `10.0.2.2:8081`), then Dev Client chrome, then "Solar Array Simulator".
+- Start recipes from a cleared app unless the file says otherwise. `.maestro/shared/launch-fresh.yaml` is the reset: `clearState: true`, platform deep-link (iOS `127.0.0.1:8081`, Android AVD `10.0.2.2:8081`). Android waits for Dev Client Home before `openLink`, then Recently Opened / typed Connect if the deep-link is dropped, then Continue, then "Solar Array Simulator".
 - Prefer testIDs and visible text already used by Maestro. Do not tap Skia/WebGPU canvas coordinates as the primary proof.
 - `--backend=maestro` is the only implemented driver. `--backend=eas` and `--backend=mac` are stubs.
 
