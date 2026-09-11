@@ -1,6 +1,6 @@
 import { Pressable, View, StyleSheet, Text } from "react-native";
 import { Stack } from "expo-router";
-import { Badge, Host, Icon, Text as UIText } from "@expo/ui/jetpack-compose";
+import { Host, Icon } from "@expo/ui/jetpack-compose";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
@@ -60,20 +60,11 @@ export default function Custom() {
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button icon={Navigation} onPress={handleCompassToggle} accessibilityLabel="Toggle compass" />
         <Stack.Toolbar.Button icon={MyLocation} onPress={handleSnapToOrigin} accessibilityLabel="Snap to origin" />
-        <Stack.Toolbar.View>
-          <View style={styles.badgedButton}>
-            <Host matchContents>
-              <Icon source={Link} tint={colors.text.primary} />
-            </Host>
-            {unlinkedCount > 0 && (
-              <Host matchContents style={styles.badge}>
-                <Badge containerColor={colors.system.red as string}>
-                  <UIText>{String(unlinkedCount)}</UIText>
-                </Badge>
-              </Host>
-            )}
-          </View>
-        </Stack.Toolbar.View>
+        <Stack.Toolbar.Button icon={Link} onPress={() => {}}>
+          {unlinkedCount > 0 && (
+            <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
+          )}
+        </Stack.Toolbar.Button>
       </Stack.Toolbar>
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={styles.outerContainer}>
@@ -158,17 +149,6 @@ const styles = StyleSheet.create({
     top: 16,
     right: 48,
     zIndex: 10,
-  },
-  badgedButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badge: {
-    position: "absolute",
-    top: 2,
-    right: 2,
   },
   bottomToolbar: {
     flexDirection: "row",

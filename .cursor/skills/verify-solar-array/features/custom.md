@@ -6,6 +6,7 @@ Wizard step 3 (`/custom?wizard=true`): Skia canvas for laying out panels. Select
 
 - `custom-canvas` mounts `id: canvas-container` with zoom controls.
 - `custom-add` toolbar plus adds a panel. Wizard "Finish" appears only after `panels.length > 0`.
+- `custom-unlinked-badge` header-right link icon shows `Stack.Toolbar.Badge` with `unlinkedCount` only when `> 0` (iOS and Android). Hidden at 0. Do not add Badge on Production / Simulate / Config.
 - `custom-select-actions` after a selection: Link inverter, Rotate, Delete.
 - `custom-panel-details` form sheet `/panel-details?panelId=…` (link / unlink / empty state).
 - `custom-panel-view` from Production tap (read-only, `mode=view`) — covered here because it is the same sheet.
@@ -26,6 +27,7 @@ Preconditions:
 
 - **Land on canvas.** `run-flow wizard-happy-path` after Upload Skip: `id: canvas-container` visible. Assert "Finish" is **not** visible on the empty canvas (Android used to show it anyway).
 - **Add panel.** `shared/tap-add-panel.yaml`: iOS `add`, Android `Add panel`. Wait for animation. Assert "Finish".
+- **Unlinked badge.** After add (and before linking), `unlinkedCount > 0`. Screenshot the Custom header-right link icon with the count badge on **both** iOS Simulator and Android emulator. Native toolbar badges are not Maestro-queryable — visual proof on the Mac, not `assertVisible: "1"`. `wizard-happy-path` reaches this state after add and before Finish.
 - **Finish.** Tap "Finish". Wait for "Total Array Output".
 - **Link inverter.** After add, tap `link` / "Link inverter". Sheet: "Available Inverters" or "Linked Inverter" or "No Available Inverters". Link a serial, dismiss, reopen — the same serial is still linked. No committed Maestro flow; drive as a follow-up.
 - **Empty inverters.** If every inverter is already linked, the sheet shows "No Available Inverters" and "Add Inverter" → Config.
@@ -36,6 +38,7 @@ Preconditions:
 
 - Shared `custom.tsx` is a stub. Product UI is `custom.ios.tsx` / `custom.android.tsx`.
 - Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches.
+- Header-right unlinked count uses `Stack.Toolbar.Badge` on both platforms. Android must not wrap a Jetpack Compose `Badge` in `Stack.Toolbar.View` + nested `Host`s. This is the only Badge call site; collapsing the rest of Custom chrome is a different issue.
 - Finish is hidden when `panels.length === 0` or not in wizard mode. Adding then deleting the last panel hides it again.
 - Compass toggle is a different feature ([compass-help.md](compass-help.md)).
 - Collision uses an 8px gap. Overlap on drag-release is app behavior; Maestro cannot see it.
