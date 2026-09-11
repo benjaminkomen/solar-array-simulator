@@ -1,0 +1,18 @@
+appId: com.bkomen.solararraysimulator
+---
+# Analyze model picker title differs by platform
+
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - extendedWaitUntil:
+          visible: "Select AI Model"
+          timeout: 15000
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - extendedWaitUntil:
+          visible: "SELECT AI MODEL"
+          timeout: 15000

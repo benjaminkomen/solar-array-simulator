@@ -1,0 +1,14 @@
+appId: com.bkomen.solararraysimulator
+---
+# Production overflow menu (iOS accessibilityLabel, Android Icon contentDescription)
+
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn: "More options"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn: "More options"

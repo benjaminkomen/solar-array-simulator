@@ -10,7 +10,7 @@
 
 ## How to get to it (user POV)
 
-- Production → Simulate (iOS sun button labeled "Simulate").
+- Production → Simulate (sun button labeled "Simulate" on iOS and Android).
 - Back returns to Production.
 
 ## Driving it with the harness
@@ -27,7 +27,7 @@ Preconditions:
 
 ## Gotchas
 
-- Android Production has no "Simulate" accessibility label. `simulation-nav.yaml` is iOS-first.
+- `simulation-nav.yaml` uses `tap-simulate.yaml` ("Simulate" on both platforms). Android needs the `development` APK + Metro at `10.0.2.2:8081`.
 - Location defaults to null lat/long in config; Simulation still opens with hook fallbacks. Setting a city on Config is not required for chrome proof, but output numbers will differ.
 - "Loading 3D scene..." is a Suspense fallback. Waiting only for that string is incomplete — wait for "Total Output" / seasons.
 - Shared `simulation.tsx` exists; product UI is `simulation.ios.tsx` / `simulation.android.tsx`.

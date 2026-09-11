@@ -1,0 +1,29 @@
+appId: com.bkomen.solararraysimulator
+---
+# iOS: Launch with clear state, deep-link local Metro (Bonjour is flaky on sim)
+# Ends on Welcome with "Solar Array Simulator" visible
+
+- launchApp:
+    clearState: true
+- openLink: solararraysimulator://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081
+# iOS "Open in 'app'?" confirmation (appears after openLink)
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+# Expo SDK 56 Dev Tools onboarding — wait; do NOT tap Cancel first
+- extendedWaitUntil:
+    visible: "Continue"
+    timeout: 90000
+- tapOn: "Continue"
+# Optional: dismiss Reload / Dev Menu chrome if it appears
+- runFlow:
+    when:
+      visible: "Reload"
+    commands:
+      - tapOn:
+          point: "50%,15%"
+- extendedWaitUntil:
+    visible: "Solar Array Simulator"
+    timeout: 120000

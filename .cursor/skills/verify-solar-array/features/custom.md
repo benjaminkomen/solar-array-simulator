@@ -25,7 +25,7 @@ Preconditions:
 - Skia nodes are **not** Maestro-accessible. Prove via toolbar side effects.
 
 - **Land on canvas.** `run-flow wizard-happy-path` after Upload Skip: `id: canvas-container` visible.
-- **Add panel.** Tap `add` (iOS SF Symbol `plus` → Maestro name `add`; accessibilityLabel "Add panel"). Wait for animation. Assert "Finish".
+- **Add panel.** `shared/tap-add-panel.yaml`: iOS `add`, Android `Add panel`. Wait for animation. Assert "Finish".
 - **Finish.** Tap "Finish". Wait for "Total Array Output".
 - **Link inverter.** After add, tap `link` / "Link inverter". Sheet: "Available Inverters" or "Linked Inverter" or "No Available Inverters". Link a serial, dismiss, reopen — the same serial is still linked. No committed Maestro flow; drive as a follow-up.
 - **Empty inverters.** If every inverter is already linked, the sheet shows "No Available Inverters" and "Add Inverter" → Config.
@@ -35,7 +35,7 @@ Preconditions:
 ## Gotchas
 
 - Shared `custom.tsx` is a stub. Product UI is `custom.ios.tsx` / `custom.android.tsx`.
-- Android add control is labeled "Add panel", not `add`. Existing YAML uses `add` (iOS).
+- Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches.
 - Finish is hidden when `panels.length === 0` or not in wizard mode. Adding then deleting the last panel hides it again.
 - Compass toggle is a different feature ([compass-help.md](compass-help.md)).
 - Collision uses an 8px gap. Overlap on drag-release is app behavior; Maestro cannot see it.

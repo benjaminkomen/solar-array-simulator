@@ -23,15 +23,15 @@ Preconditions:
 - At least one panel (Finish is disabled otherwise). Shared flow: `wizard-to-production.yaml`.
 
 - **Arrive via wizard.** `run-flow wizard-happy-path` ends on "Total Array Output".
-- **Simulate.** `run-flow simulation-nav` taps "Simulate" (iOS `accessibilityLabel`), waits for "Simulation".
-- **Edit / delete.** `run-flow production-menu`: tap "More options", "Edit Configuration" → "Panel Settings" / "Default Production"; resume to Production via `wizard-resume-to-production.yaml`; then "Delete Configuration" → "Solar Array Simulator" + `get-started-button`.
+- **Simulate.** `run-flow simulation-nav` taps "Simulate" (`tap-simulate.yaml`), waits for "Simulation".
+- **Edit / delete.** `run-flow production-menu`: tap "More options" (`tap-more-options.yaml`), "Edit Configuration" → "Panel Settings" / "Default Production"; resume to Production via `wizard-resume-to-production.yaml`; then "Delete Configuration" → "Solar Array Simulator" + `get-started-button`.
 - **Returning launch.** After Finish, kill and relaunch **without** `clearState`. Production must show, not Welcome.
 - **Proof.** "Total Array Output" visible after Finish, plus the menu or Simulate path you changed. Wattage text is selectable; asserting the label is enough unless the change is the formatter.
 
 ## Gotchas
 
-- iOS Simulate = `accessibilityLabel="Simulate"` on `sun.max`. Android is an `IconButton` **without** that label — `simulation-nav.yaml` will miss it on Android.
-- iOS menu = `accessibilityLabel="More options"`. Android uses a Compose `DropdownMenu` (three-dots). Same visible action titles: "Edit Configuration", "Delete Configuration".
+- Simulate = iOS `accessibilityLabel="Simulate"` / Android Icon `contentDescription="Simulate"`.
+- Menu = iOS `accessibilityLabel="More options"` / Android Icon `contentDescription="More options"`. Same action titles: "Edit Configuration", "Delete Configuration".
 - Delete calls `resetAllData` + `clearPanels` + `replace("/")`. Subsequent launches show Welcome.
 - Edit Configuration pushes `/config?wizard=true`, so Continue/Skip/Finish are back. `wizard-resume-to-production.yaml` assumes you are already on Config and does **not** re-add a panel (Finish is already available).
 - Tapping an **unlinked** panel does nothing. View sheet only opens when `inverterId` is set.

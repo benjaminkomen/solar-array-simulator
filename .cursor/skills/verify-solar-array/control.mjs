@@ -84,8 +84,10 @@ const COMMANDS = [
   "help",
 ];
 
+const PLATFORMS = new Set(["ios", "android"]);
+
 export function parseArgs(argv) {
-  const flags = { json: false, backend: "maestro", help: false };
+  const flags = { json: false, backend: "maestro", help: false, platform: null };
   const positional = [];
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -102,6 +104,15 @@ export function parseArgs(argv) {
       i += 1;
     } else if (arg.startsWith("--backend=")) {
       flags.backend = arg.slice("--backend=".length);
+    } else if (arg === "--platform") {
+      const value = argv[i + 1];
+      if (!value || value.startsWith("-")) {
+        throw usageError("Missing value for --platform (expected ios|android).");
+      }
+      flags.platform = normalizePlatform(value);
+      i += 1;
+    } else if (arg.startsWith("--platform=")) {
+      flags.platform = normalizePlatform(arg.slice("--platform=".length));
     } else if (arg === "--") {
       positional.push(...argv.slice(i + 1));
       break;
@@ -113,6 +124,14 @@ export function parseArgs(argv) {
   }
   const command = positional[0] ?? "help";
   return { command, args: positional.slice(1), flags };
+}
+
+function normalizePlatform(value) {
+  const platform = String(value || "").toLowerCase();
+  if (!PLATFORMS.has(platform)) {
+    throw usageError(`Unknown platform "${value}". Expected ios or android.`);
+  }
+  return platform;
 }
 
 function usageError(message) {
@@ -225,7 +244,7 @@ export function resolveFlow(name) {
 function readEasSimulatorProfiles() {
   const easPath = join(REPO_ROOT, "eas.json");
   if (!existsSync(easPath)) {
-    return { path: "eas.json", present: false, profiles: [] };
+    return { path: "eas.json", present: false, profiles: [], androidDevelopment: null };
   }
   const eas = JSON.parse(readFileSync(easPath, "utf8"));
   const profiles = [];
@@ -237,7 +256,43 @@ function readEasSimulatorProfiles() {
       iosSimulator: profile?.ios?.simulator === true,
     });
   }
-  return { path: "eas.json", present: true, profiles };
+  const development = eas.build?.development;
+  return {
+    path: "eas.json",
+    present: true,
+    profiles,
+    androidDevelopment: {
+      name: "development",
+      present: Boolean(development),
+      developmentClient: development?.developmentClient === true,
+      hint: "eas build --profile development --platform android — install the APK on an AVD (api35_test / bare-expo). development-simulator / preview-simulator are iOS-only (ios.simulator: true).",
+    },
+  };
+}
+
+export function parseAdbDevices(stdout) {
+  const devices = [];
+  for (const raw of (stdout || "").split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("List of devices")) continue;
+    const [serial, state] = line.split(/\s+/);
+    if (!serial || !state) continue;
+    devices.push({
+      serial,
+      state,
+      emulator: /^emulator-/.test(serial),
+    });
+  }
+  return devices;
+}
+
+export function parseBootedSimulators(stdout) {
+  const names = [];
+  for (const line of (stdout || "").split("\n")) {
+    const match = line.match(/^\s+(.+?)\s+\(([0-9A-F-]{36})\)\s+\(Booted\)/i);
+    if (match) names.push({ name: match[1], udid: match[2] });
+  }
+  return names;
 }
 
 function detectDevice() {
@@ -245,14 +300,17 @@ function detectDevice() {
   let available = false;
 
   const adb = which("adb");
+  let androidDevices = [];
   if (adb) {
     const result = runCapture(adb, ["devices"]);
-    const attached = (result.stdout || "")
-      .split("\n")
-      .filter((line) => /\tdevice\s*$/.test(line));
-    if (attached.length > 0) {
+    androidDevices = parseAdbDevices(result.stdout).filter((d) => d.state === "device");
+    if (androidDevices.length > 0) {
       available = true;
-      signals.push({ kind: "adb", available: true, detail: attached.map((l) => l.split("\t")[0]) });
+      signals.push({
+        kind: "adb",
+        available: true,
+        detail: androidDevices.map((d) => `${d.serial}${d.emulator ? " (emulator)" : ""}`),
+      });
     } else {
       signals.push({ kind: "adb", available: false, detail: "adb on PATH but no device in 'device' state" });
     }
@@ -261,12 +319,20 @@ function detectDevice() {
   }
 
   const xcrun = which("xcrun");
+  let iosSimulators = [];
   if (xcrun) {
     const result = runCapture(xcrun, ["simctl", "list", "devices", "booted"]);
-    const booted = /Booted/.test(result.stdout || "");
-    if (booted) {
+    iosSimulators = parseBootedSimulators(result.stdout);
+    if (iosSimulators.length === 0 && /Booted/.test(result.stdout || "")) {
+      iosSimulators = [{ name: "booted iOS simulator", udid: null }];
+    }
+    if (iosSimulators.length > 0) {
       available = true;
-      signals.push({ kind: "simctl", available: true, detail: "booted iOS simulator" });
+      signals.push({
+        kind: "simctl",
+        available: true,
+        detail: iosSimulators.map((s) => s.udid ? `${s.name} (${s.udid})` : s.name),
+      });
     } else {
       signals.push({ kind: "simctl", available: false, detail: "xcrun present but no booted simulator" });
     }
@@ -281,12 +347,37 @@ function detectDevice() {
     signals.push({ kind: "maestro-cloud", available: false, detail: "MAESTRO_CLOUD_API_KEY not set" });
   }
 
+  const androidAvailable = androidDevices.length > 0;
+  const iosAvailable = iosSimulators.length > 0;
+
   return {
     available: available || maestroCloud,
     localDevice: available,
     maestroCloud,
+    ios: {
+      available: iosAvailable,
+      xcrunOnPath: Boolean(xcrun),
+      simulators: iosSimulators,
+    },
+    android: {
+      available: androidAvailable,
+      adbOnPath: Boolean(adb),
+      devices: androidDevices,
+    },
     signals,
   };
+}
+
+function pickDeviceId(device, platform) {
+  if (platform === "android") {
+    const emulator = device.android.devices.find((d) => d.emulator);
+    const any = emulator || device.android.devices[0];
+    return any?.serial ?? null;
+  }
+  if (platform === "ios") {
+    return device.ios.simulators.find((s) => s.udid)?.udid ?? null;
+  }
+  return null;
 }
 
 function maestroStatus() {
@@ -352,6 +443,7 @@ Commands:
 
 Flags:
   --backend=maestro|eas|mac   Device backend (default: maestro)
+  --platform=ios|android      Target iOS Simulator or Android emulator (smoke/run-flow)
   --json                      Machine-readable JSON on stdout
   --help, -h                  Help for the CLI or the selected command
 
@@ -363,18 +455,19 @@ Backends:
 Evidence:  .agents/evidence/verify-solar-array/  (survives cleanup)
 Scratch:   .agents/scratch/verify-solar-array/
 
-No simulator on this machine is OK for doctor/features. It is not OK for a
-claimed UI proof. On a Mac with the dev client:
+No simulator/emulator on this machine is OK for doctor/features. It is not OK
+for a claimed UI proof. On a Mac with the iOS and/or Android development client:
 
   bun start
   ${CLI} doctor
-  ${CLI} smoke
+  ${CLI} smoke --platform=ios
+  ${CLI} smoke --platform=android
 
 Examples:
   ${CLI} doctor --json
   ${CLI} features
-  ${CLI} run-flow wizard-happy-path
-  ${CLI} run-flow simulation-nav --json
+  ${CLI} run-flow wizard-happy-path --platform=ios
+  ${CLI} run-flow simulation-nav --platform=android --json
   ${CLI} smoke --backend=eas          # must print "not wired yet"
 `.trim();
 }
@@ -405,15 +498,15 @@ list-flows — top-level Maestro YAML (not shared/ subflows)
     smoke: `
 smoke — Welcome launch + Get Started → Config
 
-  ${CLI} smoke [--backend=maestro] [--json]
+  ${CLI} smoke [--backend=maestro] [--platform=ios|android] [--json]
 
 Wraps .maestro/smoke-test.yaml (shared/launch-fresh.yaml + get-started-button).
-Requires Maestro and a simulator, emulator, or Maestro Cloud.
+Requires Maestro and an iOS Simulator, Android emulator, or Maestro Cloud.
 `.trim(),
     "run-flow": `
 run-flow — run one top-level .maestro/*.yaml
 
-  ${CLI} run-flow <name> [--backend=maestro] [--json]
+  ${CLI} run-flow <name> [--backend=maestro] [--platform=ios|android] [--json]
 
 Names: smoke-test, wizard-happy-path, analyze-skip, production-menu, simulation-nav
 Also accepts a path (.maestro/wizard-happy-path.yaml). Rejects shared/ subflows.
@@ -479,6 +572,8 @@ function buildDoctorReport(backend) {
       available: device.available,
       localDevice: device.localDevice,
       maestroCloud: device.maestroCloud,
+      ios: device.ios,
+      android: device.android,
       signals: device.signals,
     },
     featureMap: {
@@ -496,12 +591,33 @@ function buildDoctorReport(backend) {
     evidenceDir: ".agents/evidence/verify-solar-array/",
     warnings,
     howToSmokeLocally: [
-      "1. On a Mac (or CI image) with Xcode / Android SDK and the development client installed.",
+      "1. On a Mac with Xcode and/or Android SDK, plus the matching development client.",
       "2. bun install && bun start",
-      "3. Open the existing development build on the simulator (do not expo run:ios).",
-      `4. ${CLI} smoke`,
+      "3. iOS: open the development-simulator build on a booted Simulator (do not expo run:ios).",
+      "4. Android: install the `development` APK on an AVD (api35_test / bare-expo). Metro is 10.0.2.2:8081 from the guest.",
+      `5. ${CLI} smoke --platform=ios   or   ${CLI} smoke --platform=android`,
     ],
   };
+}
+
+function formatIosDoctorLine(ios) {
+  if (!ios) return "unknown";
+  if (ios.available && ios.simulators?.length) {
+    return ios.simulators.map((s) => s.udid ? `${s.name} (${s.udid})` : s.name).join(", ");
+  }
+  if (ios.xcrunOnPath) return "no booted simulator";
+  return "none (xcrun not on PATH)";
+}
+
+function formatAndroidDoctorLine(android) {
+  if (!android) return "unknown";
+  if (android.available && android.devices?.length) {
+    return android.devices
+      .map((d) => `${d.serial}${d.emulator ? " (emulator)" : ""}`)
+      .join(", ");
+  }
+  if (android.adbOnPath) return "adb on PATH, no device in 'device' state";
+  return "none (adb not on PATH)";
 }
 
 function printDoctorHuman(report) {
@@ -510,9 +626,12 @@ function printDoctorHuman(report) {
     `  backend     ${report.backend.id} (${report.backend.implemented ? "implemented" : "NOT WIRED"})`,
     `  maestro     ${report.maestro.installed ? report.maestro.version || report.maestro.bin : "not installed"}`,
     `  device      ${report.device.available ? "available" : "none (OK for doctor)"}`,
+    `  ios         ${formatIosDoctorLine(report.device.ios)}`,
+    `  android     ${formatAndroidDoctorLine(report.device.android)}`,
     `  feature map ${report.featureMap.count} file(s) — ${report.featureMap.features.join(", ") || "—"}`,
     `  flows       ${report.flows.count} — ${report.flows.names.join(", ") || "—"}`,
-    `  eas sims    ${report.eas.profiles.map((p) => `${p.name}${p.iosSimulator ? "" : " (missing)"}`).join(", ")}`,
+    `  eas ios     ${report.eas.profiles.map((p) => `${p.name}${p.iosSimulator ? "" : " (missing)"}`).join(", ")}`,
+    `  eas android ${report.eas.androidDevelopment?.present ? "development (APK / arm64-v8a, install on AVD)" : "development profile missing"}`,
     `  evidence    ${report.evidenceDir}`,
   ];
   if (report.warnings.length) {
@@ -548,7 +667,7 @@ function requireImplementedBackend(backend, json) {
   return refuseUnwiredBackend(backend, json);
 }
 
-function runMaestroCommand(args, { json, kind, extra }) {
+function runMaestroCommand(args, { json, kind, extra, platform = null }) {
   const maestro = maestroStatus();
   const device = detectDevice();
   if (!maestro.installed) {
@@ -568,8 +687,10 @@ function runMaestroCommand(args, { json, kind, extra }) {
     const error = [
       "No simulator, emulator, or Maestro Cloud credentials detected.",
       "doctor is allowed to say this; smoke/run-flow/screenshot are not a UI proof.",
-      `On a Mac: open the iOS Simulator, bun start, open the ${APP_ID} development build,`,
-      `then re-run. Cloud agents without a device should stop and say so.`,
+      "On a Mac: boot an iOS Simulator and/or Android emulator, bun start,",
+      `open the ${APP_ID} development build, then re-run.`,
+      `iOS: ${CLI} smoke --platform=ios     Android: ${CLI} smoke --platform=android`,
+      "Cloud agents without a device should stop and say so.",
     ].join("\n");
     const receipt = writeReceipt(kind, { ok: false, exitCode: 2, error, ...extra });
     const payload = { ok: false, exitCode: 2, error, receipt };
@@ -578,13 +699,44 @@ function runMaestroCommand(args, { json, kind, extra }) {
     return 2;
   }
 
+  if (platform === "ios" && !device.ios.available && !device.maestroCloud) {
+    const error = [
+      "No booted iOS Simulator detected (xcrun simctl list devices booted).",
+      `Boot a Simulator, open the development-simulator build, then re-run with --platform=ios.`,
+    ].join("\n");
+    const receipt = writeReceipt(kind, { ok: false, exitCode: 2, error, platform, ...extra });
+    const payload = { ok: false, exitCode: 2, error, receipt };
+    if (json) printJson(payload);
+    else process.stderr.write(`${error}\n`);
+    return 2;
+  }
+  if (platform === "android" && !device.android.available && !device.maestroCloud) {
+    const error = [
+      "No Android emulator/device in 'adb devices' (state=device).",
+      "Install the `development` APK on an AVD (api35_test / bare-expo), bun start,",
+      `then re-run with --platform=android. From the emulator, Metro is http://10.0.2.2:8081.`,
+    ].join("\n");
+    const receipt = writeReceipt(kind, { ok: false, exitCode: 2, error, platform, ...extra });
+    const payload = { ok: false, exitCode: 2, error, receipt };
+    if (json) printJson(payload);
+    else process.stderr.write(`${error}\n`);
+    return 2;
+  }
+
+  const maestroArgs = [...args];
+  const deviceId = pickDeviceId(device, platform);
+  if (deviceId) {
+    maestroArgs.unshift("--device", deviceId);
+  }
+
   mkdirSync(SCRATCH_DIR, { recursive: true });
-  const result = runCapture(maestro.bin, args);
+  const result = runCapture(maestro.bin, maestroArgs);
   const ok = result.status === 0;
   const receipt = writeReceipt(kind, {
     ok,
     exitCode: result.status,
-    argv: args,
+    argv: maestroArgs,
+    platform,
     stdout: result.stdout,
     stderr: result.stderr,
     spawnError: result.error,
@@ -638,29 +790,31 @@ function cmdListFlows(json) {
   return 0;
 }
 
-function cmdSmoke(backend, json) {
+function cmdSmoke(backend, json, platform) {
   const blocked = requireImplementedBackend(backend, json);
   if (blocked) return blocked;
   const flow = resolveFlow("smoke-test");
   return runMaestroCommand(["test", flow.path], {
     json,
     kind: "smoke",
+    platform,
     extra: { flow: flow.rel, featureHint: "welcome" },
   });
 }
 
-function cmdRunFlow(backend, name, json) {
+function cmdRunFlow(backend, name, json, platform) {
   const blocked = requireImplementedBackend(backend, json);
   if (blocked) return blocked;
   const flow = resolveFlow(name);
   return runMaestroCommand(["test", flow.path], {
     json,
     kind: "run-flow",
+    platform,
     extra: { flow: flow.rel, name: flow.id },
   });
 }
 
-function cmdScreenshot(backend, requestedPath, json) {
+function cmdScreenshot(backend, requestedPath, json, platform) {
   const blocked = requireImplementedBackend(backend, json);
   if (blocked) return blocked;
   ensureEvidenceDir();
@@ -669,6 +823,7 @@ function cmdScreenshot(backend, requestedPath, json) {
   return runMaestroCommand(["screenshot", outPath], {
     json,
     kind: "screenshot",
+    platform,
     extra: { path: outPath },
   });
 }
@@ -739,11 +894,11 @@ export function main(argv = process.argv.slice(2)) {
       case "list-flows":
         return cmdListFlows(flags.json);
       case "smoke":
-        return cmdSmoke(backend, flags.json);
+        return cmdSmoke(backend, flags.json, flags.platform);
       case "run-flow":
-        return cmdRunFlow(backend, args[0], flags.json);
+        return cmdRunFlow(backend, args[0], flags.json, flags.platform);
       case "screenshot":
-        return cmdScreenshot(backend, args[0], flags.json);
+        return cmdScreenshot(backend, args[0], flags.json, flags.platform);
       case "cleanup":
         return cmdCleanup(flags.json);
       default:

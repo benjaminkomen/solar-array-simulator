@@ -6,8 +6,8 @@ appId: com.bkomen.solararraysimulator
 - runFlow: shared/launch-fresh.yaml
 - runFlow: shared/wizard-to-production.yaml
 
-# Tap simulation button in header
-- tapOn: "Simulate"
+# Tap simulation button in header (iOS / Android "Simulate")
+- runFlow: shared/tap-simulate.yaml
 
 # Verify Simulation screen loads
 - extendedWaitUntil:

@@ -20,19 +20,19 @@ appId: com.bkomen.solararraysimulator
 - tapOn:
     id: "choose-gallery-button"
 
-# Wait for the system photo picker to appear
-- extendedWaitUntil:
-    visible: "Photos"
-    timeout: 10000
-
-# Tap the first photo in the grid (top-left area)
-- tapOn:
-    point: "17%,25%"
+# iOS Photos library chrome (Android system picker is a different sheet)
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - extendedWaitUntil:
+          visible: "Photos"
+          timeout: 10000
+      - tapOn:
+          point: "17%,25%"
 
 # Verify we land on the Analyze screen with model selector
-- extendedWaitUntil:
-    visible: "Select AI Model"
-    timeout: 15000
+- runFlow: shared/wait-analyze-header.yaml
 
 # Verify model list (Sonnet row includes "(Default)" in label text)
 - assertVisible: "Claude Sonnet 4.6 (Default)"

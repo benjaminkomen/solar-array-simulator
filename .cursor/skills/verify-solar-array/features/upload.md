@@ -31,5 +31,5 @@ Preconditions:
 
 - Shared `upload.tsx` is a stub. Drive `upload.ios.tsx` / `upload.android.tsx`.
 - Skip exists only in wizard mode. Non-wizard `/upload` has no Skip toolbar.
-- `analyze-skip.yaml` depends on a seeded Photos library and a coordinate tap. Empty library → timeout on "Photos" or a miss-tap.
+- `analyze-skip.yaml` depends on a seeded Photos library and a coordinate tap (iOS `Photos` + `17%,25%`). Android system picker is a different sheet — do not treat an iOS miss-tap recipe as Android proof. Empty library → timeout or a miss-tap.
 - Permission modal (`PermissionModal`) can intercept the first camera/gallery tap. Dismiss or Allow before asserting Analyze.
