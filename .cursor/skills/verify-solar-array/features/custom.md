@@ -27,7 +27,7 @@ Preconditions:
 - **Land on canvas.** `run-flow wizard-happy-path` after Upload Skip: `id: canvas-container` visible. Assert "Finish" is **not** visible on the empty canvas (Android used to show it anyway).
 - **Add panel.** `shared/tap-add-panel.yaml`: iOS `add` (SF `plus`), Android `Add panel` (`CUSTOM_ADD_PANEL_A11Y` on a RN `Pressable` with `accessibilityRole="button"`). Wait for animation. Assert "Finish". Do not skip that assert.
 - **Finish.** Tap "Finish". Wait for "Total Array Output".
-- **Link inverter.** After add, tap `link` / "Link inverter". Sheet: "Available Inverters" or "Linked Inverter" or "No Available Inverters". Link a serial, dismiss, reopen — the same serial is still linked. No committed Maestro flow; drive as a follow-up.
+- **Link inverter.** Do **not** require Custom Add or a Skia canvas tap (Android Add is still dead on #62; canvas nodes are not Maestro-accessible). `run-flow details-sheets`: Config `id: inverter-row-1` for inverter-details; `openLink` `/panel-details?panelId=seed-panel` for panel-details (`ensureSeedPanel`). After add on iOS, the new panel is auto-selected so `link` / "Link inverter" is also a toolbar path — still not the required proof.
 - **Empty inverters.** If every inverter is already linked, the sheet shows "No Available Inverters" and "Add Inverter" → Config.
 - **Production view sheet.** On Production, tap a **linked** panel (Skia — usually unreachable to Maestro). If you cannot tap, say `verified-unreachable` and prove the editor sheet from Custom instead.
 - **Proof.** `canvas-container` + "Finish" after add, then Production chrome. That is the mapped wizard proof. Canvas geometry/collision is unit-tested (`src/utils/__tests__/collision.test.ts`) and is **not** a substitute for this screen.

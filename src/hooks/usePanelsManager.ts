@@ -166,9 +166,11 @@ export function usePanelsManager(): UsePanelsManagerResult {
         inverterId: null,
       };
 
-      // Save to store (will trigger subscription update)
+      // Save to store (will trigger subscription update) and select so
+      // Link inverter is reachable without a Skia canvas tap.
       const store = getPanelStore();
       savePanelsToStore([...store.panels, newStoredPanel]);
+      setSelectedIdInStore(id);
       return true;
     },
     [getPanelStates]

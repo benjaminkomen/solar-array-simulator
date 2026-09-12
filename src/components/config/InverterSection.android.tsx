@@ -21,10 +21,12 @@ import {
   fillMaxWidth,
   padding,
   paddingAll,
+  testID as testIDModifier,
 } from '@expo/ui/jetpack-compose/modifiers';
 import { SwipeToDismissBox } from 'expo-ui-swipe-to-dismiss-box';
 import ChevronRight from '@expo/material-symbols/chevron_right.xml';
 import Delete from '@expo/material-symbols/delete.xml';
+import { inverterRowTestId } from '@/utils/detailsReachability';
 import { useColors } from '@/utils/theme';
 import type { InverterSectionProps } from './types';
 
@@ -62,7 +64,12 @@ export function InverterSection({
                   <Icon source={Delete} size={24} tint={colors.system.onErrorContainer} />
                 </Box>
               </SwipeToDismissBox.BackgroundEndToStart>
-              <ListItem modifiers={[clickable(() => onEdit(inverter))]}>
+              <ListItem
+                modifiers={[
+                  clickable(() => onEdit(inverter)),
+                  testIDModifier(inverterRowTestId(inverter.id)),
+                ]}
+              >
                 <ListItem.HeadlineContent>
                   <Text>{inverter.serialNumber}</Text>
                 </ListItem.HeadlineContent>

@@ -36,13 +36,13 @@ export default function InverterDetailsScreen() {
         <Column modifiers={[fillMaxWidth(), paddingAll(16)]} verticalArrangement={{ spacedBy: 16 }}>
           <Row horizontalArrangement="spaceBetween" modifiers={[fillMaxWidth()]}>
             <IconButton onClick={handleCancel}>
-              <Icon source={Close} tint={colors.text.secondary} />
+              <Icon source={Close} tint={colors.text.secondary} contentDescription="Cancel" />
             </IconButton>
             <UIText style={{ typography: "titleMedium", fontWeight: "700" }} color={colors.text.primary as string}>
               {isAddMode ? "New Micro-inverter" : "Edit Micro-inverter"}
             </UIText>
             <IconButton onClick={handleSave}>
-              <Icon source={Check} tint={colors.primary} />
+              <Icon source={Check} tint={colors.primary} contentDescription="Save" />
             </IconButton>
           </Row>
 

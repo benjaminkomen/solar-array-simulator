@@ -14,6 +14,7 @@ import {
   VStack,
 } from '@expo/ui/swift-ui';
 import { buttonStyle, font, foregroundStyle, opacity } from '@expo/ui/swift-ui/modifiers';
+import { inverterRowTestId } from '@/utils/detailsReachability';
 import type { InverterSectionProps } from './types';
 
 export function InverterSection({
@@ -30,6 +31,7 @@ export function InverterSection({
         {inverters.map((inverter) => (
           <Button
             key={inverter.id}
+            testID={inverterRowTestId(inverter.id)}
             onPress={() => onEdit(inverter)}
             modifiers={[buttonStyle('plain')]}
           >

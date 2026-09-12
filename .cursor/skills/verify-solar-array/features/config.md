@@ -29,8 +29,8 @@ Preconditions:
 
 - **Enter from Welcome.** `smoke` or `run-flow wizard-happy-path`: tap `id: get-started-button`, wait for "Panel Settings". Assert "Configure", "Photo", "Layout", and "Default Production".
 - **Continue.** Tap "Continue". Upload ("Take or Select Photo") is the success state. Do not skip this if you changed the toolbar. A LogBox overlay ("Can't perform a React state update on a component that hasn't mounted yet") is a product failure — dismiss/retry is not success.
-- **Add inverter.** Tap toolbar `add` (iOS `icon="plus"`, accessibilityLabel "Add inverter"). Sheet title is "New Micro-inverter". Cancel (`xmark` / "Cancel") dismisses without a new row; Save (`checkmark` / "Save") returns to Config with count + 1. No Maestro flow covers the sheet — drive it as a follow-up after Config is on screen.
-- **Edit inverter.** Tap a serial-number row. Sheet title is "Edit Micro-inverter". Change efficiency, Save, assert the row subtitle (`N% efficiency`).
+- **Add inverter.** Tap toolbar `add` (iOS `icon="plus"`, accessibilityLabel "Add inverter"). Sheet title is "New Micro-inverter". Cancel (`xmark` / "Cancel") dismisses without a new row; Save (`checkmark` / "Save") returns to Config with count + 1.
+- **Edit inverter.** `run-flow details-sheets` after Welcome: tap `id: inverter-row-1` (seeded id `1`; serial text is random). Sheet title is "Edit Micro-inverter". Assert "Serial Number" / "Efficiency", Save, reopen — values still show. Do not go through Custom Add.
 - **Edit from Production.** `run-flow production-menu` opens the menu, taps "Edit Configuration", asserts "Panel Settings" and "Default Production".
 - **Proof.** Visible "Panel Settings" / "Default Production" after the entry you claim. If you edited wattage or an inverter, the same values still show after leaving and returning via Edit Configuration.
 

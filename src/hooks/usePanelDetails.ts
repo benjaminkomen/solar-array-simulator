@@ -7,13 +7,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useConfigStore } from '@/hooks/useConfigStore';
 import { usePanelsContext } from '@/contexts/PanelsContext';
-import { getPanelStore, subscribe } from '@/utils/panelStore';
+import { SEED_PANEL_ID } from '@/utils/detailsReachability';
+import { ensureSeedPanel, getPanelStore, subscribe } from '@/utils/panelStore';
 
 export function usePanelDetails() {
-  const { panelId, mode } = useLocalSearchParams<{
+  const { panelId: panelIdParam, mode } = useLocalSearchParams<{
     panelId: string;
     mode?: 'edit' | 'view';
   }>();
+  const panelId = Array.isArray(panelIdParam) ? panelIdParam[0] : panelIdParam;
   const isViewMode = mode === 'view';
 
   const { config } = useConfigStore();
@@ -30,6 +32,13 @@ export function usePanelDetails() {
     });
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (panelId !== SEED_PANEL_ID) {
+      return;
+    }
+    ensureSeedPanel();
+  }, [panelId]);
 
   // Get current panel and its linked inverter
   const selectedPanel = storeData.panels.find(p => p.id === panelId);

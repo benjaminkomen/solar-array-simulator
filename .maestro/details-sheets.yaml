@@ -1,0 +1,62 @@
+appId: com.bkomen.solararraysimulator
+---
+# Inverter-details + panel-details FieldGroup bodies without Custom Add
+# or a Skia canvas tap (Android Add is dead on #62; canvas nodes are not
+# Maestro-accessible). Config row + seed-panel deeplink.
+#
+# Drive: run-flow details-sheets --platform=ios|android
+
+- runFlow: shared/launch-fresh.yaml
+
+- tapOn:
+    id: "get-started-button"
+- extendedWaitUntil:
+    visible: "Panel Settings"
+    timeout: 10000
+
+# Config seeded inverter id=1 (serial text is random)
+- tapOn:
+    id: "inverter-row-1"
+- runFlow:
+    when:
+      notVisible: "Serial Number"
+    commands:
+      - openLink: solararraysimulator://inverter-details?mode=edit&inverterId=1
+- extendedWaitUntil:
+    visible: "Serial Number"
+    timeout: 10000
+- assertVisible: "Edit Micro-inverter"
+- assertVisible: "Efficiency"
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Panel Settings"
+    timeout: 10000
+- tapOn:
+    id: "inverter-row-1"
+- extendedWaitUntil:
+    visible: "Serial Number"
+    timeout: 10000
+- assertVisible: "Efficiency"
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Panel Settings"
+    timeout: 10000
+
+# Seeded panel — no Add, no canvas select
+- openLink: "solararraysimulator://panel-details?panelId=seed-panel"
+- extendedWaitUntil:
+    visible: "95% efficiency"
+    timeout: 10000
+- tapOn:
+    id: "link-inverter-1"
+- runFlow:
+    when:
+      visible: "95% efficiency"
+    commands:
+      - tapOn: "95% efficiency"
+- openLink: "solararraysimulator://panel-details?panelId=seed-panel"
+- extendedWaitUntil:
+    visible: "Unlink Inverter"
+    timeout: 10000
+- assertVisible: "Serial Number"
+- assertVisible: "Efficiency"

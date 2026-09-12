@@ -18,10 +18,10 @@ const inverterWebSrc = readSrc("../../app/inverter-details.tsx");
 const panelIosSrc = readSrc("../../app/panel-details.ios.tsx");
 const panelAndroidSrc = readSrc("../../app/panel-details.android.tsx");
 const panelWebSrc = readSrc("../../app/panel-details.tsx");
-const configIosSrc = readSrc("../../app/config.ios.tsx");
-const configAndroidSrc = readSrc("../../app/config.android.tsx");
+const configSrc = readSrc("../../app/config.tsx");
 const customIosSrc = readSrc("../../app/custom.ios.tsx");
 const customAndroidSrc = readSrc("../../app/custom.android.tsx");
+const detailsFlowSrc = readSrc("../../../.maestro/details-sheets.yaml");
 const layoutSrc = readSrc("../../app/_layout.tsx");
 const appJsonSrc = readFileSync(resolve(import.meta.dir, "../../../app.json"), "utf8");
 
@@ -72,13 +72,19 @@ describe("details FieldGroup body", () => {
     expect(panelWebSrc).not.toContain("<Host");
   });
 
-  it("does not collapse Config or Custom in this change", () => {
-    expect(configIosSrc).toContain("@expo/ui/swift-ui");
-    expect(configAndroidSrc).toContain("@expo/ui/jetpack-compose");
+  it("does not collapse Custom in this change", () => {
+    expect(configSrc).toContain("FieldGroup");
     expect(customIosSrc).toContain("SolarPanelCanvas");
     expect(customAndroidSrc).toContain("SolarPanelCanvas");
     expect(customIosSrc).not.toContain("from \"@expo/ui\"");
     expect(customAndroidSrc).not.toContain("from \"@expo/ui\"");
+  });
+
+  it("reaches both sheets without Custom Add or a canvas tap", () => {
+    expect(detailsFlowSrc).toContain("inverter-row-1");
+    expect(detailsFlowSrc).toContain("panelId=seed-panel");
+    expect(detailsFlowSrc).not.toContain("tap-add-panel");
+    expect(detailsFlowSrc).not.toContain("Add panel");
   });
 
   it("does not flip Hermes V1", () => {
