@@ -1,35 +1,40 @@
 /**
- * Universal `@expo/ui` Picker only supports `appearance: 'menu' | 'wheel'`.
- * Segmented is not in that API — this is the real Material 3
- * `SingleChoiceSegmentedButtonRow`, not a dropdown Picker.
+ * Android Config keeps `@expo/ui/community/segmented-control` (via SegmentedChips).
+ *
+ * That drop-in wraps its own Host (`matchContents` vertical) — official usage
+ * is an RN-tree child, not a raw Compose child of FieldGroup:
+ * https://docs.expo.dev/versions/latest/sdk/ui/drop-in-replacements/segmentedcontrol/
+ *
+ * FieldGroup is a LazyColumn that needs a finite parent
+ * (https://github.com/expo/expo/issues/46203). Nesting the community Host
+ * directly in a section collapsed Android width (smashed chips, vertical titles).
+ *
+ * Official bridge for RN inside `@expo/ui` is RNHostView, which fills the
+ * native parent unless `matchContents` is set:
+ * https://docs.expo.dev/versions/latest/sdk/ui/universal/rnhostview/
  */
-import { Column, SegmentedButton, SingleChoiceSegmentedButtonRow, Text } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import { ROOF_TYPES } from '@/hooks/useConfigForm';
-import { useColors } from '@/utils/theme';
-import type { RoofTypePickerProps } from './types';
+import { View } from "react-native";
+import { Column, RNHostView, Text } from "@expo/ui";
+import { SegmentedChips } from "@/components/SegmentedChips";
+import { ROOF_TYPES } from "@/hooks/useConfigForm";
+import type { RoofTypePickerProps } from "./types";
+
+const CHIP_HEIGHT = 48;
 
 export function RoofTypePicker({ roofType, onChange }: RoofTypePickerProps) {
-  const colors = useColors();
-
   return (
-    <Column modifiers={[fillMaxWidth()]} verticalArrangement={{ spacedBy: 8 }}>
-      <Text style={{ typography: 'bodyLarge' }} color={colors.text.primary as string}>
-        Roof Type
-      </Text>
-      <SingleChoiceSegmentedButtonRow>
-        {ROOF_TYPES.map((rt) => (
-          <SegmentedButton
-            key={rt.value}
-            selected={rt.value === roofType}
-            onClick={() => onChange(rt.value)}
-          >
-            <SegmentedButton.Label>
-              <Text>{rt.label}</Text>
-            </SegmentedButton.Label>
-          </SegmentedButton>
-        ))}
-      </SingleChoiceSegmentedButtonRow>
+    <Column spacing={8} style={{ width: "100%" }}>
+      <Text>Roof Type</Text>
+      <RNHostView style={{ width: "100%", height: CHIP_HEIGHT }}>
+        <View style={{ flex: 1, height: CHIP_HEIGHT }} collapsable={false}>
+          <SegmentedChips
+            options={ROOF_TYPES}
+            value={roofType}
+            onChange={onChange}
+            style={{ width: "100%", height: CHIP_HEIGHT }}
+          />
+        </View>
+      </RNHostView>
     </Column>
   );
 }

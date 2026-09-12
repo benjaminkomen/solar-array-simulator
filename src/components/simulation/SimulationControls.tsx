@@ -19,9 +19,9 @@ export type SimulationControlsProps = {
 };
 
 /**
- * Shared Simulation chrome: universal `@expo/ui` Slider + platform
- * segmented SeasonPicker. SimulationView stays the GPU surface and is
- * not rendered here.
+ * Shared Simulation chrome: universal `@expo/ui` Slider + one
+ * `SeasonPicker` over `@expo/ui/community/segmented-control`.
+ * SimulationView stays the GPU surface and is not rendered here.
  */
 export function SimulationControls({
   displayHour,
@@ -87,12 +87,9 @@ export function SimulationControls({
         </Text>
       </View>
 
-      <Host
-        style={styles.seasonRow}
-        colorScheme={colorScheme ?? undefined}
-      >
+      <View style={styles.seasonRow}>
         <SeasonPicker season={season} onChange={onSeasonChange} />
-      </Host>
+      </View>
     </View>
   );
 }
@@ -144,5 +141,5 @@ const styles = StyleSheet.create({
     width: 60,
     textAlign: "center",
   },
-  seasonRow: { height: seasonRowHeight },
+  seasonRow: { height: seasonRowHeight, width: "100%", alignSelf: "stretch" },
 });

@@ -312,6 +312,12 @@ describe("verify-solar-array CLI", () => {
     expect(simulation).toContain("sim-3d-proof");
     expect(simulation).toContain("Do not wait on `webgpu-scene-painted`");
     expect(simulation).toContain("SeasonPicker");
+    expect(simulation).toContain("community/segmented-control");
+    expect(simulation).not.toContain("SeasonPicker.ios.tsx");
+    expect(config).toContain("community/segmented-control");
+    expect(config).toContain("RoofTypePicker.android.tsx");
+    expect(config).toContain("RNHostView");
+    expect(config).not.toContain("RoofTypePicker.ios.tsx");
     expect(simulation).toContain("panelsForSimulationScene");
     expect(welcome).toContain("Tools button");
     expect(welcome).toContain("10.0.2.2:8081");

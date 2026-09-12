@@ -1,19 +1,14 @@
-/**
- * Web / typecheck fallback. Universal Picker has no `segmented` appearance
- * (`menu` | `wheel` only). Native builds resolve `SeasonPicker.ios.tsx` /
- * `SeasonPicker.android.tsx` for the real platform segmented controls.
- */
-import { Picker } from '@expo/ui';
-import { SEASONS } from '@/hooks/useSimulationControls';
-import type { Season } from '@/utils/solarCalculations';
-import type { SeasonPickerProps } from './types';
+import { SegmentedChips } from "@/components/SegmentedChips";
+import { SEASONS } from "@/hooks/useSimulationControls";
+import type { SeasonPickerProps } from "./types";
 
+/**
+ * One season control. `@expo/ui/community/segmented-control` is the real
+ * platform segmented row (SwiftUI segmented / Material
+ * `SingleChoiceSegmentedButtonRow`), not universal `Picker` menu/wheel.
+ * Mounted in an RN row with its own Host — not inside Config FieldGroup.
+ * Analyze model pick stays a menu `Picker` — do not reuse this there.
+ */
 export function SeasonPicker({ season, onChange }: SeasonPickerProps) {
-  return (
-    <Picker selectedValue={season} onValueChange={(value) => onChange(value as Season)}>
-      {SEASONS.map((s) => (
-        <Picker.Item key={s.value} label={s.label} value={s.value} />
-      ))}
-    </Picker>
-  );
+  return <SegmentedChips options={SEASONS} value={season} onChange={onChange} />;
 }
