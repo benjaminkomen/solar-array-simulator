@@ -5,7 +5,7 @@ import {
   CONFIG_BOTTOM_TOOLBAR_INSET,
   PRODUCTION_PATH,
   configToolbarListInset,
-  isWelcomePath,
+  persistWizardCompletedOnProduction,
   runWizardFinish,
   shouldRedirectWelcomeToProduction,
   shouldShowWizardFinish,
@@ -17,6 +17,10 @@ const indexSrc = readFileSync(
 );
 const editorSrc = readFileSync(
   resolve(import.meta.dir, "../../hooks/useCanvasEditor.ts"),
+  "utf8",
+);
+const productionHookSrc = readFileSync(
+  resolve(import.meta.dir, "../../hooks/useProductionMonitor.ts"),
   "utf8",
 );
 const happyYaml = readFileSync(
@@ -57,58 +61,66 @@ describe("shouldShowWizardFinish", () => {
 });
 
 describe("shouldRedirectWelcomeToProduction", () => {
-  it("redirects returning users only when Welcome is the visible path", () => {
-    expect(isWelcomePath("/")).toBe(true);
-    expect(isWelcomePath("/index")).toBe(true);
-    expect(shouldRedirectWelcomeToProduction(true, "/")).toBe(true);
-    expect(shouldRedirectWelcomeToProduction(true, "/index")).toBe(true);
+  it("redirects only from the launch-time snapshot, not a live flag flip", () => {
+    expect(shouldRedirectWelcomeToProduction(true)).toBe(true);
+    expect(shouldRedirectWelcomeToProduction(false)).toBe(false);
   });
 
-  it("does not redirect from a buried Welcome while the wizard is showing", () => {
-    expect(isWelcomePath("/custom")).toBe(false);
-    expect(shouldRedirectWelcomeToProduction(true, "/custom")).toBe(false);
-    expect(shouldRedirectWelcomeToProduction(true, "/config")).toBe(false);
-    expect(shouldRedirectWelcomeToProduction(true, "/upload")).toBe(false);
-    expect(shouldRedirectWelcomeToProduction(true, PRODUCTION_PATH)).toBe(false);
-  });
-
-  it("does not redirect first-run users on Welcome", () => {
-    expect(shouldRedirectWelcomeToProduction(false, "/")).toBe(false);
-  });
-
-  it("wires Index to the focused-path gate", () => {
-    expect(indexSrc).toContain("usePathname");
+  it("wires Index to a launch-time snapshot, not useConfigStore", () => {
+    expect(indexSrc).toContain("useState(getWizardCompleted)");
     expect(indexSrc).toContain("shouldRedirectWelcomeToProduction");
     expect(indexSrc).toContain('Redirect href="/production"');
+    expect(indexSrc).not.toContain("useConfigStore");
+    expect(indexSrc).not.toContain("usePathname");
   });
 });
 
 describe("runWizardFinish", () => {
-  it("opens Production before writing wizardCompleted", () => {
-    const calls: string[] = [];
-    runWizardFinish({
-      openProduction: (href) => {
-        calls.push(`open:${href}`);
-      },
-      markWizardCompleted: () => {
-        calls.push("flag");
-      },
+  it("opens Production and does not write wizardCompleted", () => {
+    const hrefs: string[] = [];
+    runWizardFinish((href) => {
+      hrefs.push(href);
     });
-    expect(calls).toEqual([`open:${PRODUCTION_PATH}`, "flag"]);
+    expect(hrefs).toEqual([PRODUCTION_PATH]);
   });
 
-  it("Finish replaces Custom with Production instead of racing a buried Redirect", () => {
+  it("Finish pushes Production and leaves persist to the Production mount", () => {
     expect(editorSrc).toContain("runWizardFinish");
-    expect(editorSrc).toContain("router.replace");
-    expect(editorSrc).not.toContain("router.push('/production')");
-    expect(editorSrc).not.toContain('router.push("/production")');
+    expect(editorSrc).toContain("router.push");
+    expect(editorSrc).not.toContain("setWizardCompleted");
+    expect(editorSrc).not.toContain("router.replace");
+    expect(productionHookSrc).toContain("persistWizardCompletedOnProduction");
   });
 
-  it("wizard-happy-path still reaches Production via Finish, not a deeplink", () => {
+  it("wizard-happy-path still reaches Production via one Finish tap, not a deeplink", () => {
     expect(happyYaml).toContain('tapOn: "Finish"');
+    expect(happyYaml).not.toMatch(/tapOn:\s*"Finish"[\s\S]*tapOn:\s*"Finish"/);
     expect(happyYaml).toContain("Total Array Output");
     expect(happyYaml).not.toMatch(/openLink:[\s\S]*production/);
     expect(wizardToProductionYaml).toContain('tapOn: "Finish"');
     expect(wizardToProductionYaml).not.toMatch(/openLink:[\s\S]*production/);
+    expect(wizardToProductionYaml).not.toMatch(/tapOn:\s*"Finish"[\s\S]*tapOn:\s*"Finish"/);
+  });
+});
+
+describe("persistWizardCompletedOnProduction", () => {
+  it("writes the flag only when Production actually mounted incomplete", () => {
+    const writes: boolean[] = [];
+    persistWizardCompletedOnProduction({
+      getWizardCompleted: () => false,
+      setWizardCompleted: (completed) => {
+        writes.push(completed);
+      },
+    });
+    expect(writes).toEqual([true]);
+  });
+
+  it("does not rewrite when the wizard already completed", () => {
+    persistWizardCompletedOnProduction({
+      getWizardCompleted: () => true,
+      setWizardCompleted: () => {
+        throw new Error("must not write");
+      },
+    });
   });
 });

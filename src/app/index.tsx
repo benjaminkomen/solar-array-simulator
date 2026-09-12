@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { ScrollView, Text, useColorScheme } from "react-native";
-import { Redirect, usePathname, useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Button } from "@/components/Button";
-import { useConfigStore } from "@/hooks/useConfigStore";
+import { getWizardCompleted } from "@/utils/configStore";
 import { useColors } from "@/utils/theme";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 import { shouldRedirectWelcomeToProduction } from "@/utils/wizardChrome";
@@ -12,16 +13,14 @@ import { shouldRedirectWelcomeToProduction } from "@/utils/wizardChrome";
 export default function Index() {
   useMarkInteractive();
   const router = useRouter();
-  const pathname = usePathname();
-  const { getWizardCompleted } = useConfigStore();
+  const [completedOnLaunch] = useState(getWizardCompleted);
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const wizardCompleted = getWizardCompleted();
-
-  // Returning users only. Do not Redirect while Welcome is buried under the wizard.
-  if (shouldRedirectWelcomeToProduction(wizardCompleted, pathname)) {
+  // Launch-time only. Do not subscribe to wizardCompleted — Finish writing
+  // the flag must not remount this buried screen while Custom is focused.
+  if (shouldRedirectWelcomeToProduction(completedOnLaunch)) {
     return <Redirect href="/production" />;
   }
 

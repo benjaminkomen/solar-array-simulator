@@ -69,6 +69,28 @@ type ToolbarIconButtonProps = {
  * Keep the label on a RN Pressable drawn *above* the Compose Host/Icon
  * so Add panel receives the tap (nested Host as a Pressable child swallows it).
  */
+function AndroidToolbarHitOverlay({
+  onPress,
+  accessibilityLabel,
+}: {
+  onPress: () => void;
+  accessibilityLabel: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessible
+      collapsable={false}
+      cancelable={false}
+      style={styles.toolbarIconHit}
+    >
+      <View style={styles.toolbarIconHit} collapsable={false} />
+    </Pressable>
+  );
+}
+
 function ToolbarIconButton({
   name,
   onPress,
@@ -90,17 +112,10 @@ function ToolbarIconButton({
               tint={tint}
             />
           </View>
-          <Pressable
+          <AndroidToolbarHitOverlay
             onPress={onPress}
             accessibilityLabel={accessibilityLabel}
-            accessibilityRole="button"
-            accessible
-            collapsable={false}
-            cancelable={false}
-            style={styles.toolbarIconHit}
-          >
-            <View style={styles.toolbarIconHit} collapsable={false} />
-          </Pressable>
+          />
         </View>
       </Stack.Toolbar.View>
     );
@@ -156,19 +171,17 @@ function WizardFinishButton({ onFinish }: { onFinish: () => void }) {
   if (Platform.OS === "android") {
     return (
       <Stack.Toolbar.View>
-        <Pressable
-          style={styles.toolbarTextButton}
-          onPress={onFinish}
-          accessibilityRole="button"
-          accessibilityLabel="Finish"
-          accessible
-          collapsable={false}
-          cancelable={false}
-        >
-          <Text style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}>
+        <View style={styles.toolbarTextButton} collapsable={false}>
+          <Text
+            pointerEvents="none"
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}
+          >
             Finish
           </Text>
-        </Pressable>
+          <AndroidToolbarHitOverlay onPress={onFinish} accessibilityLabel="Finish" />
+        </View>
       </Stack.Toolbar.View>
     );
   }

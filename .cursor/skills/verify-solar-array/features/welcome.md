@@ -31,7 +31,7 @@ Preconditions:
 
 ## Gotchas
 
-- `getWizardCompleted()` true **and** the visible path is Welcome → `<Redirect href="/production" />` (`shouldRedirectWelcomeToProduction`). Finish must not flip that Redirect while Custom is showing — that left Custom on top on Android (#69). If smoke cannot find Get Started, state was not cleared.
+- Returning Redirect is **launch-time only**: `useState(getWizardCompleted)` then `<Redirect href="/production" />`. Index must not subscribe to `useConfigStore` for this flag. Finish writing `wizardCompleted` while Custom is showing remounted buried Welcome and dropped the first Android navigation (#69 / #71). If smoke cannot find Get Started, state was not cleared.
 - `launch-fresh` branches: iOS deep-links `127.0.0.1:8081` and waits for Continue (do not tap Cancel); Android waits for Dev Client Home (`DEVELOPMENT SERVERS`) before `openLink` to `http://10.0.2.2:8081` (`disableOnboarding=1`), then Recently Opened / typed Connect if still on Home. After attach, SDK 57 may show Continue **or** the full Dev Menu (`Reload` / `Go home`) over Welcome — dismiss the menu (`Close` / `50%,15%`), tap **Tools button** once, do not tap Go home, then wait for "Solar Array Simulator". Those taps are Dev Client chrome, not app UI. Stock `launch-fresh.android` has historically lost the Home race; Recently Opened then Continue is the workaround if the race regresses.
 - Route files: `src/app/index.tsx` is already the shared Welcome for iOS and Android. No collapse hook.
 - There is no web-first verification path. EAS Simulator is Generac-only — do not start it from this skill.

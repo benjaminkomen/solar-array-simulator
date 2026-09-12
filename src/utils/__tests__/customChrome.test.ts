@@ -95,6 +95,13 @@ describe("Custom chrome tree", () => {
     expect(iconJsx).not.toContain("contentDescription");
     expect(chromeSrc).toContain("shouldShowWizardFinish");
     expect(chromeSrc).toContain("Finish");
+    expect(chromeSrc).toContain("AndroidToolbarHitOverlay");
+    expect(chromeSrc).toContain('accessibilityLabel="Finish"');
+    const finishBlock =
+      chromeSrc.match(/function WizardFinishButton[\s\S]*?function CustomBottomToolbar/)?.[0] ?? "";
+    expect(finishBlock).toContain("pointerEvents=\"none\"");
+    expect(finishBlock).toContain("AndroidToolbarHitOverlay");
+    expect(finishBlock).not.toMatch(/<Pressable[\s\S]*Finish[\s\S]*<\/Pressable>/);
     expect(shouldShowWizardFinish(true, 0)).toBe(false);
     expect(shouldShowWizardFinish(true, 1)).toBe(true);
     expect(iosSrc).toContain("SolarPanelCanvas");

@@ -22,32 +22,32 @@ export function shouldShowWizardFinish(
   return isWizardMode && panelCount > 0;
 }
 
-/** Welcome is the index route. Query strings are stripped by usePathname(). */
-export function isWelcomePath(pathname: string): boolean {
-  return pathname === "/" || pathname === "" || pathname === "/index";
-}
-
 /**
- * Returning users bounce from Welcome → Production only when Welcome is the
- * visible route. Finish writes wizardCompleted while Custom is still focused;
- * a buried Index must not mount Redirect or Android can replace the root and
- * leave Custom on top (Maestro never sees Total Array Output).
+ * Welcome → Production is a launch-time check only. A live subscription that
+ * mounts Redirect when Finish writes wizardCompleted remounts buried Welcome
+ * and Android drops the first routingQueue action (Custom stays; a second
+ * Finish tap then works).
  */
 export function shouldRedirectWelcomeToProduction(
-  wizardCompleted: boolean,
-  pathname: string,
+  wizardCompletedAtLaunch: boolean,
 ): boolean {
-  return wizardCompleted && isWelcomePath(pathname);
+  return wizardCompletedAtLaunch;
 }
 
 /**
- * Open Production first, then persist wizardCompleted. Writing the flag first
- * remounts buried Welcome as Redirect and races the stack on Android.
+ * Finish only opens Production. Persist wizardCompleted when Production
+ * mounts (`persistWizardCompletedOnProduction`) so a sync store notify cannot
+ * re-render Custom/Welcome in the same turn as the first navigation.
  */
-export function runWizardFinish(actions: {
-  openProduction: (href: string) => void;
-  markWizardCompleted: () => void;
+export function runWizardFinish(openProduction: (href: string) => void): void {
+  openProduction(PRODUCTION_PATH);
+}
+
+export function persistWizardCompletedOnProduction(actions: {
+  getWizardCompleted: () => boolean;
+  setWizardCompleted: (completed: boolean) => void;
 }): void {
-  actions.openProduction(PRODUCTION_PATH);
-  actions.markWizardCompleted();
+  if (!actions.getWizardCompleted()) {
+    actions.setWizardCompleted(true);
+  }
 }

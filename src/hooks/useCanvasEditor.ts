@@ -46,7 +46,7 @@ export function useCanvasEditor() {
   const canvasHeight = useSharedValue(0);
   const hasInitialized = useRef(false);
   const [compassVisible, setCompassVisible] = useState(false);
-  const { config, setWizardCompleted, updateCompassDirection } = useConfigStore();
+  const { config, updateCompassDirection } = useConfigStore();
   const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
 
   const {
@@ -144,11 +144,10 @@ export function useCanvasEditor() {
 
   const handleFinish = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    runWizardFinish({
-      openProduction: (href) => router.replace(href),
-      markWizardCompleted: () => setWizardCompleted(true),
-    });
-  }, [setWizardCompleted, router]);
+    // Push only. Writing wizardCompleted here re-renders Custom/Welcome and
+    // Android drops the first routingQueue action (second Finish then works).
+    runWizardFinish((href) => router.push(href));
+  }, [router]);
 
   const handleCompassTap = useCallback(() => {
     router.push('/compass-help');
