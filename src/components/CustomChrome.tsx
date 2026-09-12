@@ -1,4 +1,4 @@
-import { Platform, Pressable, StyleSheet, Text, type ImageSourcePropType } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
 import { Stack } from "expo-router";
 import type { SFSymbol } from "sf-symbols-typescript";
 import Add from "@expo/material-symbols/add.xml";
@@ -65,8 +65,9 @@ type ToolbarIconButtonProps = {
 
 /**
  * Android Stack.Toolbar.Button puts accessibilityLabel on a Compose Icon
- * (clickable=false). Keep the label on a RN Pressable (no nested Host)
- * so Add panel / header actions are real buttons whose onPress fires.
+ * (android.view.View, clickable=false). Maestro then taps a dead node.
+ * Keep the label on a RN Pressable drawn *above* the Compose Host/Icon
+ * so Add panel receives the tap (nested Host as a Pressable child swallows it).
  */
 function ToolbarIconButton({
   name,
@@ -77,19 +78,30 @@ function ToolbarIconButton({
   if (Platform.OS === "android") {
     return (
       <Stack.Toolbar.View>
-        <Pressable
-          onPress={onPress}
-          accessibilityLabel={accessibilityLabel}
-          accessibilityRole="button"
-          accessible
-          collapsable={false}
-          style={styles.toolbarIconButton}
-        >
-          <CustomToolbarAndroidIcon
-            source={CUSTOM_TOOLBAR_ICONS[name] as ImageSourcePropType}
-            tint={tint}
-          />
-        </Pressable>
+        <View style={styles.toolbarIconButton} collapsable={false}>
+          <View
+            pointerEvents="none"
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            style={styles.toolbarIconGlyph}
+          >
+            <CustomToolbarAndroidIcon
+              source={CUSTOM_TOOLBAR_ICONS[name] as ImageSourcePropType}
+              tint={tint}
+            />
+          </View>
+          <Pressable
+            onPress={onPress}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole="button"
+            accessible
+            collapsable={false}
+            cancelable={false}
+            style={styles.toolbarIconHit}
+          >
+            <View style={styles.toolbarIconHit} collapsable={false} />
+          </Pressable>
+        </View>
       </Stack.Toolbar.View>
     );
   }
@@ -151,6 +163,7 @@ function WizardFinishButton({ onFinish }: { onFinish: () => void }) {
           accessibilityLabel="Finish"
           accessible
           collapsable={false}
+          cancelable={false}
         >
           <Text style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}>
             Finish
@@ -223,6 +236,14 @@ const styles = StyleSheet.create({
     height: 48,
     justifyContent: "center",
     alignItems: "center",
+  },
+  toolbarIconGlyph: {
+    ...StyleSheet.absoluteFill,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  toolbarIconHit: {
+    ...StyleSheet.absoluteFill,
   },
   toolbarTextButton: {
     paddingHorizontal: 12,

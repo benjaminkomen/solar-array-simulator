@@ -1,4 +1,4 @@
-import { Image } from "expo-image";
+import { Host, Icon } from "@expo/ui/jetpack-compose";
 import type { ColorValue, ImageSourcePropType } from "react-native";
 
 type CustomToolbarAndroidIconProps = {
@@ -7,16 +7,14 @@ type CustomToolbarAndroidIconProps = {
 };
 
 /**
- * RN image only — no Compose Host. A Host inside Toolbar.View's RNHostView
- * swallows clicks even when the parent Pressable is clickable=true.
+ * Compose icon only — do not label this Icon.
+ * Stack.Toolbar.Button puts that label on a dead android.view.View.
+ * pointerEvents=none so the RN Pressable above receives the tap.
  */
 export function CustomToolbarAndroidIcon({ source, tint }: CustomToolbarAndroidIconProps) {
   return (
-    <Image
-      source={source}
-      style={{ width: 24, height: 24 }}
-      contentFit="contain"
-      tintColor={typeof tint === "string" ? tint : undefined}
-    />
+    <Host matchContents pointerEvents="none">
+      <Icon source={source} tint={tint} />
+    </Host>
   );
 }

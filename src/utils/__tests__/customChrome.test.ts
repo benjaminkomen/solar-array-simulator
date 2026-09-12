@@ -83,9 +83,16 @@ describe("Custom chrome tree", () => {
     expect(chromeSrc).toContain('accessibilityRole="button"');
     expect(chromeSrc).toContain("collapsable={false}");
     expect(chromeSrc).toContain("CustomToolbarAndroidIcon");
-    expect(androidIconSrc).not.toContain("<Host");
-    expect(androidIconSrc).not.toContain("@expo/ui/jetpack-compose");
-    expect(androidIconSrc).not.toContain("accessibilityLabel");
+    expect(chromeSrc).toContain("toolbarIconHit");
+    expect(chromeSrc).toContain("cancelable={false}");
+    expect(androidIconSrc).toContain("@expo/ui/jetpack-compose");
+    expect(androidIconSrc).toContain("<Host");
+    expect(androidIconSrc).toContain('pointerEvents="none"');
+    expect(androidIconSrc).toContain("<Icon");
+    const iconJsx = androidIconSrc.match(/<Icon[\s\S]*?\/>/)?.[0] ?? "";
+    expect(iconJsx).toContain("<Icon");
+    expect(iconJsx).not.toContain("accessibilityLabel");
+    expect(iconJsx).not.toContain("contentDescription");
     expect(chromeSrc).toContain("shouldShowWizardFinish");
     expect(chromeSrc).toContain("Finish");
     expect(shouldShowWizardFinish(true, 0)).toBe(false);
@@ -97,5 +104,6 @@ describe("Custom chrome tree", () => {
   it("does not let Add silently no-op when the canvas has not measured yet", () => {
     expect(resolveCanvasSizeForAdd(0, 0, 400, 800)).toEqual({ width: 400, height: 800 });
     expect(resolveCanvasSizeForAdd(390, 700, 400, 800)).toEqual({ width: 390, height: 700 });
+    expect(resolveCanvasSizeForAdd(0, 0, 0, 0)).toEqual({ width: 400, height: 800 });
   });
 });
