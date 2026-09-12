@@ -13,7 +13,11 @@ import {
   CUSTOM_ADD_PANEL_A11Y,
   CUSTOM_HEADER_LINK_A11Y,
 } from "@/utils/customChrome";
-import { androidWizardFinishBottom, shouldShowWizardFinish } from "@/utils/wizardChrome";
+import {
+  androidWizardFinishBottom,
+  androidWizardFinishRight,
+  shouldShowWizardFinish,
+} from "@/utils/wizardChrome";
 import { useColors } from "@/utils/theme";
 
 type ToolbarIcon = SFSymbol | ImageSourcePropType;
@@ -193,6 +197,12 @@ function WizardFinishButton({
   );
 }
 
+/**
+ * Android-only Finish. If onPress ran, Custom would return `<Redirect>`
+ * and stop painting Layout. SHA1-identical Layout+FINISH after a tap
+ * therefore means this onPress did not run — move the hit box off the
+ * zoom column instead of stacking another navigate/reset/retry.
+ */
 export function AndroidWizardFinishButton({
   visible,
   onFinish,
@@ -215,7 +225,13 @@ export function AndroidWizardFinishButton({
       accessible
       collapsable={false}
       cancelable={false}
-      style={[styles.androidFinishHit, { bottom: androidWizardFinishBottom(insets.bottom) }]}
+      style={[
+        styles.androidFinishHit,
+        {
+          bottom: androidWizardFinishBottom(insets.bottom),
+          right: androidWizardFinishRight(),
+        },
+      ]}
     >
       <Text
         pointerEvents="none"
@@ -336,8 +352,8 @@ const styles = StyleSheet.create({
   },
   androidFinishHit: {
     position: "absolute",
-    right: 24,
     zIndex: 30,
+    elevation: 8,
     minWidth: 48,
     minHeight: 48,
     paddingHorizontal: 12,

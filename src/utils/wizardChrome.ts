@@ -3,6 +3,11 @@
  * platform files cannot drift (e.g. Finish visible on an empty canvas).
  */
 
+import {
+  ZOOM_COLUMN_RIGHT,
+  ZOOM_COLUMN_WIDTH,
+} from "./zoomConstants";
+
 /**
  * Extra list inset (points) so Config rows sit above the bottom Stack.Toolbar
  * (Continue + add). Add the device safe-area bottom on top of this — 96 alone
@@ -60,6 +65,33 @@ export const ANDROID_BOTTOM_TOOLBAR_HEIGHT = 64;
  */
 export function androidWizardFinishBottom(safeAreaBottom: number): number {
   return Math.max(0, safeAreaBottom) + ANDROID_BOTTOM_TOOLBAR_HEIGHT + 12;
+}
+
+/**
+ * Gap between Finish's right edge and the zoom column's left edge.
+ * ZoomControls uses RNGH Pressable + elevation 4. An overlapping RN
+ * Pressable is visible but does not receive the tap (af4f41c pixels).
+ */
+export const ANDROID_WIZARD_FINISH_ZOOM_GAP = 16;
+
+/** Android Finish `right` — left of the zoom pill, not on top of it. */
+export function androidWizardFinishRight(): number {
+  return ZOOM_COLUMN_RIGHT + ZOOM_COLUMN_WIDTH + ANDROID_WIZARD_FINISH_ZOOM_GAP;
+}
+
+/**
+ * True when Finish's horizontal band does not intersect the zoom pill.
+ * Used to prove Maestro `tapOn: Finish` is not a zoom-column hit.
+ */
+export function androidFinishClearsZoomColumn(
+  finishRight: number,
+  finishWidth: number,
+): boolean {
+  const finishNear = finishRight;
+  const finishFar = finishRight + Math.max(0, finishWidth);
+  const zoomNear = ZOOM_COLUMN_RIGHT;
+  const zoomFar = ZOOM_COLUMN_RIGHT + ZOOM_COLUMN_WIDTH;
+  return finishFar <= zoomNear || finishNear >= zoomFar;
 }
 
 export function persistWizardCompletedOnProduction(actions: {

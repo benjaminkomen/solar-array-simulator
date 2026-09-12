@@ -3,9 +3,12 @@ import { resolve } from "node:path";
 import { describe, it, expect } from "bun:test";
 import {
   ANDROID_BOTTOM_TOOLBAR_HEIGHT,
+  ANDROID_WIZARD_FINISH_ZOOM_GAP,
   CONFIG_BOTTOM_TOOLBAR_INSET,
   PRODUCTION_PATH,
+  androidFinishClearsZoomColumn,
   androidWizardFinishBottom,
+  androidWizardFinishRight,
   configToolbarListInset,
   persistWizardCompletedOnProduction,
   requestWizardFinish,
@@ -13,6 +16,10 @@ import {
   shouldRedirectWelcomeToProduction,
   shouldShowWizardFinish,
 } from "../wizardChrome";
+import {
+  ZOOM_COLUMN_RIGHT,
+  ZOOM_COLUMN_WIDTH,
+} from "../zoomConstants";
 
 const indexSrc = readFileSync(
   resolve(import.meta.dir, "../../app/index.tsx"),
@@ -32,6 +39,10 @@ const iosCustomSrc = readFileSync(
 );
 const chromeSrc = readFileSync(
   resolve(import.meta.dir, "../../components/CustomChrome.tsx"),
+  "utf8",
+);
+const zoomSrc = readFileSync(
+  resolve(import.meta.dir, "../../components/ZoomControls.tsx"),
   "utf8",
 );
 const productionHookSrc = readFileSync(
@@ -62,6 +73,18 @@ describe("androidWizardFinishBottom", () => {
     expect(androidWizardFinishBottom(0)).toBe(76);
     expect(androidWizardFinishBottom(34)).toBe(110);
     expect(androidWizardFinishBottom(-8)).toBe(76);
+  });
+});
+
+describe("androidWizardFinishRight", () => {
+  it("places Finish left of the zoom column that ate the af4f41c tap", () => {
+    expect(ANDROID_WIZARD_FINISH_ZOOM_GAP).toBe(16);
+    expect(androidWizardFinishRight()).toBe(
+      ZOOM_COLUMN_RIGHT + ZOOM_COLUMN_WIDTH + ANDROID_WIZARD_FINISH_ZOOM_GAP,
+    );
+    expect(androidWizardFinishRight()).toBe(76);
+    expect(androidFinishClearsZoomColumn(androidWizardFinishRight(), 48)).toBe(true);
+    expect(androidFinishClearsZoomColumn(24, 48)).toBe(false);
   });
 });
 
@@ -125,11 +148,24 @@ describe("requestWizardFinish", () => {
     expect(androidCustomSrc).toContain("shouldRedirectCustomToProduction");
     expect(androidCustomSrc).toContain("Redirect");
     expect(androidCustomSrc).toContain("AndroidWizardFinishButton");
+    const redirectBranch = androidCustomSrc.indexOf(
+      "if (shouldRedirectCustomToProduction(finishHref))",
+    );
+    expect(redirectBranch).toBeGreaterThan(-1);
+    expect(redirectBranch).toBeLessThan(androidCustomSrc.indexOf("<SolarPanelCanvas"));
+    expect(androidCustomSrc).toMatch(
+      /if \(shouldRedirectCustomToProduction\(finishHref\)\) \{\s*return <Redirect/,
+    );
+    expect(zoomSrc).toContain("react-native-gesture-handler");
+    expect(zoomSrc).toContain("ZOOM_COLUMN_RIGHT");
+    expect(zoomSrc).toContain("elevation: 4");
+    expect(chromeSrc).toContain("elevation: 8");
     expect(iosCustomSrc).toContain("shouldRedirectCustomToProduction");
     expect(iosCustomSrc).toContain("Redirect");
     expect(chromeSrc).toContain("AndroidWizardFinishButton");
     expect(chromeSrc).toContain("androidFinishHit");
     expect(chromeSrc).toContain("androidWizardFinishBottom");
+    expect(chromeSrc).toContain("androidWizardFinishRight");
     expect(chromeSrc).toContain('Platform.OS !== "android"');
     expect(chromeSrc).toMatch(
       /Platform\.OS !== "android"[\s\S]*<WizardFinishButton/,

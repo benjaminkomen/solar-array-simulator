@@ -3,7 +3,12 @@ import { Pressable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { ZOOM_LEVELS } from "@/utils/zoomConstants";
+import {
+  ZOOM_COLUMN_BOTTOM_ABOVE_SAFE_AREA,
+  ZOOM_COLUMN_RIGHT,
+  ZOOM_COLUMN_WIDTH,
+  ZOOM_LEVELS,
+} from "@/utils/zoomConstants";
 import { useColors } from "@/utils/theme";
 
 interface ZoomControlsProps {
@@ -37,7 +42,7 @@ export function ZoomControls({
   };
 
   return (
-    <View style={[styles.container, { bottom: insets.bottom + 80, backgroundColor: colors.background.primary }]}>
+    <View style={[styles.container, { bottom: insets.bottom + ZOOM_COLUMN_BOTTOM_ABOVE_SAFE_AREA, backgroundColor: colors.background.primary }]}>
       <Pressable
         onPress={handleZoomIn}
         style={[styles.button, !canZoomIn && styles.buttonDisabled]}
@@ -80,7 +85,7 @@ export function ZoomControls({
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    right: 16,
+    right: ZOOM_COLUMN_RIGHT,
     borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -90,8 +95,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   button: {
-    width: 44,
-    height: 44,
+    width: ZOOM_COLUMN_WIDTH,
+    height: ZOOM_COLUMN_WIDTH,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -99,7 +104,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   indicator: {
-    width: 44,
+    width: ZOOM_COLUMN_WIDTH,
     paddingVertical: 8,
     justifyContent: "center",
     alignItems: "center",
