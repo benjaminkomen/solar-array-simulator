@@ -58,7 +58,7 @@ Match the change to a feature file, then run the matching Maestro flow. One scre
 | If you changed | Drive | Notes |
 | --- | --- | --- |
 | Welcome / Get Started | `smoke` + `wizard-happy-path` | Welcome is real. |
-| Config (SwiftUI Form / inverters) | `wizard-happy-path` + `details-sheets` | One `src/app/config.tsx` (#63). `config.web.tsx` is the web stub. Android inverter row is `id: inverter-row-1`. Android roof chips are Compose `SingleChoiceSegmentedButtonRow` (`RoofTypePicker.android.tsx`) so community `SegmentedControl` does not nest a Host inside FieldGroup. |
+| Config (SwiftUI Form / inverters) | `wizard-happy-path` + `details-sheets` | One `src/app/config.tsx` (#63). `config.web.tsx` is the web stub. Android inverter row is `id: inverter-row-1`. Android roof chips stay on community `SegmentedControl` inside `RNHostView` (`RoofTypePicker.android.tsx`). |
 | inverter-details / panel-details | `details-sheets` | Shared `FieldGroup` bodies (#64). Drive via Config `id: inverter-row-1` + Custom `openLink` `/panel-details?panelId=seed-panel`. Do not use Custom Add. Presentation chrome is `InverterDetailsScreen.*` / `PanelDetailsScreen.*` (#56). |
 | Upload | `wizard-happy-path` + `analyze-skip` | One `src/app/upload.tsx` (#59). No Host/entering first paint. Android Skip is Pressable. |
 | Analyze (model picker / Skip / Continue) | `analyze-skip` | One `src/app/analyze.tsx` (#61). Header is `Select AI Model` on **both** platforms. Android Continue-without-photo is `id: analyze-empty-state-button`. Android Skip is Pressable. iOS Skip/Continue stay SwiftUI. |

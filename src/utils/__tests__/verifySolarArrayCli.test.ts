@@ -316,7 +316,7 @@ describe("verify-solar-array CLI", () => {
     expect(simulation).not.toContain("SeasonPicker.ios.tsx");
     expect(config).toContain("community/segmented-control");
     expect(config).toContain("RoofTypePicker.android.tsx");
-    expect(config).toContain("nested Host");
+    expect(config).toContain("RNHostView");
     expect(config).not.toContain("RoofTypePicker.ios.tsx");
     expect(simulation).toContain("panelsForSimulationScene");
     expect(welcome).toContain("Tools button");

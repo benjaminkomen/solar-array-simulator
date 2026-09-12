@@ -16,12 +16,9 @@ export type SegmentedChipsProps<T extends string> = {
 
 /**
  * Shared chips over `@expo/ui/community/segmented-control`.
- * That export maps to SwiftUI `pickerStyle('segmented')` and Material
- * `SingleChoiceSegmentedButtonRow` — not universal `Picker` menu/wheel.
- *
- * Android: this control wraps its own Host. Do not mount it inside an
- * existing Host/FieldGroup (Config roof uses the Compose picker instead).
- * Stretch width so a standalone Host does not wrap to smashed chips.
+ * Official drop-in usage is an RN-tree child (the control wraps its own Host).
+ * Inside Config FieldGroup on Android, mount this through `RNHostView` so the
+ * nested Host fills a finite parent instead of collapsing LazyColumn width.
  */
 export function SegmentedChips<T extends string>({
   options,

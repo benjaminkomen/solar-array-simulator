@@ -73,16 +73,16 @@ describe("config FieldGroup collapse", () => {
     expect(configSrc).toContain("<RoofTypePicker");
   });
 
-  it("keeps Android Config roof chips on Compose so FieldGroup is not collapsed by a nested Host", () => {
+  it("keeps Android Config roof chips on community segmented-control inside RNHostView", () => {
     const androidRoofSrc = readFileSync(src("components/config/RoofTypePicker.android.tsx"), "utf8");
     expect(existsSync(src("components/config/RoofTypePicker.android.tsx"))).toBe(true);
-    expect(androidRoofSrc).toContain("SingleChoiceSegmentedButtonRow");
-    expect(androidRoofSrc).toContain("SegmentedButton");
-    expect(androidRoofSrc).toContain("fillMaxWidth");
-    expect(androidRoofSrc).not.toMatch(/from ['"]@expo\/ui\/community\/segmented-control['"]/);
+    expect(androidRoofSrc).toContain("SegmentedChips");
+    expect(androidRoofSrc).toContain("RNHostView");
+    expect(androidRoofSrc).not.toMatch(/<RNHostView[^>]*matchContents/);
+    expect(androidRoofSrc).not.toContain("SingleChoiceSegmentedButtonRow");
     expect(androidRoofSrc).not.toMatch(/<Host[\s>]/);
     expect(androidRoofSrc).not.toMatch(/<Picker[\s>]/);
-    expect(chipsSrc).toContain("Do not mount it inside an");
+    expect(chipsSrc).toContain("RNHostView");
   });
 
   it("keeps a real platform delete gesture for inverter rows", () => {
