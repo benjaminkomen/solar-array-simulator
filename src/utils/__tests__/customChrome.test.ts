@@ -95,6 +95,33 @@ describe("Custom chrome tree", () => {
     expect(iconJsx).not.toContain("contentDescription");
     expect(chromeSrc).toContain("shouldShowWizardFinish");
     expect(chromeSrc).toContain("Finish");
+    expect(chromeSrc).toContain("AndroidToolbarHitOverlay");
+    expect(chromeSrc).toContain("AndroidWizardFinishButton");
+    expect(chromeSrc).toContain("androidFinishHit");
+    expect(chromeSrc).toContain("androidWizardFinishBottom");
+    expect(chromeSrc).toContain("androidWizardFinishRight");
+    expect(chromeSrc).toContain("androidWizardFinishPressProofLabel");
+    expect(chromeSrc).toContain("AndroidWizardFinishGlyph");
+    expect(chromeSrc).toContain("hidden={!selectedId}");
+    const finishBlock =
+      chromeSrc.match(/function WizardFinishButton[\s\S]*?export function AndroidWizardFinishButton/)?.[0] ?? "";
+    expect(finishBlock).toContain('Platform.OS === "android" || !visible');
+    expect(finishBlock).not.toContain("disabled={!visible}");
+    expect(finishBlock).not.toContain("if (visible)");
+    expect(finishBlock).not.toContain("AndroidToolbarHitOverlay");
+    const bottomToolbar =
+      chromeSrc.match(/<Stack\.Toolbar placement="bottom">[\s\S]*?<\/Stack\.Toolbar>/)?.[0] ?? "";
+    expect(bottomToolbar).toContain('Platform.OS !== "android" && (');
+    expect(bottomToolbar).toContain("<WizardFinishButton");
+    expect(bottomToolbar.indexOf('Platform.OS !== "android"')).toBeLessThan(
+      bottomToolbar.indexOf("<WizardFinishButton"),
+    );
+    expect(androidSrc).toContain("AndroidWizardFinishButton");
+    expect(androidSrc.indexOf("<ZoomControls")).toBeLessThan(
+      androidSrc.indexOf("<AndroidWizardFinishButton"),
+    );
+    expect(chromeSrc).toContain("visible={showFinish}");
+    expect(chromeSrc).not.toContain("shouldShowWizardFinish(isWizardMode, panelCount) &&");
     expect(shouldShowWizardFinish(true, 0)).toBe(false);
     expect(shouldShowWizardFinish(true, 1)).toBe(true);
     expect(iosSrc).toContain("SolarPanelCanvas");

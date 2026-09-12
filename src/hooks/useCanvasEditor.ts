@@ -15,6 +15,7 @@ import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { buildMockPanelGrid, mapAnalysisToCanvasPositions } from "@/utils/canvasLayout";
 import { resolveCanvasSizeForAdd } from "@/utils/customChrome";
+import { requestWizardFinish } from "@/utils/wizardChrome";
 
 // Module-level worklet functions: required by React Compiler
 function setCanvasSize(w: SharedValue<number>, h: SharedValue<number>, width: number, height: number) {
@@ -36,6 +37,7 @@ function animateViewport(
 export function useCanvasEditor() {
   const router = useRouter();
   const windowSize = useWindowDimensions();
+  const [finishHref, setFinishHref] = useState<string | null>(null);
   const { initialPanels, wizard } = useLocalSearchParams<{ initialPanels?: string; wizard?: string }>();
   const isWizardMode = wizard === 'true';
   const canvasSize = useRef({ width: 0, height: 0 });
@@ -45,7 +47,7 @@ export function useCanvasEditor() {
   const canvasHeight = useSharedValue(0);
   const hasInitialized = useRef(false);
   const [compassVisible, setCompassVisible] = useState(false);
-  const { config, setWizardCompleted, updateCompassDirection } = useConfigStore();
+  const { config, updateCompassDirection } = useConfigStore();
   const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
 
   const {
@@ -142,10 +144,9 @@ export function useCanvasEditor() {
   const unlinkedCount = panels.length - getLinkedCount();
 
   const handleFinish = useCallback(() => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setWizardCompleted(true);
-    router.push('/production');
-  }, [setWizardCompleted, router]);
+    requestWizardFinish(setFinishHref);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, []);
 
   const handleCompassTap = useCallback(() => {
     router.push('/compass-help');
@@ -167,6 +168,7 @@ export function useCanvasEditor() {
   }, [selectedId, router]);
 
   return {
+    finishHref,
     isWizardMode,
     config,
     panels,

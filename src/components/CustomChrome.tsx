@@ -1,4 +1,7 @@
-import { Platform, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
+import { useState } from "react";
+import { Platform, Pressable, StyleSheet, View, type ImageSourcePropType } from "react-native";
+import { Pressable as GesturePressable } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import type { SFSymbol } from "sf-symbols-typescript";
 import Add from "@expo/material-symbols/add.xml";
@@ -7,12 +10,20 @@ import LinkIcon from "@expo/material-symbols/link.xml";
 import MyLocation from "@expo/material-symbols/my_location.xml";
 import Navigation from "@expo/material-symbols/navigation.xml";
 import RotateRight from "@expo/material-symbols/rotate_right.xml";
+import { AndroidWizardFinishGlyph } from "@/components/AndroidWizardFinishGlyph";
 import { CustomToolbarAndroidIcon } from "@/components/CustomToolbarAndroidIcon";
 import {
   CUSTOM_ADD_PANEL_A11Y,
   CUSTOM_HEADER_LINK_A11Y,
 } from "@/utils/customChrome";
-import { shouldShowWizardFinish } from "@/utils/wizardChrome";
+import {
+  ANDROID_WIZARD_FINISH_HIT_HEIGHT,
+  ANDROID_WIZARD_FINISH_HIT_WIDTH,
+  androidWizardFinishBottom,
+  androidWizardFinishPressProofLabel,
+  androidWizardFinishRight,
+  shouldShowWizardFinish,
+} from "@/utils/wizardChrome";
 import { useColors } from "@/utils/theme";
 
 type ToolbarIcon = SFSymbol | ImageSourcePropType;
@@ -61,6 +72,7 @@ type ToolbarIconButtonProps = {
   onPress: () => void;
   accessibilityLabel: string;
   tint: string;
+  hidden?: boolean;
 };
 
 /**
@@ -69,15 +81,38 @@ type ToolbarIconButtonProps = {
  * Keep the label on a RN Pressable drawn *above* the Compose Host/Icon
  * so Add panel receives the tap (nested Host as a Pressable child swallows it).
  */
+function AndroidToolbarHitOverlay({
+  onPress,
+  accessibilityLabel,
+}: {
+  onPress: () => void;
+  accessibilityLabel: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessible
+      collapsable={false}
+      cancelable={false}
+      style={styles.toolbarIconHit}
+    >
+      <View style={styles.toolbarIconHit} collapsable={false} />
+    </Pressable>
+  );
+}
+
 function ToolbarIconButton({
   name,
   onPress,
   accessibilityLabel,
   tint,
+  hidden,
 }: ToolbarIconButtonProps) {
   if (Platform.OS === "android") {
     return (
-      <Stack.Toolbar.View>
+      <Stack.Toolbar.View hidden={hidden}>
         <View style={styles.toolbarIconButton} collapsable={false}>
           <View
             pointerEvents="none"
@@ -90,17 +125,10 @@ function ToolbarIconButton({
               tint={tint}
             />
           </View>
-          <Pressable
+          <AndroidToolbarHitOverlay
             onPress={onPress}
             accessibilityLabel={accessibilityLabel}
-            accessibilityRole="button"
-            accessible
-            collapsable={false}
-            cancelable={false}
-            style={styles.toolbarIconHit}
-          >
-            <View style={styles.toolbarIconHit} collapsable={false} />
-          </Pressable>
+          />
         </View>
       </Stack.Toolbar.View>
     );
@@ -108,6 +136,7 @@ function ToolbarIconButton({
 
   return (
     <Stack.Toolbar.Button
+      hidden={hidden}
       icon={CUSTOM_TOOLBAR_ICONS[name]}
       onPress={onPress}
       accessibilityLabel={accessibilityLabel}
@@ -150,33 +179,93 @@ export function CustomHeaderToolbar({
   );
 }
 
-function WizardFinishButton({ onFinish }: { onFinish: () => void }) {
-  const colors = useColors();
-
-  if (Platform.OS === "android") {
-    return (
-      <Stack.Toolbar.View>
-        <Pressable
-          style={styles.toolbarTextButton}
-          onPress={onFinish}
-          accessibilityRole="button"
-          accessibilityLabel="Finish"
-          accessible
-          collapsable={false}
-          cancelable={false}
-        >
-          <Text style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}>
-            Finish
-          </Text>
-        </Pressable>
-      </Stack.Toolbar.View>
-    );
+/**
+ * iOS Finish stays a Toolbar.Button (official happy path already lands
+ * Production). Android must not mount this child at all — a `null`
+ * toolbar slot can still leave a leftover FINISH a11y node that Maestro
+ * hits instead of `AndroidWizardFinishButton` (#80).
+ */
+function WizardFinishButton({
+  onFinish,
+  visible,
+}: {
+  onFinish: () => void;
+  visible: boolean;
+}) {
+  if (Platform.OS === "android" || !visible) {
+    return null;
   }
 
   return (
     <Stack.Toolbar.Button onPress={onFinish}>
       Finish
     </Stack.Toolbar.Button>
+  );
+}
+
+function pressAndroidWizardFinish(
+  setPressed: (pressed: boolean) => void,
+  onFinish: () => void,
+): void {
+  setPressed(true);
+  onFinish();
+}
+
+/**
+ * Android-only Finish. Visual is Skia (no TextView). RNGH Pressable +
+ * box-none overlay sit above the full-screen canvas GestureDetector so
+ * Maestro's a11y-coordinate tap hits this control, not the Skia tap
+ * (which deselects the panel). Hit width/height fill that a11y box (#80).
+ */
+export function AndroidWizardFinishButton({
+  visible,
+  onFinish,
+}: {
+  visible: boolean;
+  onFinish: () => void;
+}) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const [pressed, setPressed] = useState(false);
+  const label = androidWizardFinishPressProofLabel(pressed);
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <View
+      pointerEvents="box-none"
+      accessible={false}
+      importantForAccessibility="no"
+      style={styles.androidFinishOverlay}
+    >
+      <GesturePressable
+        onPress={() => {
+          pressAndroidWizardFinish(setPressed, onFinish);
+        }}
+        accessibilityLabel={label}
+        accessibilityRole="button"
+        accessible
+        collapsable={false}
+        pointerEvents="box-only"
+        testID={pressed ? "android-wizard-finish-tapped" : "android-wizard-finish"}
+        style={[
+          styles.androidFinishHit,
+          {
+            bottom: androidWizardFinishBottom(insets.bottom),
+            right: androidWizardFinishRight(),
+            width: ANDROID_WIZARD_FINISH_HIT_WIDTH,
+            height: ANDROID_WIZARD_FINISH_HIT_HEIGHT,
+          },
+        ]}
+      >
+        <AndroidWizardFinishGlyph
+          label={label}
+          color={colors.primary as string}
+        />
+      </GesturePressable>
+    </View>
   );
 }
 
@@ -192,6 +281,7 @@ export function CustomBottomToolbar({
 }: CustomBottomToolbarProps) {
   const colors = useColors();
   const actionTint = colors.primary as string;
+  const showFinish = shouldShowWizardFinish(isWizardMode, panelCount);
 
   return (
     <Stack.Toolbar placement="bottom">
@@ -201,30 +291,56 @@ export function CustomBottomToolbar({
         accessibilityLabel={CUSTOM_ADD_PANEL_A11Y}
         tint={actionTint}
       />
-      {selectedId && (
+      {Platform.OS === "android" ? (
         <>
           <ToolbarIconButton
             name="link"
+            hidden={!selectedId}
             onPress={onLinkInverter}
             accessibilityLabel="Link inverter"
             tint={actionTint}
           />
           <ToolbarIconButton
             name="rotate"
+            hidden={!selectedId}
             onPress={onRotatePanel}
             accessibilityLabel="Rotate panel"
             tint={actionTint}
           />
           <ToolbarIconButton
             name="delete"
+            hidden={!selectedId}
             onPress={onDeletePanel}
             accessibilityLabel="Delete panel"
             tint={actionTint}
           />
         </>
+      ) : (
+        selectedId && (
+          <>
+            <ToolbarIconButton
+              name="link"
+              onPress={onLinkInverter}
+              accessibilityLabel="Link inverter"
+              tint={actionTint}
+            />
+            <ToolbarIconButton
+              name="rotate"
+              onPress={onRotatePanel}
+              accessibilityLabel="Rotate panel"
+              tint={actionTint}
+            />
+            <ToolbarIconButton
+              name="delete"
+              onPress={onDeletePanel}
+              accessibilityLabel="Delete panel"
+              tint={actionTint}
+            />
+          </>
+        )
       )}
-      {shouldShowWizardFinish(isWizardMode, panelCount) && (
-        <WizardFinishButton onFinish={onFinish} />
+      {Platform.OS !== "android" && (
+        <WizardFinishButton onFinish={onFinish} visible={showFinish} />
       )}
     </Stack.Toolbar>
   );
@@ -245,16 +361,15 @@ const styles = StyleSheet.create({
   toolbarIconHit: {
     ...StyleSheet.absoluteFill,
   },
-  toolbarTextButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: 36,
-    justifyContent: "center",
+  androidFinishOverlay: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 40,
   },
-  toolbarTextButtonLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  androidFinishHit: {
+    position: "absolute",
+    zIndex: 40,
+    elevation: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

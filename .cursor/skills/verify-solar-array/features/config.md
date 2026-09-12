@@ -2,7 +2,7 @@
 
 Wizard step 1 (`/config?wizard=true`) and later "Edit Configuration". Sets default panel wattage, optional city, roof type/tilt, and the micro-inverter list (add/edit/delete sheets).
 
-Product UI is one `FieldGroup` in `src/app/config.tsx` (#63; web stub is `config.web.tsx`). Roof chips are `@expo/ui/community/segmented-control` (#75) because universal `Picker` has no `segmented` appearance. Official drop-in usage is an RN-tree child (the control wraps its own Host). Android Config keeps that library inside FieldGroup by embedding it through `RNHostView` (`RoofTypePicker.android.tsx`) so the nested Host fills a finite parent instead of collapsing LazyColumn width. Inverter delete stays on platform swipe because universal `List` has no swipe-delete. Do not paper Config as still-split.
+Product UI is one `FieldGroup` in `src/app/config.tsx` (#63; web stub is `config.web.tsx`). iOS roof chips are `@expo/ui/community/segmented-control` (#75) because universal `Picker` has no `segmented` appearance. Android Config FieldGroup is Compose — `RoofTypePicker.android.tsx` is `SingleChoiceSegmentedButtonRow` + `fillMaxWidth()`. Do **not** embed `RNHostView` / `width: "100%"` on a Compose `Column` (`FieldCastException`, crash to launcher). Inverter delete stays on platform swipe because universal `List` has no swipe-delete. Do not paper Config as still-split.
 
 ## Sub-features
 
@@ -43,5 +43,5 @@ Preconditions:
 - Location search hits the network. An empty result list is not a product bug if the query is garbage or the geocoder is down; say so.
 - Seeded config ships **14** inverters. Do not assume an empty list on first launch.
 - Continue is **wizard-only**. Edit-from-Production still uses `wizard=true`, so Continue is present; that is how `wizard-resume-to-production.yaml` works. Config reserves `configToolbarListInset` (96 + safe-area bottom) above the bottom toolbar so the last inverter row is not under Continue.
-- Roof chips are `@expo/ui/community/segmented-control` (SwiftUI segmented / Material `SingleChoiceSegmentedButtonRow`). Android Config wraps that drop-in in `RNHostView` (`RoofTypePicker.android.tsx`) — not a raw nested Host, not a Compose-only fork, not universal `Picker appearance="segmented"`. Pixel proof is Gable / Hip / Flat / Shed on one row and horizontal FieldGroup titles — a11y strings alone are not enough.
+- iOS roof chips are `@expo/ui/community/segmented-control` (SwiftUI segmented). Android Config chips are Compose `SingleChoiceSegmentedButtonRow` (`RoofTypePicker.android.tsx`) with `fillMaxWidth()` — not `RNHostView`, not `style={{ width: "100%" }}` on `Column`, not universal `Picker appearance="segmented"`. Pixel proof is Gable / Hip / Flat / Shed on one row and horizontal FieldGroup titles — a11y strings alone are not enough. Get Started must open Config without crashing.
 - Inverter swipe-delete is platform-only: iOS `SwipeActions` and Android `SwipeToDismissBox` (`InverterSection.ios.tsx` / `.android.tsx`). Do not wrap iOS rows in `List.ForEach` inside the Section — that packs every row into one Form cell and misses taps on the Spacer.

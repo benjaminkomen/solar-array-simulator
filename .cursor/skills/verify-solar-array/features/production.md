@@ -12,7 +12,7 @@ Post-wizard home: live-ish total wattage, a read-only canvas, compass, Edit/Dele
 
 ## How to get to it (user POV)
 
-- Custom (wizard) → Finish.
+- Custom (wizard) → one Finish tap (`<Redirect href="/production" />`). Production persists `wizardCompleted` on mount. Do not deeplink this as the primary proof.
 - Cold launch after the wizard has been completed (Welcome redirects here).
 - Returning from Simulation via back.
 
@@ -21,7 +21,7 @@ Post-wizard home: live-ish total wattage, a read-only canvas, compass, Edit/Dele
 Preconditions:
 
 - At least one panel (Finish is hidden otherwise). Shared flow: `wizard-to-production.yaml`.
-- Android Dev Client Tools overlay must already be off (`launch-fresh.android` taps **Tools button** once).
+- Android Dev Client Tools overlay must already be off (`launch-fresh.android` opens the FAB if needed, swipes the Dev Menu up, taps **Tools button** once, dismisses).
 
 - **Arrive via wizard.** `run-flow wizard-happy-path` ends on "Total Array Output". `run-flow full-app-tour` also lands here before Simulation.
 - **Simulate.** `run-flow simulation-nav` taps "Simulate" (`tap-simulate.yaml`), waits for "Simulation".

@@ -9,10 +9,11 @@ import { usePanelsContext } from "@/contexts/PanelsContext";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { useZoom } from "@/hooks/useZoom";
 import { useViewport } from "@/hooks/useViewport";
-import { resetAllData } from "@/utils/configStore";
+import { getWizardCompleted, resetAllData, setWizardCompleted } from "@/utils/configStore";
 import { clearPanels } from "@/utils/panelStore";
 import { getEffectiveOutput } from "@/utils/solarCalculations";
 import { formatWattage } from "@/utils/formatters";
+import { persistWizardCompletedOnProduction } from "@/utils/wizardChrome";
 
 export { formatWattage };
 
@@ -28,6 +29,13 @@ export function useProductionMonitor() {
 
   const { zoomIndex, scale, handleZoomIn, handleZoomOut } = useZoom();
   const { viewportX, viewportY, canvasWidth, canvasHeight, handleLayout } = useViewport(panels);
+
+  useEffect(() => {
+    persistWizardCompletedOnProduction({
+      getWizardCompleted,
+      setWizardCompleted,
+    });
+  }, []);
 
   // Calculate wattage for a single panel using solar position model
   const calculateWattage = useCallback(

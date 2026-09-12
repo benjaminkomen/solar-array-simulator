@@ -159,6 +159,10 @@ describe("verify-solar-array CLI", () => {
     expect(hideTools).toBeLessThan(goHomeVisible);
     expect(hideToolsYaml).toContain('tapOn: "Tools button"');
     expect(hideToolsYaml).toContain('visible: "Tools button"');
+    expect(hideToolsYaml).toContain("extendedWaitUntil:");
+    expect(hideToolsYaml).toContain('tapOn: "Tools"');
+    expect(hideToolsYaml).toContain("swipe:");
+    expect(hideToolsYaml).toContain("direction: UP");
     expect(android).not.toMatch(/extendedWaitUntil:[\s\S]*visible: \"Continue\"[\s\S]*timeout: 90000/);
     expect(android.indexOf("Go home")).toBeLessThan(android.lastIndexOf("Continue"));
   });
@@ -222,6 +226,10 @@ describe("verify-solar-array CLI", () => {
     expect(wizard.indexOf('assertNotVisible: "Finish"')).toBeLessThan(wizard.indexOf("tap-add-panel"));
     expect(happy).toContain('assertNotVisible: "Finish"');
     expect(happy.indexOf('assertNotVisible: "Finish"')).toBeLessThan(happy.indexOf("tap-add-panel"));
+    expect(happy).toContain('tapOn: "Finish"');
+    expect(happy).toContain("Total Array Output");
+    expect(happy).not.toMatch(/openLink:[\s\S]*production/);
+    expect(wizard).not.toMatch(/openLink:[\s\S]*production/);
     const details = readFileSync(join(repoRoot, ".maestro/details-sheets.yaml"), "utf8");
     expect(details).toContain("inverter-row-1");
     expect(details).toContain("panelId=seed-panel");
@@ -321,7 +329,10 @@ describe("verify-solar-array CLI", () => {
     expect(simulation).not.toContain("SeasonPicker.ios.tsx");
     expect(config).toContain("community/segmented-control");
     expect(config).toContain("RoofTypePicker.android.tsx");
-    expect(config).toContain("RNHostView");
+    expect(config).toContain("SingleChoiceSegmentedButtonRow");
+    expect(config).toContain("fillMaxWidth");
+    expect(config).toContain("FieldCastException");
+    expect(config).not.toMatch(/embeds that drop-in through `RNHostView`/);
     expect(config).not.toContain("RoofTypePicker.ios.tsx");
     expect(simulation).toContain("panelsForSimulationScene");
     expect(welcome).toContain("Tools button");

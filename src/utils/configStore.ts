@@ -217,6 +217,9 @@ export function getWizardCompleted(): boolean {
  * Set wizard completed status
  */
 export function setWizardCompleted(completed: boolean): void {
+  if (currentConfig.wizardCompleted === completed) {
+    return;
+  }
   const newConfig = getConfig();
   newConfig.wizardCompleted = completed;
   updateConfig(newConfig);
