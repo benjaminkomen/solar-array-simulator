@@ -1,5 +1,5 @@
 import { View, StyleSheet } from "react-native";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { CustomBottomToolbar, CustomHeaderToolbar } from "@/components/CustomChrome";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
@@ -8,11 +8,13 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
+import { shouldRedirectCustomToProduction } from "@/utils/wizardChrome";
 
 export default function Custom() {
   useMarkInteractive();
   const colors = useColors();
   const {
+    finishHref,
     isWizardMode,
     config,
     panels,
@@ -41,6 +43,10 @@ export default function Custom() {
     handleCompassToggle,
     handleLinkInverter,
   } = useCanvasEditor();
+
+  if (shouldRedirectCustomToProduction(finishHref)) {
+    return <Redirect href={finishHref} />;
+  }
 
   return (
     <>

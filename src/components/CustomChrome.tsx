@@ -1,5 +1,5 @@
-import { useCallback, useLayoutEffect, useRef } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import type { SFSymbol } from "sf-symbols-typescript";
 import Add from "@expo/material-symbols/add.xml";
@@ -13,11 +13,7 @@ import {
   CUSTOM_ADD_PANEL_A11Y,
   CUSTOM_HEADER_LINK_A11Y,
 } from "@/utils/customChrome";
-import {
-  pressWizardFinish,
-  shouldShowWizardFinish,
-  syncWizardFinishPressRefs,
-} from "@/utils/wizardChrome";
+import { shouldShowWizardFinish } from "@/utils/wizardChrome";
 import { useColors } from "@/utils/theme";
 
 type ToolbarIcon = SFSymbol | ImageSourcePropType;
@@ -174,13 +170,11 @@ export function CustomHeaderToolbar({
 }
 
 /**
- * Android Finish matches Analyze Skip: Toolbar.View + Pressable + label,
- * toggled with `hidden` so the slot index stays put when Add selects the
- * panel (Link/Rotate/Delete also stay mounted).
- *
- * Do not close over `visible` in onPress — Compose can keep the empty-canvas
- * callback, where `if (visible)` is a no-op. Read refs instead. Do not
- * `disabled={!visible}`.
+ * iOS Finish stays a Toolbar.Button (official happy path already lands
+ * Production). Android Finish is NOT in Stack.Toolbar — Compose Host /
+ * Toolbar.View ate every in-toolbar Pressable we tried (dead node, stale
+ * visible, hidden slot). `AndroidWizardFinishButton` is a real RN control
+ * above the Host.
  */
 function WizardFinishButton({
   onFinish,
@@ -189,47 +183,7 @@ function WizardFinishButton({
   onFinish: () => void;
   visible: boolean;
 }) {
-  const colors = useColors();
-  const visibleRef = useRef(visible);
-  const onFinishRef = useRef(onFinish);
-  useLayoutEffect(() => {
-    syncWizardFinishPressRefs(
-      { visible: visibleRef, onFinish: onFinishRef },
-      visible,
-      onFinish,
-    );
-  }, [visible, onFinish]);
-  const onPress = useCallback(() => {
-    pressWizardFinish({ visible: visibleRef, onFinish: onFinishRef });
-  }, []);
-
-  if (Platform.OS === "android") {
-    return (
-      <Stack.Toolbar.View hidden={!visible}>
-        <Pressable
-          onPress={onPress}
-          accessibilityLabel={visible ? "Finish" : undefined}
-          accessibilityRole={visible ? "button" : undefined}
-          accessible={visible}
-          importantForAccessibility={visible ? "yes" : "no-hide-descendants"}
-          collapsable={false}
-          cancelable={false}
-          style={styles.toolbarFinishHit}
-        >
-          <Text
-            pointerEvents="none"
-            accessible={false}
-            importantForAccessibility="no-hide-descendants"
-            style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}
-          >
-            Finish
-          </Text>
-        </Pressable>
-      </Stack.Toolbar.View>
-    );
-  }
-
-  if (!visible) {
+  if (Platform.OS === "android" || !visible) {
     return null;
   }
 
@@ -237,6 +191,42 @@ function WizardFinishButton({
     <Stack.Toolbar.Button onPress={onFinish}>
       Finish
     </Stack.Toolbar.Button>
+  );
+}
+
+export function AndroidWizardFinishButton({
+  visible,
+  onFinish,
+}: {
+  visible: boolean;
+  onFinish: () => void;
+}) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <Pressable
+      onPress={onFinish}
+      accessibilityLabel="Finish"
+      accessibilityRole="button"
+      accessible
+      collapsable={false}
+      cancelable={false}
+      style={[styles.androidFinishHit, { bottom: insets.bottom + 16 }]}
+    >
+      <Text
+        pointerEvents="none"
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+        style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}
+      >
+        Finish
+      </Text>
+    </Pressable>
   );
 }
 
@@ -337,6 +327,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   toolbarFinishHit: {
+    minWidth: 48,
+    minHeight: 48,
+    paddingHorizontal: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  androidFinishHit: {
+    position: "absolute",
+    right: 24,
+    zIndex: 30,
     minWidth: 48,
     minHeight: 48,
     paddingHorizontal: 12,

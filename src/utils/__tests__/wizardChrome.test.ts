@@ -4,16 +4,12 @@ import { describe, it, expect } from "bun:test";
 import {
   CONFIG_BOTTOM_TOOLBAR_INSET,
   PRODUCTION_PATH,
-  PRODUCTION_ROUTE_NAME,
   configToolbarListInset,
-  dispatchWizardFinish,
   persistWizardCompletedOnProduction,
-  wizardFinishResetState,
-  pressWizardFinish,
-  runWizardFinish,
+  requestWizardFinish,
+  shouldRedirectCustomToProduction,
   shouldRedirectWelcomeToProduction,
   shouldShowWizardFinish,
-  syncWizardFinishPressRefs,
 } from "../wizardChrome";
 
 const indexSrc = readFileSync(
@@ -22,6 +18,14 @@ const indexSrc = readFileSync(
 );
 const editorSrc = readFileSync(
   resolve(import.meta.dir, "../../hooks/useCanvasEditor.ts"),
+  "utf8",
+);
+const androidCustomSrc = readFileSync(
+  resolve(import.meta.dir, "../../components/screens/CustomScreen.android.tsx"),
+  "utf8",
+);
+const iosCustomSrc = readFileSync(
+  resolve(import.meta.dir, "../../components/screens/CustomScreen.ios.tsx"),
   "utf8",
 );
 const chromeSrc = readFileSync(
@@ -84,76 +88,36 @@ describe("shouldRedirectWelcomeToProduction", () => {
   });
 });
 
-describe("pressWizardFinish", () => {
-  it("is a no-op while the empty-canvas ref is false, then fires after Add", () => {
-    const calls: string[] = [];
-    const refs = {
-      visible: { current: false },
-      onFinish: {
-        current: () => {
-          calls.push("finish");
-        },
-      },
-    };
-    const cachedPress = () => {
-      pressWizardFinish(refs);
-    };
-
-    cachedPress();
-    expect(calls).toEqual([]);
-
-    syncWizardFinishPressRefs(refs, true, () => {
-      calls.push("finish");
-    });
-    cachedPress();
-    expect(calls).toEqual(["finish"]);
-  });
-
-  it("does not close over the empty-canvas visible boolean in CustomChrome", () => {
-    const finishBlock =
-      chromeSrc.match(/function WizardFinishButton[\s\S]*?function CustomBottomToolbar/)?.[0] ?? "";
-    expect(finishBlock).toContain("pressWizardFinish");
-    expect(finishBlock).toContain("syncWizardFinishPressRefs");
-    expect(finishBlock).toContain("hidden={!visible}");
-    expect(finishBlock).not.toContain("if (visible)");
-    expect(finishBlock).not.toContain("disabled={!visible}");
-    expect(chromeSrc).toContain("hidden={!selectedId}");
-  });
-});
-
-describe("runWizardFinish", () => {
-  it("opens Production and does not write wizardCompleted", () => {
+describe("requestWizardFinish", () => {
+  it("records the Production href and does not write wizardCompleted", () => {
     const hrefs: string[] = [];
-    runWizardFinish((href) => {
+    requestWizardFinish((href) => {
       hrefs.push(href);
     });
     expect(hrefs).toEqual([PRODUCTION_PATH]);
+    expect(shouldRedirectCustomToProduction(PRODUCTION_PATH)).toBe(true);
+    expect(shouldRedirectCustomToProduction(null)).toBe(false);
+    expect(shouldRedirectCustomToProduction("/custom")).toBe(false);
   });
 
-  it("resets the stack to Production so Custom cannot stay on top", () => {
-    const stacks: ReturnType<typeof wizardFinishResetState>[] = [];
-    dispatchWizardFinish({
-      reset: (state) => {
-        stacks.push(state as ReturnType<typeof wizardFinishResetState>);
-      },
-    });
-    expect(wizardFinishResetState()).toEqual({
-      index: 0,
-      routes: [{ name: PRODUCTION_ROUTE_NAME }],
-    });
-    expect(stacks).toEqual([wizardFinishResetState()]);
-  });
-
-  it("Finish resets to Production and leaves persist to the Production mount", () => {
-    expect(editorSrc).toContain("dispatchWizardFinish");
-    expect(editorSrc).toContain("useNavigation");
+  it("Finish asks Custom to Redirect, not navigate/reset/push", () => {
+    expect(editorSrc).toContain("requestWizardFinish");
+    expect(editorSrc).toContain("setFinishHref");
+    expect(editorSrc).not.toContain("useNavigation");
+    expect(editorSrc).not.toContain("dispatchWizardFinish");
     expect(editorSrc).not.toContain("retryWizardFinishIfNeeded");
     expect(editorSrc).not.toContain("requestAnimationFrame");
-    expect(editorSrc).not.toContain("expoRouter.push");
     expect(editorSrc).not.toMatch(/setTimeout\s*\(/);
     expect(editorSrc).not.toContain("setWizardCompleted");
     expect(editorSrc).not.toContain("router.replace");
     expect(editorSrc).not.toContain("router.push('/production')");
+    expect(androidCustomSrc).toContain("shouldRedirectCustomToProduction");
+    expect(androidCustomSrc).toContain("Redirect");
+    expect(androidCustomSrc).toContain("AndroidWizardFinishButton");
+    expect(iosCustomSrc).toContain("shouldRedirectCustomToProduction");
+    expect(iosCustomSrc).toContain("Redirect");
+    expect(chromeSrc).toContain("AndroidWizardFinishButton");
+    expect(chromeSrc).toContain("androidFinishHit");
     expect(productionHookSrc).toContain("persistWizardCompletedOnProduction");
   });
 

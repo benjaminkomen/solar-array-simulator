@@ -4,7 +4,7 @@
  */
 import { useCallback, useRef, useState } from "react";
 import { useWindowDimensions, type LayoutChangeEvent } from "react-native";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
@@ -15,7 +15,7 @@ import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { buildMockPanelGrid, mapAnalysisToCanvasPositions } from "@/utils/canvasLayout";
 import { resolveCanvasSizeForAdd } from "@/utils/customChrome";
-import { dispatchWizardFinish } from "@/utils/wizardChrome";
+import { requestWizardFinish } from "@/utils/wizardChrome";
 
 // Module-level worklet functions: required by React Compiler
 function setCanvasSize(w: SharedValue<number>, h: SharedValue<number>, width: number, height: number) {
@@ -36,8 +36,8 @@ function animateViewport(
 
 export function useCanvasEditor() {
   const router = useRouter();
-  const navigation = useNavigation();
   const windowSize = useWindowDimensions();
+  const [finishHref, setFinishHref] = useState<string | null>(null);
   const { initialPanels, wizard } = useLocalSearchParams<{ initialPanels?: string; wizard?: string }>();
   const isWizardMode = wizard === 'true';
   const canvasSize = useRef({ width: 0, height: 0 });
@@ -144,11 +144,9 @@ export function useCanvasEditor() {
   const unlinkedCount = panels.length - getLinkedCount();
 
   const handleFinish = useCallback(() => {
-    // Reset first so Custom cannot stay focused with Production underneath.
-    // Haptics after — a focus-stealing notification must not precede reset.
-    dispatchWizardFinish(navigation);
+    requestWizardFinish(setFinishHref);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [navigation]);
+  }, []);
 
   const handleCompassTap = useCallback(() => {
     router.push('/compass-help');
@@ -170,6 +168,7 @@ export function useCanvasEditor() {
   }, [selectedId, router]);
 
   return {
+    finishHref,
     isWizardMode,
     config,
     panels,

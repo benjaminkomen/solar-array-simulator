@@ -15,28 +15,6 @@ export function configToolbarListInset(safeAreaBottom: number): number {
 }
 
 export const PRODUCTION_PATH = "/production";
-export const PRODUCTION_ROUTE_NAME = "production";
-
-export type WizardFinishResetState = {
-  index: number;
-  routes: { name: string }[];
-};
-
-export type WizardFinishNavigation = {
-  reset: (state: never) => void;
-};
-
-export function wizardFinishResetState(): WizardFinishResetState {
-  return {
-    index: 0,
-    routes: [{ name: PRODUCTION_ROUTE_NAME }],
-  };
-}
-
-export type WizardFinishPressRefs = {
-  visible: { current: boolean };
-  onFinish: { current: () => void };
-};
 
 export function shouldShowWizardFinish(
   isWizardMode: boolean,
@@ -57,39 +35,19 @@ export function shouldRedirectWelcomeToProduction(
 }
 
 /**
- * Android Toolbar.View / RNHostView can keep the first Pressable onPress.
- * A closed-over `visible` from the empty canvas stays false, so the first
- * Finish tap after Add is a silent no-op (Custom stays; a later tap works
- * once the native callback is rebound). Always read the current refs.
+ * Finish records the Production href. Custom then renders `<Redirect>`, the
+ * same Expo-owned path Welcome uses. Imperative `router.push` / `navigate` /
+ * `reset` leave the file route at `/custom?wizard=true` on Android (one tap
+ * still shows Layout + FINISH). Do not retry the same tap.
  */
-export function syncWizardFinishPressRefs(
-  refs: WizardFinishPressRefs,
-  visible: boolean,
-  onFinish: () => void,
-): void {
-  refs.visible.current = visible;
-  refs.onFinish.current = onFinish;
-}
-
-export function pressWizardFinish(refs: WizardFinishPressRefs): void {
-  if (refs.visible.current) {
-    refs.onFinish.current();
-  }
-}
-
-/**
- * Finish must make Production the only stack route. `navigate` can leave
- * Custom focused with Production mounted underneath (screenshot after one
- * tap: wizard step 3 + FINISH, no Total Array Output). `router.push` /
- * Redirect.replace go through routingQueue. reset is a sync stack replace.
- * Persist wizardCompleted when Production mounts.
- */
-export function runWizardFinish(openProduction: (href: string) => void): void {
+export function requestWizardFinish(openProduction: (href: string) => void): void {
   openProduction(PRODUCTION_PATH);
 }
 
-export function dispatchWizardFinish(navigation: WizardFinishNavigation): void {
-  navigation.reset(wizardFinishResetState() as never);
+export function shouldRedirectCustomToProduction(
+  finishHref: string | null,
+): finishHref is typeof PRODUCTION_PATH {
+  return finishHref === PRODUCTION_PATH;
 }
 
 export function persistWizardCompletedOnProduction(actions: {
