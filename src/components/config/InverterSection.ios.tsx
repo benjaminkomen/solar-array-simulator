@@ -1,6 +1,8 @@
 /**
- * Universal `@expo/ui` List has no swipe-to-delete. This keeps the real
- * SwiftUI `List.ForEach` `onDelete` gesture instead of dropping delete.
+ * Each inverter is a FieldGroup.Section row so a tap opens edit. Universal
+ * List has no swipe-delete; iOS uses SwipeActions (Android: SwipeToDismissBox).
+ * List.ForEach as a single Section child packed every row into one Form cell
+ * and left the Spacer untappable, so row taps often did nothing.
  */
 import { PlatformColor } from 'react-native';
 import { FieldGroup } from '@expo/ui';
@@ -8,34 +10,46 @@ import {
   Button,
   HStack,
   Image,
-  List,
   Spacer,
+  SwipeActions,
   Text,
   VStack,
 } from '@expo/ui/swift-ui';
-import { buttonStyle, font, foregroundStyle, opacity } from '@expo/ui/swift-ui/modifiers';
+import {
+  buttonStyle,
+  contentShape,
+  font,
+  foregroundStyle,
+  frame,
+  opacity,
+  shapes,
+} from '@expo/ui/swift-ui/modifiers';
 import { inverterRowTestId } from '@/utils/detailsReachability';
 import type { InverterSectionProps } from './types';
 
 export function InverterSection({
   inverters,
   onEdit,
-  onDeleteIndices,
+  onDeleteInverter,
 }: InverterSectionProps) {
   return (
     <FieldGroup.Section title={`Micro-inverters (${inverters.length})`}>
       <FieldGroup.SectionFooter>
         <Text>Tap to edit efficiency. Swipe left to delete.</Text>
       </FieldGroup.SectionFooter>
-      <List.ForEach onDelete={onDeleteIndices}>
-        {inverters.map((inverter) => (
+      {inverters.map((inverter) => (
+        <SwipeActions key={inverter.id}>
           <Button
-            key={inverter.id}
             testID={inverterRowTestId(inverter.id)}
             onPress={() => onEdit(inverter)}
             modifiers={[buttonStyle('plain')]}
           >
-            <HStack>
+            <HStack
+              modifiers={[
+                frame({ maxWidth: Infinity, alignment: 'leading' }),
+                contentShape(shapes.rectangle()),
+              ]}
+            >
               <VStack alignment="leading" spacing={2}>
                 <Text modifiers={[foregroundStyle({ type: 'hierarchical', style: 'primary' })]}>
                   {inverter.serialNumber}
@@ -48,8 +62,16 @@ export function InverterSection({
               <Image systemName="chevron.right" size={14} color={PlatformColor('tertiaryLabel')} />
             </HStack>
           </Button>
-        ))}
-      </List.ForEach>
+          <SwipeActions.Actions edge="trailing">
+            <Button
+              role="destructive"
+              systemImage="trash"
+              label="Delete"
+              onPress={() => onDeleteInverter(inverter)}
+            />
+          </SwipeActions.Actions>
+        </SwipeActions>
+      ))}
     </FieldGroup.Section>
   );
 }

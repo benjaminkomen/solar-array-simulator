@@ -85,6 +85,15 @@ describe("details FieldGroup body", () => {
     expect(detailsFlowSrc).toContain("panelId=seed-panel");
     expect(detailsFlowSrc).not.toContain("tap-add-panel");
     expect(detailsFlowSrc).not.toContain("Add panel");
+    expect(detailsFlowSrc).not.toContain("inverter-details?mode=edit");
+    expect(detailsFlowSrc).toContain("scrollUntilVisible");
+    expect(detailsFlowSrc).toContain("visibilityPercentage: 100");
+    const firstSave = detailsFlowSrc.indexOf('tapOn: "Save"');
+    const afterFirstSave = detailsFlowSrc.slice(firstSave);
+    expect(afterFirstSave).toContain('visible: "Continue"');
+    expect(afterFirstSave.indexOf('visible: "Continue"')).toBeLessThan(
+      afterFirstSave.indexOf('id: "inverter-row-1"'),
+    );
   });
 
   it("does not flip Hermes V1", () => {

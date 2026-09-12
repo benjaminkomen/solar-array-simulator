@@ -30,7 +30,7 @@ Preconditions:
 - **Enter from Welcome.** `smoke` or `run-flow wizard-happy-path`: tap `id: get-started-button`, wait for "Panel Settings". Assert "Configure", "Photo", "Layout", and "Default Production".
 - **Continue.** Tap "Continue". Upload ("Take or Select Photo") is the success state. A LogBox overlay ("Can't perform a React state update on a component that hasn't mounted yet") is a product failure. Do not remount a Jetpack `Host` on Upload first paint.
 - **Add inverter.** Tap toolbar control with accessibilityLabel "Add inverter" (iOS SF `plus` may also appear as `add`). Sheet title is "New Micro-inverter".
-- **Edit inverter.** `run-flow details-sheets` after Welcome: tap `id: inverter-row-1` (seeded id `1`; serial text is random). Sheet title is "Edit Micro-inverter". Assert "Serial Number" / "Efficiency", Save, reopen — values still show. Do not go through Custom Add.
+- **Edit inverter.** `run-flow details-sheets` after Welcome: the list inset must put the last visible inverter fully above Continue (a real thumb tap, not a swipe-to-uncover). Then tap `id: inverter-row-1` (seeded id `1`; serial text is random). A Maestro `scrollUntilVisible` is OK only after that inset. The **row tap** must open the sheet (Serial Number, Efficiency, Edit Micro-inverter). Do not paper this with `openLink`. After Save, wait for **Continue** (centering the row scrolls Panel Settings off-screen), then tap the same row again — the sheet reopens with the same fields. Do not go through Custom Add.
 - **Edit from Production.** `run-flow production-menu` opens the menu, taps "Edit Configuration", asserts "Panel Settings" and "Default Production".
 - **Proof.** Visible "Panel Settings" / "Default Production" after the entry you claim.
 
@@ -42,6 +42,6 @@ Preconditions:
 - SwiftUI section headers may be invisible to Maestro — assert "Default Production", not the header node.
 - Location search hits the network. An empty result list is not a product bug if the query is garbage or the geocoder is down; say so.
 - Seeded config ships **14** inverters. Do not assume an empty list on first launch.
-- Continue is **wizard-only**. Edit-from-Production still uses `wizard=true`, so Continue is present; that is how `wizard-resume-to-production.yaml` works.
+- Continue is **wizard-only**. Edit-from-Production still uses `wizard=true`, so Continue is present; that is how `wizard-resume-to-production.yaml` works. Config reserves `configToolbarListInset` (96 + safe-area bottom) above the bottom toolbar so the last inverter row is not under Continue.
 - Roof chips are `@expo/ui/community/segmented-control` (SwiftUI segmented / Material `SingleChoiceSegmentedButtonRow`). Android Config wraps that drop-in in `RNHostView` (`RoofTypePicker.android.tsx`) — not a raw nested Host, not a Compose-only fork, not universal `Picker appearance="segmented"`. Pixel proof is Gable / Hip / Flat / Shed on one row and horizontal FieldGroup titles — a11y strings alone are not enough.
-- Inverter swipe-delete is platform-only (`InverterSection.ios.tsx` / `.android.tsx`).
+- Inverter swipe-delete is platform-only: iOS `SwipeActions` and Android `SwipeToDismissBox` (`InverterSection.ios.tsx` / `.android.tsx`). Do not wrap iOS rows in `List.ForEach` inside the Section — that packs every row into one Form cell and misses taps on the Spacer.

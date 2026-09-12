@@ -8,6 +8,7 @@ import * as Haptics from "expo-haptics";
 import { useConfigStore } from '@/hooks/useConfigStore';
 import type { InverterConfig, RoofType } from '@/utils/configStore';
 import { searchCity, type GeocodingResult } from "@/utils/geocoding";
+import { inverterEditPath } from "@/utils/detailsReachability";
 
 export const ROOF_TYPES: { value: RoofType; label: string }[] = [
   { value: 'gable', label: 'Gable' },
@@ -55,7 +56,9 @@ export function useConfigForm() {
   };
 
   const handleOpenEditSheet = (inverter: InverterConfig) => {
-    router.push(`/inverter-details?mode=edit&inverterId=${inverter.id}`);
+    // navigate (not push) so a tap after Save re-presents the same sheet
+    // if the formSheet dismiss is still on the stack.
+    router.navigate(inverterEditPath(inverter.id));
   };
 
   const handleContinue = useCallback(() => {

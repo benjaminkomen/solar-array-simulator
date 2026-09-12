@@ -226,6 +226,11 @@ describe("verify-solar-array CLI", () => {
     expect(details).toContain("inverter-row-1");
     expect(details).toContain("panelId=seed-panel");
     expect(details).not.toContain("tap-add-panel");
+    expect(details).not.toContain("inverter-details?mode=edit");
+    expect(details).toContain("scrollUntilVisible");
+    expect(details).toContain("visibilityPercentage: 100");
+    const firstSave = details.indexOf('tapOn: "Save"');
+    expect(details.slice(firstSave)).toContain('visible: "Continue"');
   });
 
   it("features lists the Feature Map", () => {

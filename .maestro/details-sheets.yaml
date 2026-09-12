@@ -14,23 +14,35 @@ appId: com.bkomen.solararraysimulator
     visible: "Panel Settings"
     timeout: 10000
 
-# Config seeded inverter id=1 (serial text is random)
+# Config seeded inverter id=1 (serial text is random).
+# Product row tap must open the sheet — no openLink paper-over.
+# Scroll only after the list inset has cleared the row of the Continue FAB.
+- scrollUntilVisible:
+    element:
+      id: "inverter-row-1"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 100
+    centerElement: true
 - tapOn:
     id: "inverter-row-1"
-- runFlow:
-    when:
-      notVisible: "Serial Number"
-    commands:
-      - openLink: solararraysimulator://inverter-details?mode=edit&inverterId=1
 - extendedWaitUntil:
     visible: "Serial Number"
     timeout: 10000
 - assertVisible: "Edit Micro-inverter"
 - assertVisible: "Efficiency"
 - tapOn: "Save"
+# centerElement scrolls Panel Settings off-screen; Continue stays on the toolbar.
 - extendedWaitUntil:
-    visible: "Panel Settings"
+    visible: "Continue"
     timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: "inverter-row-1"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 100
+    centerElement: true
 - tapOn:
     id: "inverter-row-1"
 - extendedWaitUntil:
@@ -39,7 +51,7 @@ appId: com.bkomen.solararraysimulator
 - assertVisible: "Efficiency"
 - tapOn: "Save"
 - extendedWaitUntil:
-    visible: "Panel Settings"
+    visible: "Continue"
     timeout: 10000
 
 # Seeded panel — no Add, no canvas select
