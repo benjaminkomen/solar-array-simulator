@@ -6,18 +6,39 @@ appId: com.bkomen.solararraysimulator
 # Tapping the row flips it off. Tools button is a toggle — tap it once per
 # open menu, then dismiss so a later hide call cannot flip it back on.
 #
-# After launch-fresh the FAB label "Tools" is still the Icon
-# contentDescription even after the caption hides (10s). Opening the menu
-# and immediately looking for "Tools button" races the sheet: the row is
-# often not in the tree yet, hide no-ops, FAB stays. Wait for the row.
+# Tools button sits below Fast Refresh (below the fold). Waiting alone
+# misses it. Scroll the sheet, then tap. Icon contentDescription stays
+# "Tools" after the FAB caption hides (10s).
 
 - runFlow:
     when:
-      visible: "Tools button"
+      visible: "Tools"
+      notVisible: "Reload"
     commands:
-      - tapOn: "Tools button"
+      - tapOn: "Tools"
       - waitForAnimationToEnd:
           timeout: 5000
+
+- runFlow:
+    when:
+      visible: "Reload"
+    commands:
+      - swipe:
+          direction: UP
+          duration: 400
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - extendedWaitUntil:
+          visible: "Tools button"
+          timeout: 10000
+          optional: true
+      - runFlow:
+          when:
+            visible: "Tools button"
+          commands:
+            - tapOn: "Tools button"
+            - waitForAnimationToEnd:
+                timeout: 5000
       - runFlow:
           when:
             visible: "Close"
@@ -36,41 +57,3 @@ appId: com.bkomen.solararraysimulator
           commands:
             - tapOn:
                 point: "50%,15%"
-
-- runFlow:
-    when:
-      visible: "Tools"
-      notVisible: "Tools button"
-    commands:
-      - tapOn: "Tools"
-      - waitForAnimationToEnd:
-          timeout: 5000
-      - extendedWaitUntil:
-          visible: "Tools button"
-          timeout: 10000
-          optional: true
-      - runFlow:
-          when:
-            visible: "Tools button"
-          commands:
-            - tapOn: "Tools button"
-            - waitForAnimationToEnd:
-                timeout: 5000
-            - runFlow:
-                when:
-                  visible: "Close"
-                commands:
-                  - tapOn: "Close"
-            - runFlow:
-                when:
-                  visible: "Go home"
-                commands:
-                  - tapOn:
-                      point: "50%,15%"
-            - runFlow:
-                when:
-                  visible: "Reload"
-                  notVisible: "Continue"
-                commands:
-                  - tapOn:
-                      point: "50%,15%"

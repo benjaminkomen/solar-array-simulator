@@ -103,6 +103,7 @@ describe("Custom chrome tree", () => {
     expect(finishBlock).toContain("toolbarFinishHit");
     expect(finishBlock).toContain("<Pressable");
     expect(finishBlock).toMatch(/<Pressable[\s\S]*Finish[\s\S]*<\/Pressable>/);
+    expect(finishBlock).not.toContain("disabled={!visible}");
     expect(finishBlock).not.toContain("AndroidToolbarHitOverlay");
     expect(chromeSrc).toContain("visible={showFinish}");
     expect(chromeSrc).not.toContain("shouldShowWizardFinish(isWizardMode, panelCount) &&");

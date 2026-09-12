@@ -169,14 +169,10 @@ export function CustomHeaderToolbar({
  * Android Finish must match Upload/Analyze Skip: Pressable wraps the label
  * and the Toolbar.View is mounted for the whole Custom visit.
  *
- * A newly mounted overlay-on-text (Add's pattern) is wrong here. Maestro
- * tapOn: "Finish" prefers the visible uppercase Text. That Text's parent
- * was a plain View, so the first tap after Add hit a dead node. Skip works
- * on the first tap because the Pressable is the clickable parent and has
- * been laid out since the screen mounted. Keep the slot reserved (no
- * "Finish" text/a11y) so assertNotVisible: Finish still passes on empty
- * canvas, then reveal the same Pressable after Add — no enter animation,
- * no 0×0 Host.
+ * Keep the slot reserved (no "Finish" text/a11y) so assertNotVisible:
+ * Finish still passes on an empty canvas, then reveal the same Pressable
+ * after Add. Do not `disabled={!visible}` — Android can swallow the first
+ * press after enable. Navigation is `dispatchWizardFinish`, not router.push.
  */
 function WizardFinishButton({
   onFinish,
@@ -191,8 +187,11 @@ function WizardFinishButton({
     return (
       <Stack.Toolbar.View>
         <Pressable
-          onPress={onFinish}
-          disabled={!visible}
+          onPress={() => {
+            if (visible) {
+              onFinish();
+            }
+          }}
           accessibilityLabel={visible ? "Finish" : undefined}
           accessibilityRole={visible ? "button" : undefined}
           accessible={visible}

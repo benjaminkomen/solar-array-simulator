@@ -14,6 +14,31 @@ export function configToolbarListInset(safeAreaBottom: number): number {
 }
 
 export const PRODUCTION_PATH = "/production";
+export const PRODUCTION_ROUTE_NAME = "production";
+
+export type WizardFinishNavigation = {
+  navigate: (name: string) => void;
+  getState?: () =>
+    | {
+        index?: number;
+        routes?: { name: string }[];
+      }
+    | undefined;
+};
+
+export function focusedRouteName(
+  navigation: Pick<WizardFinishNavigation, "getState">,
+): string | undefined {
+  const state = navigation.getState?.();
+  if (!state?.routes?.length) {
+    return undefined;
+  }
+  return state.routes[state.index ?? state.routes.length - 1]?.name;
+}
+
+export function isWizardProductionRoute(routeName: string | undefined): boolean {
+  return routeName === PRODUCTION_ROUTE_NAME;
+}
 
 export function shouldShowWizardFinish(
   isWizardMode: boolean,
@@ -35,12 +60,26 @@ export function shouldRedirectWelcomeToProduction(
 }
 
 /**
- * Finish only opens Production. Persist wizardCompleted when Production
- * mounts (`persistWizardCompletedOnProduction`) so a sync store notify cannot
- * re-render Custom/Welcome in the same turn as the first navigation.
+ * Finish opens Production on the focused navigator. Do not use
+ * expo-router `router.push` here: that enqueues a ROUTER_LINK and
+ * `useImperativeApiEmitter` flushes it in a `useEffect`. After Add,
+ * Android can flush that queue with a null container ref (or a
+ * same-snapshot `useSyncExternalStore` miss) and drop the first action.
+ * A later Finish tap then works. `navigation.navigate` dispatches now.
+ * Persist wizardCompleted when Production mounts.
  */
 export function runWizardFinish(openProduction: (href: string) => void): void {
   openProduction(PRODUCTION_PATH);
+}
+
+export function dispatchWizardFinish(navigation: WizardFinishNavigation): void {
+  navigation.navigate(PRODUCTION_ROUTE_NAME);
+}
+
+export function retryWizardFinishIfNeeded(navigation: WizardFinishNavigation): void {
+  if (!isWizardProductionRoute(focusedRouteName(navigation))) {
+    dispatchWizardFinish(navigation);
+  }
 }
 
 export function persistWizardCompletedOnProduction(actions: {

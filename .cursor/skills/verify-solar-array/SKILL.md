@@ -76,7 +76,7 @@ Match the change to a feature file, then run the matching Maestro flow. One scre
 4. **Analyze header is `Select AI Model` on both platforms.** `wait-analyze-header.yaml` no longer branches. Do not wait for `SELECT AI MODEL`.
 5. **Android Analyze empty-state Continue.** `analyze-skip` on Android taps `id: analyze-empty-state-button` instead of the system Photos picker.
 6. **Android Skip / Analyze Pressable.** Upload and Analyze Skip on Android are RN `Pressable`, not SwiftUI Button.
-7. **Android launch.** Wait for Dev Client Home, deep-link `http://10.0.2.2:8081`, dismiss Dev Menu, open the Tools FAB if needed, wait for **Tools button**, tap it once. Expo Go / `exp://` / `launchApp` alone is not enough. Comments in `launch-android.yaml` say SDK 57.
+7. **Android launch.** Wait for Dev Client Home, deep-link `http://10.0.2.2:8081`, dismiss Dev Menu, open the Tools FAB if needed, swipe the sheet up, tap **Tools button** once. Expo Go / `exp://` / `launchApp` alone is not enough. Comments in `launch-android.yaml` say SDK 57.
 8. **Compass help is iOS-only as a sheet.** Android compass opens a modal that Maestro cannot assert the same way.
 9. **Do not "fix" the map to hide a product bug.** If Android ≠ iOS, leave it as a product issue and document it.
 10. **Leftover platform chrome is in `src/components/screens/` (#56).** `config.web.tsx` stays in `src/app/`. Do not recreate `src/app/*.ios.tsx` / `*.android.tsx` for already-universal screens.

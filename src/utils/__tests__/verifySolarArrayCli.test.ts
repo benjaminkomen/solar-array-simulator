@@ -161,6 +161,8 @@ describe("verify-solar-array CLI", () => {
     expect(hideToolsYaml).toContain('visible: "Tools button"');
     expect(hideToolsYaml).toContain("extendedWaitUntil:");
     expect(hideToolsYaml).toContain('tapOn: "Tools"');
+    expect(hideToolsYaml).toContain("swipe:");
+    expect(hideToolsYaml).toContain("direction: UP");
     expect(android).not.toMatch(/extendedWaitUntil:[\s\S]*visible: \"Continue\"[\s\S]*timeout: 90000/);
     expect(android.indexOf("Go home")).toBeLessThan(android.lastIndexOf("Continue"));
   });

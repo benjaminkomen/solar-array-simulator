@@ -3,8 +3,8 @@
  * Manages panel CRUD, viewport animation, compass, and analysis initialization.
  */
 import { useCallback, useRef, useState } from "react";
-import { useWindowDimensions, type LayoutChangeEvent } from "react-native";
-import { router as expoRouter, useLocalSearchParams, useRouter } from "expo-router";
+import { Platform, useWindowDimensions, type LayoutChangeEvent } from "react-native";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
@@ -15,7 +15,7 @@ import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { buildMockPanelGrid, mapAnalysisToCanvasPositions } from "@/utils/canvasLayout";
 import { resolveCanvasSizeForAdd } from "@/utils/customChrome";
-import { runWizardFinish } from "@/utils/wizardChrome";
+import { dispatchWizardFinish, retryWizardFinishIfNeeded } from "@/utils/wizardChrome";
 
 // Module-level worklet functions: required by React Compiler
 function setCanvasSize(w: SharedValue<number>, h: SharedValue<number>, width: number, height: number) {
@@ -36,6 +36,7 @@ function animateViewport(
 
 export function useCanvasEditor() {
   const router = useRouter();
+  const navigation = useNavigation();
   const windowSize = useWindowDimensions();
   const { initialPanels, wizard } = useLocalSearchParams<{ initialPanels?: string; wizard?: string }>();
   const isWizardMode = wizard === 'true';
@@ -144,17 +145,16 @@ export function useCanvasEditor() {
 
   const handleFinish = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // Push only, and not in the same turn as the toolbar press. Writing
-    // wizardCompleted here re-renders Custom/Welcome; a sync push during
-    // the Android Host press is also dropped (routingQueue run with a
-    // null ref). A later Finish tap then works. Use the imperative router
-    // after the press returns.
-    runWizardFinish((href) => {
-      setTimeout(() => {
-        expoRouter.push(href);
-      }, 0);
-    });
-  }, []);
+    // Dispatch on the focused stack. Imperative router.push is queued and
+    // Android drops that first action after Add (Mac #71 @ 64fe44a:
+    // Pressable fired, Custom stayed, second tap worked).
+    dispatchWizardFinish(navigation);
+    if (Platform.OS === "android") {
+      requestAnimationFrame(() => {
+        retryWizardFinishIfNeeded(navigation);
+      });
+    }
+  }, [navigation]);
 
   const handleCompassTap = useCallback(() => {
     router.push('/compass-help');
