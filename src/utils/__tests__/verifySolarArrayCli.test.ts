@@ -22,9 +22,15 @@ function run(args: string[]) {
 }
 
 describe("verify-solar-array CLI", () => {
-  it("route-source hook prefers remaining platform pairs and falls back after collapse", () => {
+  it("route-source hook prefers leftover Custom mounts and falls back after collapse", () => {
+    const custom = readAppRouteSource(repoRoot, "custom", "android");
+    expect(custom.file.endsWith("custom.android.tsx")).toBe(true);
     const upload = readAppRouteSource(repoRoot, "upload", "android");
-    expect(upload.file.endsWith("upload.android.tsx")).toBe(true);
+    expect(upload.file.endsWith("upload.tsx")).toBe(true);
+    const analyze = readAppRouteSource(repoRoot, "analyze", "ios");
+    expect(analyze.file.endsWith("analyze.tsx")).toBe(true);
+    const simulation = readAppRouteSource(repoRoot, "simulation", "ios");
+    expect(simulation.file.endsWith("simulation.tsx")).toBe(true);
     const production = readAppRouteSource(repoRoot, "production", "android");
     expect(production.file.endsWith("production.tsx")).toBe(true);
     expect(production.src).toContain("Toolbar.Menu");
@@ -40,9 +46,11 @@ describe("verify-solar-array CLI", () => {
     const payload = JSON.parse(result.stdout);
     const ids = payload.flows.map((f: { id: string }) => f.id);
     expect(ids).toContain("full-app-tour");
+    expect(ids).toContain("details-sheets");
     expect(ids).toContain("wizard-happy-path");
     expect(ids).toContain("production-menu");
     expect(ids).toContain("simulation-nav");
+    expect(ids).toContain("analyze-skip");
   });
 
   it("prints a command surface on --help", () => {
@@ -66,6 +74,7 @@ describe("verify-solar-array CLI", () => {
     expect(report.featureMap.count).toBeGreaterThanOrEqual(8);
     expect(report.flows.names).toContain("smoke-test");
     expect(report.flows.names).toContain("full-app-tour");
+    expect(report.flows.names).toContain("details-sheets");
     expect(report.featureMap.features).toEqual([
       "analyze",
       "compass-help",
@@ -265,8 +274,13 @@ describe("verify-solar-array CLI", () => {
     expect(readme).toContain("MAESTRO_DRIVER_STARTUP_TIMEOUT=180000");
     expect(readme).toContain("full-app-tour");
     expect(readme).toContain("Already universal");
-    expect(readme).toContain("Remaining platform stubs");
-    expect(readme).toContain("Hold #56");
+    expect(readme).toContain("Leftovers that still exist");
+    expect(readme).not.toContain("Remaining platform stubs");
+    expect(readme).toContain("hold #56");
+    expect(readme).toContain("src/app/upload.tsx");
+    expect(readme).toContain("src/app/analyze.tsx");
+    expect(readme).toContain("src/app/simulation.tsx");
+    expect(readme).toContain("details-sheets");
 
     expect(production).toContain("src/app/production.tsx");
     expect(production).toContain("no `production.ios.tsx`");
@@ -282,20 +296,30 @@ describe("verify-solar-array CLI", () => {
     expect(config).not.toContain("product UI is `src/app/config.ios.tsx`");
     expect(compass).toContain("src/app/compass-help.tsx");
     expect(compass).toContain("old `compass-help.ios.tsx`");
-    expect(upload).toContain("upload.ios.tsx");
-    expect(upload).toContain("Do not paper this as already collapsed");
+    expect(upload).toContain("src/app/upload.tsx");
+    expect(upload).toContain("Do not paper this as still-split");
+    expect(upload).toContain("analyze-empty-state-button");
     expect(custom).toContain("shouldShowWizardFinish");
     expect(custom).toContain('Assert "Finish" is **not** visible');
-    expect(analyze).toContain("SELECT AI MODEL");
+    expect(custom).toContain("CustomChrome");
+    expect(custom).toContain("custom.ios.tsx");
+    expect(custom).toContain("hold #56");
+    expect(analyze).toContain("Select AI Model");
+    expect(analyze).toContain("Do not wait for `SELECT AI MODEL`");
+    expect(analyze).toContain("analyze-empty-state-button");
     expect(analyze).toContain("verified-unreachable");
     expect(simulation).toContain("sim-3d-proof");
     expect(simulation).toContain("Do not wait on `webgpu-scene-painted`");
+    expect(simulation).toContain("SeasonPicker");
+    expect(simulation).toContain("panelsForSimulationScene");
     expect(welcome).toContain("Tools button");
     expect(welcome).toContain("10.0.2.2:8081");
     expect(skill).toContain("MAESTRO_DRIVER_STARTUP_TIMEOUT=180000");
     expect(skill).toContain("Generac-only");
     expect(skill).toContain("emulator-5554");
-    expect(skill).toContain("Do not invent a video");
+    expect(skill).toContain("Do not invent a full-app video");
+    expect(skill).toContain("details-sheets");
+    expect(skill).toContain("Select AI Model");
   });
 
   it("full-app-tour encodes the honesty facts and is a top-level flow", () => {

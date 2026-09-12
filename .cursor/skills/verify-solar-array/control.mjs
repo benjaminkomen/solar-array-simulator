@@ -243,7 +243,7 @@ export function resolveFlow(name) {
         : candidate;
       if (rel.includes(".maestro/shared/")) {
         throw usageError(
-          `${rel} is a shared subflow, not a top-level drive. Use smoke-test, wizard-happy-path, analyze-skip, production-menu, simulation-nav, or full-app-tour.`,
+          `${rel} is a shared subflow, not a top-level drive. Use smoke-test, wizard-happy-path, analyze-skip, production-menu, simulation-nav, details-sheets, or full-app-tour.`,
         );
       }
       return { id: basename(candidate).replace(/\.ya?ml$/, ""), path: candidate, rel };
@@ -482,6 +482,7 @@ Examples:
   ${CLI} features
   ${CLI} run-flow wizard-happy-path --platform=ios
   ${CLI} run-flow simulation-nav --platform=android --json
+  ${CLI} run-flow details-sheets --platform=ios
   ${CLI} run-flow full-app-tour --platform=ios
   ${CLI} smoke --backend=eas          # must print "not wired yet"
 `.trim();
@@ -523,7 +524,7 @@ run-flow — run one top-level .maestro/*.yaml
 
   ${CLI} run-flow <name> [--backend=maestro] [--platform=ios|android] [--json]
 
-Names: smoke-test, wizard-happy-path, analyze-skip, production-menu, simulation-nav, full-app-tour
+Names: smoke-test, wizard-happy-path, analyze-skip, production-menu, simulation-nav, details-sheets, full-app-tour
 Also accepts a path (.maestro/wizard-happy-path.yaml). Rejects shared/ subflows.
 `.trim(),
     screenshot: `

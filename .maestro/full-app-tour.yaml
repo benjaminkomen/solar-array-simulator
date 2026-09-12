@@ -11,9 +11,9 @@ appId: com.bkomen.solararraysimulator
 # - Finish is NOT visible before the first panel (shouldShowWizardFinish).
 # - Production overflow: iOS "More options", Android "Configuration options".
 # - production-menu must not show Reload / Go home.
-# - sim-3d-proof is Simulation chrome (panel+sun or black canvas with chrome),
-#   not the launcher. GPU loads late; short settle only.
-# - Android Add panel can miss (#54) — this flow uses the same tap helper.
+# - sim-3d-proof is panel + sun (seeded if the array is empty), not chrome-only
+#   and not the launcher. GPU loads late; short settle only.
+# - Android Add works after #62 — same add-panel helper as wizard-happy-path.
 
 - runFlow: shared/launch-fresh.yaml
 
