@@ -1,3 +1,4 @@
+import { SEED_PANEL_ID } from "./detailsReachability";
 import Storage from "./storage";
 
 export interface StoredPanel {
@@ -78,6 +79,26 @@ export function savePanels(panels: StoredPanel[]) {
 
 export function addPanel(panel: StoredPanel) {
   updateData({ ...currentData, panels: [...currentData.panels, panel] });
+}
+
+/**
+ * Guarantee a known panel for `/panel-details?panelId=seed-panel`.
+ * Does not run on a normal empty Custom canvas (wizard Finish stays hidden).
+ */
+export function ensureSeedPanel(): StoredPanel {
+  const existing = currentData.panels.find((panel) => panel.id === SEED_PANEL_ID);
+  if (existing) {
+    return existing;
+  }
+  const panel: StoredPanel = {
+    id: SEED_PANEL_ID,
+    x: 60,
+    y: 60,
+    rotation: 0,
+    inverterId: null,
+  };
+  addPanel(panel);
+  return panel;
 }
 
 export function removePanel(id: string) {

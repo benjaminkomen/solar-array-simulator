@@ -5,6 +5,7 @@
  * platform swipe gestures.
  */
 import { FieldGroup, ListItem, Text } from '@expo/ui';
+import { inverterRowTestId } from '@/utils/detailsReachability';
 import type { InverterSectionProps } from './types';
 
 export function InverterSection({
@@ -20,6 +21,7 @@ export function InverterSection({
       {inverters.map((inverter) => (
         <ListItem
           key={inverter.id}
+          testID={inverterRowTestId(inverter.id)}
           onPress={() => onEdit(inverter)}
           supportingText={`${Math.round(inverter.efficiency)}% efficiency`}
           trailing={

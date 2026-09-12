@@ -150,6 +150,10 @@ describe("verify-solar-array CLI", () => {
     expect(wizard.indexOf('assertNotVisible: "Finish"')).toBeLessThan(wizard.indexOf("tap-add-panel"));
     expect(happy).toContain('assertNotVisible: "Finish"');
     expect(happy.indexOf('assertNotVisible: "Finish"')).toBeLessThan(happy.indexOf("tap-add-panel"));
+    const details = readFileSync(join(repoRoot, ".maestro/details-sheets.yaml"), "utf8");
+    expect(details).toContain("inverter-row-1");
+    expect(details).toContain("panelId=seed-panel");
+    expect(details).not.toContain("tap-add-panel");
   });
 
   it("features lists the Feature Map", () => {

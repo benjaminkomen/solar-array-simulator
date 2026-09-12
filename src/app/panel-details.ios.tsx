@@ -1,30 +1,13 @@
-import {PlatformColor, StyleSheet, View} from 'react-native';
-import {Link, Stack} from 'expo-router';
-import {
-  Button,
-  Form,
-  Host,
-  HStack,
-  Image,
-  LabeledContent,
-  List,
-  Section,
-  Spacer,
-  Text,
-  VStack,
-} from '@expo/ui/swift-ui';
-import {
-  bold,
-  buttonStyle,
-  font,
-  foregroundStyle,
-  opacity,
-} from '@expo/ui/swift-ui/modifiers';
-import { usePanelDetails } from '@/hooks/usePanelDetails';
+import { StyleSheet, View } from "react-native";
+import { Stack, useRouter } from "expo-router";
+import { Host } from "@expo/ui/swift-ui";
+import { PanelDetailsForm } from "@/components/PanelDetailsForm";
+import { usePanelDetails } from "@/hooks/usePanelDetails";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
 
 export default function PanelDetailsScreen() {
   useMarkInteractive();
+  const router = useRouter();
   const {
     isViewMode,
     currentInverter,
@@ -42,74 +25,14 @@ export default function PanelDetailsScreen() {
       />
       <View style={styles.container}>
         <Host style={styles.host}>
-          <Form>
-          {currentInverter ? (
-            <Section
-              header={<Text>Linked Inverter</Text>}
-            >
-              <LabeledContent label="Serial Number">
-                <Text>{currentInverter.serialNumber}</Text>
-              </LabeledContent>
-              <LabeledContent label="Efficiency">
-                <Text>{Math.round(currentInverter.efficiency)}%</Text>
-              </LabeledContent>
-              {!isViewMode && (
-                <Button onPress={handleUnlink} modifiers={[buttonStyle('plain')]}>
-                  <HStack spacing={8}>
-                    <Image systemName="link.badge.plus" size={20} color={PlatformColor("systemRed")} />
-                    <Text modifiers={[foregroundStyle({type: 'color', color: PlatformColor("systemRed")}), bold()]}>
-                      Unlink Inverter
-                    </Text>
-                  </HStack>
-                </Button>
-              )}
-            </Section>
-          ) : !isViewMode && availableInverters.length > 0 ? (
-            <Section
-              header={<Text>Available Inverters</Text>}
-              footer={<Text>Select a micro-inverter to link to this panel.</Text>}
-            >
-              <List.ForEach>
-                {availableInverters.map((inv) => (
-                  <Button key={inv.id} onPress={() => handleLink(inv.id)} modifiers={[buttonStyle('plain')]}>
-                    <HStack>
-                      <VStack alignment="leading" spacing={2}>
-                        <Text modifiers={[foregroundStyle({type: 'hierarchical', style: 'primary'})]}>
-                          {inv.serialNumber}
-                        </Text>
-                        <Text modifiers={[opacity(0.6), font({size: 14})]}>
-                          {Math.round(inv.efficiency)}% efficiency
-                        </Text>
-                      </VStack>
-                      <Spacer />
-                      <Image systemName="chevron.right" size={14} color={PlatformColor("tertiaryLabel")} />
-                    </HStack>
-                  </Button>
-                ))}
-              </List.ForEach>
-            </Section>
-          ) : !isViewMode ? (
-            <Section>
-              <VStack spacing={16}>
-                <Image systemName="exclamationmark.triangle" size={56} color={PlatformColor("secondaryLabel")} />
-                <Text modifiers={[bold(), font({size: 20})]}>No Available Inverters</Text>
-                <Text modifiers={[opacity(0.6), font({size: 15})]}>
-                  All inverters are assigned. Unlink a panel first or add a new inverter.
-                </Text>
-                <Link href="/config" asChild>
-                  <Button>
-                    <HStack>
-                      <Image systemName="plus.circle" size={22} color={PlatformColor("systemBlue")} />
-                      <Text modifiers={[foregroundStyle({type: 'color', color: PlatformColor("systemBlue")}), bold()]}>
-                        Add Inverter
-                      </Text>
-                    </HStack>
-                  </Button>
-                </Link>
-              </VStack>
-            </Section>
-          ) : null}
-          </Form>
+          <PanelDetailsForm
+            isViewMode={isViewMode}
+            currentInverter={currentInverter}
+            availableInverters={availableInverters}
+            onLink={handleLink}
+            onUnlink={handleUnlink}
+            onAddInverter={() => router.push("/config")}
+          />
         </Host>
       </View>
     </>
