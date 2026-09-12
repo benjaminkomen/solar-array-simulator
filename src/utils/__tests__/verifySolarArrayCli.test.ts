@@ -329,7 +329,10 @@ describe("verify-solar-array CLI", () => {
     expect(simulation).not.toContain("SeasonPicker.ios.tsx");
     expect(config).toContain("community/segmented-control");
     expect(config).toContain("RoofTypePicker.android.tsx");
-    expect(config).toContain("RNHostView");
+    expect(config).toContain("SingleChoiceSegmentedButtonRow");
+    expect(config).toContain("fillMaxWidth");
+    expect(config).toContain("FieldCastException");
+    expect(config).not.toMatch(/embeds that drop-in through `RNHostView`/);
     expect(config).not.toContain("RoofTypePicker.ios.tsx");
     expect(simulation).toContain("panelsForSimulationScene");
     expect(welcome).toContain("Tools button");

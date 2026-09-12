@@ -17,8 +17,9 @@ export type SegmentedChipsProps<T extends string> = {
 /**
  * Shared chips over `@expo/ui/community/segmented-control`.
  * Official drop-in usage is an RN-tree child (the control wraps its own Host).
- * Inside Config FieldGroup on Android, mount this through `RNHostView` so the
- * nested Host fills a finite parent instead of collapsing LazyColumn width.
+ * Do not mount this inside Android Config FieldGroup — that Host/RNHostView
+ * path crashes Compose when width is the string "100%". Android Config uses
+ * Compose `SingleChoiceSegmentedButtonRow` instead (`RoofTypePicker.android.tsx`).
  */
 export function SegmentedChips<T extends string>({
   options,
