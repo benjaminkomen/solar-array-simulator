@@ -50,6 +50,18 @@ export function shouldRedirectCustomToProduction(
   return finishHref === PRODUCTION_PATH;
 }
 
+/** Expo `RouterToolbarHost` Compose band on Android (`height(64)`). */
+export const ANDROID_BOTTOM_TOOLBAR_HEIGHT = 64;
+
+/**
+ * Sit the Android Finish Pressable just above that native Host.
+ * Compose Hosts swallow every hit in their 64dp band, so an overlapping
+ * label is a dead target even when it looks like the toolbar Finish.
+ */
+export function androidWizardFinishBottom(safeAreaBottom: number): number {
+  return Math.max(0, safeAreaBottom) + ANDROID_BOTTOM_TOOLBAR_HEIGHT + 12;
+}
+
 export function persistWizardCompletedOnProduction(actions: {
   getWizardCompleted: () => boolean;
   setWizardCompleted: (completed: boolean) => void;

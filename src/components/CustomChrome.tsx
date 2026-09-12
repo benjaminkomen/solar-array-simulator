@@ -13,7 +13,7 @@ import {
   CUSTOM_ADD_PANEL_A11Y,
   CUSTOM_HEADER_LINK_A11Y,
 } from "@/utils/customChrome";
-import { shouldShowWizardFinish } from "@/utils/wizardChrome";
+import { androidWizardFinishBottom, shouldShowWizardFinish } from "@/utils/wizardChrome";
 import { useColors } from "@/utils/theme";
 
 type ToolbarIcon = SFSymbol | ImageSourcePropType;
@@ -171,10 +171,9 @@ export function CustomHeaderToolbar({
 
 /**
  * iOS Finish stays a Toolbar.Button (official happy path already lands
- * Production). Android Finish is NOT in Stack.Toolbar — Compose Host /
- * Toolbar.View ate every in-toolbar Pressable we tried (dead node, stale
- * visible, hidden slot). `AndroidWizardFinishButton` is a real RN control
- * above the Host.
+ * Production). Android must not mount this child at all — a `null`
+ * toolbar slot can still leave a leftover FINISH a11y node that Maestro
+ * hits instead of `AndroidWizardFinishButton` (#80).
  */
 function WizardFinishButton({
   onFinish,
@@ -216,7 +215,7 @@ export function AndroidWizardFinishButton({
       accessible
       collapsable={false}
       cancelable={false}
-      style={[styles.androidFinishHit, { bottom: insets.bottom + 16 }]}
+      style={[styles.androidFinishHit, { bottom: androidWizardFinishBottom(insets.bottom) }]}
     >
       <Text
         pointerEvents="none"
@@ -300,7 +299,9 @@ export function CustomBottomToolbar({
           </>
         )
       )}
-      <WizardFinishButton onFinish={onFinish} visible={showFinish} />
+      {Platform.OS !== "android" && (
+        <WizardFinishButton onFinish={onFinish} visible={showFinish} />
+      )}
     </Stack.Toolbar>
   );
 }

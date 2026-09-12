@@ -2,8 +2,10 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it, expect } from "bun:test";
 import {
+  ANDROID_BOTTOM_TOOLBAR_HEIGHT,
   CONFIG_BOTTOM_TOOLBAR_INSET,
   PRODUCTION_PATH,
+  androidWizardFinishBottom,
   configToolbarListInset,
   persistWizardCompletedOnProduction,
   requestWizardFinish,
@@ -51,6 +53,15 @@ describe("configToolbarListInset", () => {
     expect(configToolbarListInset(34)).toBe(130);
     expect(configToolbarListInset(0)).toBe(96);
     expect(configToolbarListInset(-1)).toBe(96);
+  });
+});
+
+describe("androidWizardFinishBottom", () => {
+  it("sits Finish above the 64dp Android toolbar Host", () => {
+    expect(ANDROID_BOTTOM_TOOLBAR_HEIGHT).toBe(64);
+    expect(androidWizardFinishBottom(0)).toBe(76);
+    expect(androidWizardFinishBottom(34)).toBe(110);
+    expect(androidWizardFinishBottom(-8)).toBe(76);
   });
 });
 
@@ -118,6 +129,12 @@ describe("requestWizardFinish", () => {
     expect(iosCustomSrc).toContain("Redirect");
     expect(chromeSrc).toContain("AndroidWizardFinishButton");
     expect(chromeSrc).toContain("androidFinishHit");
+    expect(chromeSrc).toContain("androidWizardFinishBottom");
+    expect(chromeSrc).toContain('Platform.OS !== "android"');
+    expect(chromeSrc).toMatch(
+      /Platform\.OS !== "android"[\s\S]*<WizardFinishButton/,
+    );
+    expect(chromeSrc.split('accessibilityLabel="Finish"').length - 1).toBe(1);
     expect(productionHookSrc).toContain("persistWizardCompletedOnProduction");
   });
 
