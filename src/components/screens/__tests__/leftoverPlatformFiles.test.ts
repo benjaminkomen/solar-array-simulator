@@ -9,6 +9,7 @@ const THIN_ROUTES = [
   { file: "custom.tsx", screen: "CustomScreen" },
   { file: "inverter-details.tsx", screen: "InverterDetailsScreen" },
   { file: "panel-details.tsx", screen: "PanelDetailsScreen" },
+  { file: "compass-help.tsx", screen: "CompassHelpScreen" },
 ] as const;
 
 describe("leftover platform chrome", () => {
@@ -40,5 +41,15 @@ describe("leftover platform chrome", () => {
     expect(names).not.toContain("production.ios.tsx");
     expect(names).not.toContain("config.ios.tsx");
     expect(names).not.toContain("analyze.android.tsx");
+    expect(names).not.toContain("compass-help.ios.tsx");
+    expect(names).not.toContain("compass-help.android.tsx");
+  });
+
+  it("keeps compass-help leftover chrome next to inverter/panel sheets", () => {
+    const screensDir = join(repoRoot, "src/components/screens");
+    const screenNames = readdirSync(screensDir);
+    expect(screenNames).toContain("CompassHelpScreen.ios.tsx");
+    expect(screenNames).toContain("CompassHelpScreen.android.tsx");
+    expect(screenNames).toContain("CompassHelpScreen.tsx");
   });
 });

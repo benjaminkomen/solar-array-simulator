@@ -52,7 +52,8 @@ appId: com.bkomen.solararraysimulator
 # Custom: empty canvas hides Finish
 - assertNotVisible: "Finish"
 
-# Compass help sheet (first Toggle compass)
+# Compass help sheet (first Toggle compass).
+# iOS formSheet; Android Compose ModalBottomSheet — not a full-screen page.
 - tapOn: "Toggle compass"
 - extendedWaitUntil:
     visible: "Array Orientation"

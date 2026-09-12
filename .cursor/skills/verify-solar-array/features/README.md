@@ -7,7 +7,7 @@ Surface: iOS Simulator and Android emulator development builds (SDK 57). Maestro
 **Already universal on current main — do not paper as still-split:**
 
 - `src/app/production.tsx` (#55)
-- `src/app/compass-help.tsx` (#60; chrome stays in `_layout`)
+- compass-help copy (#60; leftover chrome in `CompassHelpScreen.*` after #77)
 - `src/app/config.tsx` (#63; `config.web.tsx` is the web stub)
 - `src/app/simulation.tsx` (#65 + #67 chips + #75 community `SeasonPicker`, empty-array 3D seed)
 - Custom chrome (#62; shared `CustomHeaderToolbar` / `CustomBottomToolbar`; Android Add works; Badge on header-right unlinked count)
@@ -15,7 +15,7 @@ Surface: iOS Simulator and Android emulator development builds (SDK 57). Maestro
 - `src/app/analyze.tsx` (#61; universal Picker; header **Select AI Model** on both; Android Continue without photo + Skip Pressable)
 - inverter-details / panel-details FieldGroup bodies (#64; `InverterDetailsForm` / `PanelDetailsForm`; drive via Config `inverter-row-1` + `seed-panel`)
 
-**Leftover platform chrome (#56) lives in `src/components/screens/`:** `CustomScreen.ios.tsx` / `CustomScreen.android.tsx` mount the shared chrome (`CustomScreen.tsx` is the web stub); `InverterDetailsScreen.*` / `PanelDetailsScreen.*` are presentation chrome only. `src/app/custom.tsx`, `inverter-details.tsx`, and `panel-details.tsx` are thin re-exports. `src/app/config.web.tsx` stays. Do not invent extra stubs. Do not treat web-stub copy as success.
+**Leftover platform chrome (#56) lives in `src/components/screens/`:** `CustomScreen.ios.tsx` / `CustomScreen.android.tsx` mount the shared chrome (`CustomScreen.tsx` is the web stub); `InverterDetailsScreen.*` / `PanelDetailsScreen.*` / `CompassHelpScreen.*` are presentation chrome only. `src/app/custom.tsx`, `inverter-details.tsx`, `panel-details.tsx`, and `compass-help.tsx` are thin re-exports. `src/app/config.web.tsx` stays. Do not invent extra stubs. Do not treat web-stub copy as success.
 
 ## Baseline preconditions
 
@@ -81,7 +81,7 @@ All listed collapses have landed, including leftover-file move **#56**.
 | landed #55 | `production.tsx` universal | [production.md](production.md) |
 | landed #59 | `upload.tsx` universal | [upload.md](upload.md) |
 | landed #61 | `analyze.tsx` universal Picker | [analyze.md](analyze.md) |
-| landed #60 | `compass-help.tsx` universal | [compass-help.md](compass-help.md) |
+| landed #60 / #77 | compass-help copy universal; Android Compose `ModalBottomSheet` | [compass-help.md](compass-help.md) |
 | landed #65 / #67 / #75 | `simulation.tsx` + community segmented `SeasonPicker` | [simulation.md](simulation.md) |
 | landed #75 | iOS roof + season use `@expo/ui/community/segmented-control`; Android Config roof is Compose `SingleChoiceSegmentedButtonRow` (do not RNHostView / width `"100%"`) | [config.md](config.md), [simulation.md](simulation.md) |
 | landed #64 | details FieldGroup bodies; `#56` moved presentation chrome | [config.md](config.md), [custom.md](custom.md) |
