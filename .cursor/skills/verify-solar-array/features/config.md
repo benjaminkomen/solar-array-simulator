@@ -2,7 +2,7 @@
 
 Wizard step 1 (`/config?wizard=true`) and later "Edit Configuration". Sets default panel wattage, optional city, roof type/tilt, and the micro-inverter list (add/edit/delete sheets).
 
-Product UI is one `FieldGroup` in `src/app/config.tsx` (#63; web stub is `config.web.tsx`). Roof type uses a documented platform segmented control (`RoofTypePicker.ios.tsx` / `.android.tsx`) because universal `Picker` has no `segmented` appearance. Inverter delete stays on platform swipe because universal `List` has no swipe-delete. Do not paper Config as still-split.
+Product UI is one `FieldGroup` in `src/app/config.tsx` (#63; web stub is `config.web.tsx`). Roof type is one `RoofTypePicker.tsx` over `@expo/ui/community/segmented-control` (#75) because universal `Picker` has no `segmented` appearance. Inverter delete stays on platform swipe because universal `List` has no swipe-delete. Do not paper Config as still-split.
 
 ## Sub-features
 
@@ -43,5 +43,5 @@ Preconditions:
 - Location search hits the network. An empty result list is not a product bug if the query is garbage or the geocoder is down; say so.
 - Seeded config ships **14** inverters. Do not assume an empty list on first launch.
 - Continue is **wizard-only**. Edit-from-Production still uses `wizard=true`, so Continue is present; that is how `wizard-resume-to-production.yaml` works.
-- Roof chips are platform segmented controls, not universal `Picker appearance="segmented"`.
+- Roof chips are `@expo/ui/community/segmented-control` (SwiftUI segmented / Material `SingleChoiceSegmentedButtonRow`), not universal `Picker appearance="segmented"`.
 - Inverter swipe-delete is platform-only (`InverterSection.ios.tsx` / `.android.tsx`).

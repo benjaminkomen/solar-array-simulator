@@ -9,9 +9,18 @@ const androidPath = resolve(
   import.meta.dir,
   "../../../app/simulation.android.tsx",
 );
+const seasonPath = resolve(import.meta.dir, "../SeasonPicker.tsx");
 const seasonIosPath = resolve(import.meta.dir, "../SeasonPicker.ios.tsx");
 const seasonAndroidPath = resolve(import.meta.dir, "../SeasonPicker.android.tsx");
-const seasonFallbackPath = resolve(import.meta.dir, "../SeasonPicker.tsx");
+const chipsPath = resolve(import.meta.dir, "../../SegmentedChips.tsx");
+const communitySegmentedIosPath = resolve(
+  import.meta.dir,
+  "../../../../node_modules/@expo/ui/src/community/segmented-control/SegmentedControl.ios.tsx",
+);
+const communitySegmentedAndroidPath = resolve(
+  import.meta.dir,
+  "../../../../node_modules/@expo/ui/src/community/segmented-control/SegmentedControl.android.tsx",
+);
 const hookPath = resolve(import.meta.dir, "../../../hooks/useSimulationControls.ts");
 const pickerTypesPath = resolve(
   import.meta.dir,
@@ -19,12 +28,13 @@ const pickerTypesPath = resolve(
 );
 
 describe("Simulation controls collapse", () => {
-  it("keeps a universal Slider and platform-splits only the season control", () => {
+  it("keeps a universal Slider and collapses season onto community segmented-control", () => {
     const controls = readFileSync(controlsPath, "utf8");
-    const seasonIos = readFileSync(seasonIosPath, "utf8");
-    const seasonAndroid = readFileSync(seasonAndroidPath, "utf8");
-    const seasonFallback = readFileSync(seasonFallbackPath, "utf8");
+    const season = readFileSync(seasonPath, "utf8");
+    const chips = readFileSync(chipsPath, "utf8");
     const pickerTypes = readFileSync(pickerTypesPath, "utf8");
+    const communityIos = readFileSync(communitySegmentedIosPath, "utf8");
+    const communityAndroid = readFileSync(communitySegmentedAndroidPath, "utf8");
 
     expect(controls).toMatch(/from ["']@expo\/ui["']/);
     expect(controls).toContain("Slider");
@@ -35,11 +45,14 @@ describe("Simulation controls collapse", () => {
 
     expect(pickerTypes).toContain("'wheel' | 'menu'");
     expect(pickerTypes).not.toMatch(/segmented/);
-    expect(seasonIos).toContain("pickerStyle('segmented')");
-    expect(seasonIos).toContain("@expo/ui/swift-ui");
-    expect(seasonAndroid).toContain("SingleChoiceSegmentedButtonRow");
-    expect(seasonAndroid).toContain("SegmentedButton");
-    expect(seasonFallback).toContain("from '@expo/ui'");
+    expect(existsSync(seasonIosPath)).toBe(false);
+    expect(existsSync(seasonAndroidPath)).toBe(false);
+    expect(season).toContain("SegmentedChips");
+    expect(season).not.toMatch(/<Picker[\s>]/);
+    expect(chips).toContain('@expo/ui/community/segmented-control');
+    expect(communityIos).toContain("pickerStyle('segmented')");
+    expect(communityAndroid).toContain("SingleChoiceSegmentedButtonRow");
+    expect(communityAndroid).toContain("SegmentedButton");
   });
 
   it("keeps SimulationView as the GPU surface on the shared route", () => {

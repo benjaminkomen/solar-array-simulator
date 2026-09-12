@@ -8,8 +8,19 @@ const src = (...parts: string[]) => resolve(repoRoot, "src", ...parts);
 const configSrc = readFileSync(src("app/config.tsx"), "utf8");
 const layoutSrc = readFileSync(src("app/_layout.tsx"), "utf8");
 const uploadSrc = readFileSync(src("app/upload.tsx"), "utf8");
-const roofIosSrc = readFileSync(src("components/config/RoofTypePicker.ios.tsx"), "utf8");
-const roofAndroidSrc = readFileSync(src("components/config/RoofTypePicker.android.tsx"), "utf8");
+const roofSrc = readFileSync(src("components/config/RoofTypePicker.tsx"), "utf8");
+const chipsSrc = readFileSync(src("components/SegmentedChips.tsx"), "utf8");
+const communitySegmentedIos = readFileSync(
+  resolve(repoRoot, "node_modules/@expo/ui/src/community/segmented-control/SegmentedControl.ios.tsx"),
+  "utf8",
+);
+const communitySegmentedAndroid = readFileSync(
+  resolve(
+    repoRoot,
+    "node_modules/@expo/ui/src/community/segmented-control/SegmentedControl.android.tsx",
+  ),
+  "utf8",
+);
 const inverterIosSrc = readFileSync(src("components/config/InverterSection.ios.tsx"), "utf8");
 const inverterAndroidSrc = readFileSync(
   src("components/config/InverterSection.android.tsx"),
@@ -43,13 +54,21 @@ describe("config FieldGroup collapse", () => {
     expect(configSrc).not.toContain("<Stack.Screen");
   });
 
-  it("documents that universal Picker has no segmented appearance", () => {
+  it("collapses roof type onto community segmented-control, not a menu Picker", () => {
     expect(pickerTypesSrc).toContain("'wheel' | 'menu'");
     expect(pickerTypesSrc).not.toMatch(/segmented/);
-    expect(roofIosSrc).toContain("pickerStyle('segmented')");
-    expect(roofIosSrc).toContain("@expo/ui/swift-ui");
-    expect(roofAndroidSrc).toContain("SingleChoiceSegmentedButtonRow");
-    expect(roofAndroidSrc).toContain("SegmentedButton");
+    expect(existsSync(src("components/config/RoofTypePicker.ios.tsx"))).toBe(false);
+    expect(existsSync(src("components/config/RoofTypePicker.android.tsx"))).toBe(false);
+    expect(roofSrc).toContain("SegmentedChips");
+    expect(roofSrc).not.toMatch(/<Picker[\s>]/);
+    expect(roofSrc).not.toContain("@expo/ui/swift-ui");
+    expect(roofSrc).not.toContain("@expo/ui/jetpack-compose");
+    expect(chipsSrc).toContain('@expo/ui/community/segmented-control');
+    expect(chipsSrc).not.toContain("from '@expo/ui'");
+    expect(chipsSrc).not.toContain('from "@expo/ui"');
+    expect(communitySegmentedIos).toContain("pickerStyle('segmented')");
+    expect(communitySegmentedAndroid).toContain("SingleChoiceSegmentedButtonRow");
+    expect(communitySegmentedAndroid).toContain("SegmentedButton");
     expect(configSrc).toContain("<RoofTypePicker");
   });
 

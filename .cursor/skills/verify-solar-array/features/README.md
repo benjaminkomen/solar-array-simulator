@@ -9,7 +9,7 @@ Surface: iOS Simulator and Android emulator development builds (SDK 57). Maestro
 - `src/app/production.tsx` (#55)
 - `src/app/compass-help.tsx` (#60; chrome stays in `_layout`)
 - `src/app/config.tsx` (#63; `config.web.tsx` is the web stub)
-- `src/app/simulation.tsx` (#65 + #67 segmented `SeasonPicker`, empty-array 3D seed)
+- `src/app/simulation.tsx` (#65 + #67 chips + #75 community `SeasonPicker`, empty-array 3D seed)
 - Custom chrome (#62; shared `CustomHeaderToolbar` / `CustomBottomToolbar`; Android Add works; Badge on header-right unlinked count)
 - `src/app/upload.tsx` (#59; no Host/entering first paint; Android Skip Pressable)
 - `src/app/analyze.tsx` (#61; universal Picker; header **Select AI Model** on both; Android Continue without photo + Skip Pressable)
@@ -82,7 +82,8 @@ All listed collapses have landed, including leftover-file move **#56**.
 | landed #59 | `upload.tsx` universal | [upload.md](upload.md) |
 | landed #61 | `analyze.tsx` universal Picker | [analyze.md](analyze.md) |
 | landed #60 | `compass-help.tsx` universal | [compass-help.md](compass-help.md) |
-| landed #65 / #67 | `simulation.tsx` + segmented `SeasonPicker` | [simulation.md](simulation.md) |
+| landed #65 / #67 / #75 | `simulation.tsx` + community segmented `SeasonPicker` | [simulation.md](simulation.md) |
+| landed #75 | roof + season use `@expo/ui/community/segmented-control` | [config.md](config.md), [simulation.md](simulation.md) |
 | landed #64 | details FieldGroup bodies; `#56` moved presentation chrome | [config.md](config.md), [custom.md](custom.md) |
 | landed #63 | `config.tsx` FieldGroup (`config.web.tsx` stub) | [config.md](config.md) |
 | landed #56 | leftover Custom/details platform chrome is in `src/components/screens/` | this README |

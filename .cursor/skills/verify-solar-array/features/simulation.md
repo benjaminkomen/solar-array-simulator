@@ -2,7 +2,7 @@
 
 3D WebGPU scene (`/simulation`) of the array, with time-of-day slider and season picker. Opened from Production.
 
-One route: `src/app/simulation.tsx` (#65). Season chips are platform `SeasonPicker` (#67) because universal `Picker` has no `segmented` appearance. Empty arrays seed one 3D panel (`panelsForSimulationScene`) so the viewport is panel + sun. Do not paper this as still-split.
+One route: `src/app/simulation.tsx` (#65). Season chips are one `SeasonPicker.tsx` over `@expo/ui/community/segmented-control` (#75; #67 restored chips after the #65 menu veto). Universal `Picker` has no `segmented` appearance. Empty arrays seed one 3D panel (`panelsForSimulationScene`) so the viewport is panel + sun. Do not paper this as still-split.
 
 ## Sub-features
 
@@ -34,6 +34,6 @@ Preconditions:
 - Do not wait on `webgpu-scene-painted` — that id is not in the tree; a long optional wait can leave the app and screenshot the launcher.
 - Location defaults to null lat/long in config; Simulation still opens with hook fallbacks.
 - "Loading 3D scene..." is a Suspense fallback. Waiting only for that string is incomplete — wait for "Total Output" / seasons.
-- Product UI is one `src/app/simulation.tsx`. Controls live in `SimulationControls` (universal `@expo/ui` `Host` / `Slider`). Season uses `SeasonPicker.ios.tsx` / `.android.tsx`. `SimulationView` stays the WebGPU surface — do not stub it. Empty arrays are seeded in `useSimulationControls` via `panelsForSimulationScene`, not inside `SimulationView`.
+- Product UI is one `src/app/simulation.tsx`. Controls live in `SimulationControls` (universal `@expo/ui` `Host` / `Slider`). Season is one `SeasonPicker.tsx` over `@expo/ui/community/segmented-control`. `SimulationView` stays the WebGPU surface — do not stub it. Empty arrays are seeded in `useSimulationControls` via `panelsForSimulationScene`, not inside `SimulationView`.
 - `react-native-webgpu@0.10` (not `react-native-wgpu@0.4.x`). SDK 57 New Architecture is always on — do not add `newArchEnabled`. After a native upgrade, rebuild `development-simulator` (iOS) and `development` (Android).
 - "3D view unavailable" is a canvas fallback, not a failed navigation. Maestro should still see "Simulation" / "Total Output" / seasons.

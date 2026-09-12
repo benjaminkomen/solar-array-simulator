@@ -27,6 +27,7 @@ describe("analyze chrome collapse", () => {
     expect(analyzeSrc).not.toContain("@expo/ui/jetpack-compose");
     expect(analyzeSrc).toContain("<Picker");
     expect(analyzeSrc).toContain("<Picker.Item");
+    expect(analyzeSrc).not.toContain("community/segmented-control");
     expect(analyzeSrc.match(/<Stack\.Toolbar placement="bottom">/g)?.length).toBe(1);
     expect(analyzeSrc).toContain("ANALYZE_MODEL_SECTION_TITLE");
     expect(analyzeSrc).toContain("ANALYZE_EMPTY_PREVIEW_LABEL");
