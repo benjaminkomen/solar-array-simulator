@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, useColorScheme, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Host, Picker, Slider } from "@expo/ui";
+import { Host, Slider } from "@expo/ui";
 import { useColors } from "@/utils/theme";
-import { SEASONS } from "@/hooks/useSimulationControls";
+import { SeasonPicker } from "@/components/simulation/SeasonPicker";
 import type { Season } from "@/utils/solarCalculations";
 
 export type SimulationControlsProps = {
@@ -19,8 +19,9 @@ export type SimulationControlsProps = {
 };
 
 /**
- * Shared Simulation chrome: universal `@expo/ui` Slider + Picker.
- * SimulationView stays the GPU surface and is not rendered here.
+ * Shared Simulation chrome: universal `@expo/ui` Slider + platform
+ * segmented SeasonPicker. SimulationView stays the GPU surface and is
+ * not rendered here.
  */
 export function SimulationControls({
   displayHour,
@@ -90,22 +91,14 @@ export function SimulationControls({
         style={styles.seasonRow}
         colorScheme={colorScheme ?? undefined}
       >
-        <Picker
-          selectedValue={season}
-          onValueChange={onSeasonChange}
-          testID="season-picker"
-        >
-          {SEASONS.map((s) => (
-            <Picker.Item key={s.value} label={s.label} value={s.value} />
-          ))}
-        </Picker>
+        <SeasonPicker season={season} onChange={onSeasonChange} />
       </Host>
     </View>
   );
 }
 
 const sliderRowHeight = Platform.OS === "android" ? 56 : 44;
-const seasonRowHeight = Platform.OS === "android" ? 56 : 36;
+const seasonRowHeight = Platform.OS === "android" ? 48 : 36;
 
 const styles = StyleSheet.create({
   controlsContainer: {

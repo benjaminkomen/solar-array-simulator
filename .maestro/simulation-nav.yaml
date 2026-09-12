@@ -14,10 +14,12 @@ appId: com.bkomen.solararraysimulator
     visible: "Simulation"
     timeout: 15000
 
-# Verify simulation UI elements. Season labels live in the universal
-# Picker menu (selected value only) — do not require Spring/Summer/Fall/Winter
-# as simultaneous chrome.
+# Verify simulation UI elements. Season labels are segmented chrome again.
 - assertVisible: "Total Output"
+- assertVisible: "Spring"
+- assertVisible: "Summer"
+- assertVisible: "Fall"
+- assertVisible: "Winter"
 
 # Short settle only. Do not wait for a testID that is not in the tree —
 # a 90s optional wait lets the app leave Simulation (AVD launcher).
