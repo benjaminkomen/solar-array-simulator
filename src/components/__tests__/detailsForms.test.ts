@@ -12,15 +12,15 @@ const readSrc = (...parts: string[]) =>
 
 const inverterFormSrc = readSrc("../InverterDetailsForm.tsx");
 const panelFormSrc = readSrc("../PanelDetailsForm.tsx");
-const inverterIosSrc = readSrc("../../app/inverter-details.ios.tsx");
-const inverterAndroidSrc = readSrc("../../app/inverter-details.android.tsx");
-const inverterWebSrc = readSrc("../../app/inverter-details.tsx");
-const panelIosSrc = readSrc("../../app/panel-details.ios.tsx");
-const panelAndroidSrc = readSrc("../../app/panel-details.android.tsx");
-const panelWebSrc = readSrc("../../app/panel-details.tsx");
+const inverterIosSrc = readSrc("../screens/InverterDetailsScreen.ios.tsx");
+const inverterAndroidSrc = readSrc("../screens/InverterDetailsScreen.android.tsx");
+const inverterWebSrc = readSrc("../screens/InverterDetailsScreen.tsx");
+const panelIosSrc = readSrc("../screens/PanelDetailsScreen.ios.tsx");
+const panelAndroidSrc = readSrc("../screens/PanelDetailsScreen.android.tsx");
+const panelWebSrc = readSrc("../screens/PanelDetailsScreen.tsx");
 const configSrc = readSrc("../../app/config.tsx");
-const customIosSrc = readSrc("../../app/custom.ios.tsx");
-const customAndroidSrc = readSrc("../../app/custom.android.tsx");
+const customIosSrc = readSrc("../screens/CustomScreen.ios.tsx");
+const customAndroidSrc = readSrc("../screens/CustomScreen.android.tsx");
 const detailsFlowSrc = readSrc("../../../.maestro/details-sheets.yaml");
 const layoutSrc = readSrc("../../app/_layout.tsx");
 const appJsonSrc = readFileSync(resolve(import.meta.dir, "../../../app.json"), "utf8");

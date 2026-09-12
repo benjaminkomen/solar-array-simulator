@@ -29,7 +29,7 @@ npx react-doctor --verbose         # React Compiler health check
 
 **Development builds only:** This project uses Expo dev client builds. Start dev server with `bun start`, then open the development build on the simulator. **DO NOT run** `npx expo run:ios`, `npx expo run:android`, or `eas build --local` for local development.
 
-**Prefer Expo UI components:** For any screen with forms, selections, or structured input, use `@expo/ui/swift-ui` components (`Host`, `Form`, `Section`, `TextField`, `Picker`, `Slider`, `LabeledContent`, `List.ForEach`, `Button`) instead of custom React Native primitives. Wrap SwiftUI content in `<Host><Form>...</Form></Host>`. See `src/app/config.tsx` and `src/app/inverter-details.tsx` for reference patterns.
+**Prefer Expo UI components:** For any screen with forms, selections, or structured input, use `@expo/ui/swift-ui` components (`Host`, `Form`, `Section`, `TextField`, `Picker`, `Slider`, `LabeledContent`, `List.ForEach`, `Button`) instead of custom React Native primitives. Wrap SwiftUI content in `<Host><Form>...</Form></Host>`. See `src/app/config.tsx` and `src/components/screens/InverterDetailsScreen.ios.tsx` for reference patterns.
 
 ## Architecture
 
@@ -57,7 +57,7 @@ src/
 │   ├── compass-help.tsx    # Form sheet: compass help
 │   └── api/
 │       └── analyze+api.ts  # Bedrock API route (Claude vision)
-├── components/             # Reusable UI components
+├── components/             # Reusable UI + leftover screen chrome (`screens/`)
 ├── hooks/                  # React hooks (useConfigStore, usePanelsManager, useImagePicker)
 ├── lib/                    # WebGPU/R3F setup for 3D rendering
 └── utils/                  # Pure utilities (config store, collision, grid snap, etc.)
