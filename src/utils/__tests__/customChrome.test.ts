@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it, expect } from "bun:test";
-import { CUSTOM_ADD_PANEL_A11Y, CUSTOM_HEADER_LINK_A11Y } from "../customChrome";
+import {
+  CUSTOM_ADD_PANEL_A11Y,
+  CUSTOM_HEADER_LINK_A11Y,
+  resolveCanvasSizeForAdd,
+} from "../customChrome";
 import { shouldShowWizardFinish } from "../wizardChrome";
 
 const chromeSrc = readFileSync(
@@ -20,12 +24,12 @@ const productionSrc = readFileSync(
   resolve(import.meta.dir, "../../app/production.tsx"),
   "utf8",
 );
-const configIosSrc = readFileSync(
-  resolve(import.meta.dir, "../../app/config.ios.tsx"),
+const configSrc = readFileSync(
+  resolve(import.meta.dir, "../../app/config.tsx"),
   "utf8",
 );
-const configAndroidSrc = readFileSync(
-  resolve(import.meta.dir, "../../app/config.android.tsx"),
+const androidIconSrc = readFileSync(
+  resolve(import.meta.dir, "../../components/CustomToolbarAndroidIcon.android.tsx"),
   "utf8",
 );
 const expoToolbarButtonAndroid = readFileSync(
@@ -68,8 +72,7 @@ describe("Custom chrome tree", () => {
     expect(iosSrc).not.toContain("Stack.Toolbar.Badge");
     expect(androidSrc).not.toContain("Stack.Toolbar.Badge");
     expect(productionSrc).not.toContain("Stack.Toolbar.Badge");
-    expect(configIosSrc).not.toContain("Stack.Toolbar.Badge");
-    expect(configAndroidSrc).not.toContain("Stack.Toolbar.Badge");
+    expect(configSrc).not.toContain("Stack.Toolbar.Badge");
   });
 
   it("keeps Add panel on a clickable RN Pressable because Android Toolbar.Button a11y is dead", () => {
@@ -78,12 +81,21 @@ describe("Custom chrome tree", () => {
     expect(CUSTOM_ADD_PANEL_A11Y).toBe("Add panel");
     expect(chromeSrc).toContain("CUSTOM_ADD_PANEL_A11Y");
     expect(chromeSrc).toContain('accessibilityRole="button"');
+    expect(chromeSrc).toContain("collapsable={false}");
     expect(chromeSrc).toContain("CustomToolbarAndroidIcon");
+    expect(androidIconSrc).not.toContain("<Host");
+    expect(androidIconSrc).not.toContain("@expo/ui/jetpack-compose");
+    expect(androidIconSrc).not.toContain("accessibilityLabel");
     expect(chromeSrc).toContain("shouldShowWizardFinish");
     expect(chromeSrc).toContain("Finish");
     expect(shouldShowWizardFinish(true, 0)).toBe(false);
     expect(shouldShowWizardFinish(true, 1)).toBe(true);
     expect(iosSrc).toContain("SolarPanelCanvas");
     expect(androidSrc).toContain("SolarPanelCanvas");
+  });
+
+  it("does not let Add silently no-op when the canvas has not measured yet", () => {
+    expect(resolveCanvasSizeForAdd(0, 0, 400, 800)).toEqual({ width: 400, height: 800 });
+    expect(resolveCanvasSizeForAdd(390, 700, 400, 800)).toEqual({ width: 390, height: 700 });
   });
 });

@@ -65,8 +65,8 @@ type ToolbarIconButtonProps = {
 
 /**
  * Android Stack.Toolbar.Button puts accessibilityLabel on a Compose Icon
- * (android.view.View, clickable=false). Maestro then taps a dead node.
- * Keep the label on a RN Pressable so Add panel / header actions are real buttons.
+ * (clickable=false). Keep the label on a RN Pressable (no nested Host)
+ * so Add panel / header actions are real buttons whose onPress fires.
  */
 function ToolbarIconButton({
   name,
@@ -81,6 +81,8 @@ function ToolbarIconButton({
           onPress={onPress}
           accessibilityLabel={accessibilityLabel}
           accessibilityRole="button"
+          accessible
+          collapsable={false}
           style={styles.toolbarIconButton}
         >
           <CustomToolbarAndroidIcon
@@ -147,6 +149,8 @@ function WizardFinishButton({ onFinish }: { onFinish: () => void }) {
           onPress={onFinish}
           accessibilityRole="button"
           accessibilityLabel="Finish"
+          accessible
+          collapsable={false}
         >
           <Text style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}>
             Finish

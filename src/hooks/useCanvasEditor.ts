@@ -3,7 +3,7 @@
  * Manages panel CRUD, viewport animation, compass, and analysis initialization.
  */
 import { useCallback, useRef, useState } from "react";
-import { type LayoutChangeEvent } from "react-native";
+import { useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
@@ -14,6 +14,7 @@ import { useZoom } from "@/hooks/useZoom";
 import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { buildMockPanelGrid, mapAnalysisToCanvasPositions } from "@/utils/canvasLayout";
+import { resolveCanvasSizeForAdd } from "@/utils/customChrome";
 
 // Module-level worklet functions: required by React Compiler
 function setCanvasSize(w: SharedValue<number>, h: SharedValue<number>, width: number, height: number) {
@@ -34,6 +35,7 @@ function animateViewport(
 
 export function useCanvasEditor() {
   const router = useRouter();
+  const windowSize = useWindowDimensions();
   const { initialPanels, wizard } = useLocalSearchParams<{ initialPanels?: string; wizard?: string }>();
   const isWizardMode = wizard === 'true';
   const canvasSize = useRef({ width: 0, height: 0 });
@@ -102,11 +104,14 @@ export function useCanvasEditor() {
   );
 
   const handleAddPanel = useCallback(() => {
-    const { width, height } = canvasSize.current;
-    if (width > 0 && height > 0) {
-      addPanel(width, height, -viewportX.value, -viewportY.value);
-    }
-  }, [addPanel, viewportX, viewportY]);
+    const { width, height } = resolveCanvasSizeForAdd(
+      canvasSize.current.width,
+      canvasSize.current.height,
+      windowSize.width,
+      windowSize.height,
+    );
+    addPanel(width, height, -viewportX.value, -viewportY.value);
+  }, [addPanel, viewportX, viewportY, windowSize.width, windowSize.height]);
 
   const handleRotatePanel = useCallback(() => {
     if (selectedId) {
