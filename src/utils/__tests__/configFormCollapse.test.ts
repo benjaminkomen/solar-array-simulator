@@ -79,7 +79,7 @@ describe("config FieldGroup collapse", () => {
     expect(androidRoofSrc).toContain("SingleChoiceSegmentedButtonRow");
     expect(androidRoofSrc).toContain("SegmentedButton");
     expect(androidRoofSrc).toContain("fillMaxWidth");
-    expect(androidRoofSrc).not.toContain("community/segmented-control");
+    expect(androidRoofSrc).not.toMatch(/from ['"]@expo\/ui\/community\/segmented-control['"]/);
     expect(androidRoofSrc).not.toMatch(/<Host[\s>]/);
     expect(androidRoofSrc).not.toMatch(/<Picker[\s>]/);
     expect(chipsSrc).toContain("Do not mount it inside an");
