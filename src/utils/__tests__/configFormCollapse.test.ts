@@ -7,9 +7,7 @@ const src = (...parts: string[]) => resolve(repoRoot, "src", ...parts);
 
 const configSrc = readFileSync(src("app/config.tsx"), "utf8");
 const layoutSrc = readFileSync(src("app/_layout.tsx"), "utf8");
-const uploadIosSrc = readFileSync(src("app/upload.ios.tsx"), "utf8");
-const uploadAndroidSrc = readFileSync(src("app/upload.android.tsx"), "utf8");
-const uploadStubSrc = readFileSync(src("app/upload.tsx"), "utf8");
+const uploadSrc = readFileSync(src("app/upload.tsx"), "utf8");
 const roofIosSrc = readFileSync(src("components/config/RoofTypePicker.ios.tsx"), "utf8");
 const roofAndroidSrc = readFileSync(src("components/config/RoofTypePicker.android.tsx"), "utf8");
 const inverterIosSrc = readFileSync(src("components/config/InverterSection.ios.tsx"), "utf8");
@@ -66,18 +64,17 @@ describe("config FieldGroup collapse", () => {
   it("puts Config and Upload header options in _layout", () => {
     expect(layoutSrc).toMatch(/name="config"[\s\S]*headerBackButtonDisplayMode:\s*"minimal"/);
     expect(layoutSrc).toMatch(/name="upload"[\s\S]*headerBackButtonDisplayMode:\s*"minimal"/);
-    expect(uploadIosSrc).not.toContain("Stack.Screen.BackButton");
-    expect(uploadIosSrc).not.toContain("<Stack.Screen");
-    expect(uploadAndroidSrc).not.toContain("<Stack.Screen");
+    expect(uploadSrc).not.toContain("Stack.Screen.BackButton");
+    expect(uploadSrc).not.toContain("<Stack.Screen");
   });
 
   it("does not put Host on Upload first paint", () => {
-    for (const uploadSrc of [uploadIosSrc, uploadAndroidSrc, uploadStubSrc]) {
-      expect(uploadSrc).not.toMatch(/from ["']@expo\/ui/);
-      expect(uploadSrc).not.toMatch(/<Host[\s>]/);
-      expect(uploadSrc).not.toContain("@expo/ui/swift-ui");
-      expect(uploadSrc).not.toContain("@expo/ui/jetpack-compose");
-    }
+    expect(existsSync(src("app/upload.ios.tsx"))).toBe(false);
+    expect(existsSync(src("app/upload.android.tsx"))).toBe(false);
+    expect(uploadSrc).not.toMatch(/from ["']@expo\/ui/);
+    expect(uploadSrc).not.toMatch(/<Host[\s>]/);
+    expect(uploadSrc).not.toContain("@expo/ui/swift-ui");
+    expect(uploadSrc).not.toContain("@expo/ui/jetpack-compose");
   });
 
   it("does not flip Hermes V1 or move the Production overflow", () => {

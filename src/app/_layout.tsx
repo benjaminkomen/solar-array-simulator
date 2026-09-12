@@ -54,6 +54,7 @@ function RootLayout() {
                 headerBackButtonDisplayMode: "minimal",
               }}
             />
+
             <Stack.Screen
               name="analyze"
               options={{
