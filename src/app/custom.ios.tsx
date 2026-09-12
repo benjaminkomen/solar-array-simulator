@@ -1,5 +1,6 @@
 import { View, StyleSheet } from "react-native";
-import { Stack, Link } from "expo-router";
+import { Stack } from "expo-router";
+import { CustomBottomToolbar, CustomHeaderToolbar } from "@/components/CustomChrome";
 import { SolarPanelCanvas } from "@/components/SolarPanelCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
@@ -7,7 +8,6 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useCanvasEditor } from "@/hooks/useCanvasEditor";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
-import { shouldShowWizardFinish } from "@/utils/wizardChrome";
 
 export default function Custom() {
   useMarkInteractive();
@@ -39,21 +39,17 @@ export default function Custom() {
     handleFinish,
     handleCompassTap,
     handleCompassToggle,
+    handleLinkInverter,
   } = useCanvasEditor();
 
   return (
     <>
       <Stack.Screen.BackButton displayMode="minimal" />
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="location.north.circle" onPress={handleCompassToggle} accessibilityLabel="Toggle compass" />
-        <Stack.Toolbar.Button onPress={() => {}}>
-          <Stack.Toolbar.Icon sf="link" />
-          {unlinkedCount > 0 && (
-            <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
-          )}
-        </Stack.Toolbar.Button>
-        <Stack.Toolbar.Button icon="scope" onPress={handleSnapToOrigin} accessibilityLabel="Snap to origin" />
-      </Stack.Toolbar>
+      <CustomHeaderToolbar
+        unlinkedCount={unlinkedCount}
+        onCompassToggle={handleCompassToggle}
+        onSnapToOrigin={handleSnapToOrigin}
+      />
       {isWizardMode && <WizardProgress currentStep={3} />}
       <View style={[styles.container, { backgroundColor: colors.background.secondary }]} onLayout={handleLayout} testID="canvas-container">
         {compassVisible && (
@@ -83,27 +79,16 @@ export default function Custom() {
           onZoomOut={handleZoomOut}
         />
       </View>
-      <Stack.Toolbar placement="bottom">
-        <Stack.Toolbar.Button icon="plus" onPress={handleAddPanel} accessibilityLabel="Add panel" />
-        {selectedId && (
-          <>
-            <Link href={`/panel-details?panelId=${selectedId}`} asChild>
-              <Stack.Toolbar.Button icon="link" accessibilityLabel="Link inverter" />
-            </Link>
-            <Stack.Toolbar.Button
-              icon="rotate.right"
-              onPress={handleRotatePanel}
-              accessibilityLabel="Rotate panel"
-            />
-            <Stack.Toolbar.Button icon="trash" onPress={handleDeletePanel} accessibilityLabel="Delete panel" />
-          </>
-        )}
-        {shouldShowWizardFinish(isWizardMode, panels.length) && (
-          <Stack.Toolbar.Button onPress={handleFinish}>
-            Finish
-          </Stack.Toolbar.Button>
-        )}
-      </Stack.Toolbar>
+      <CustomBottomToolbar
+        selectedId={selectedId}
+        isWizardMode={isWizardMode}
+        panelCount={panels.length}
+        onAddPanel={handleAddPanel}
+        onLinkInverter={handleLinkInverter}
+        onRotatePanel={handleRotatePanel}
+        onDeletePanel={handleDeletePanel}
+        onFinish={handleFinish}
+      />
     </>
   );
 }

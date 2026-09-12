@@ -25,7 +25,7 @@ Preconditions:
 - Skia nodes are **not** Maestro-accessible. Prove via toolbar side effects.
 
 - **Land on canvas.** `run-flow wizard-happy-path` after Upload Skip: `id: canvas-container` visible. Assert "Finish" is **not** visible on the empty canvas (Android used to show it anyway).
-- **Add panel.** `shared/tap-add-panel.yaml`: iOS `add`, Android `Add panel`. Wait for animation. Assert "Finish".
+- **Add panel.** `shared/tap-add-panel.yaml`: iOS `add` (SF `plus`), Android `Add panel` (`CUSTOM_ADD_PANEL_A11Y` on a RN `Pressable` with `accessibilityRole="button"`). Wait for animation. Assert "Finish". Do not skip that assert.
 - **Finish.** Tap "Finish". Wait for "Total Array Output".
 - **Link inverter.** After add, tap `link` / "Link inverter". Sheet: "Available Inverters" or "Linked Inverter" or "No Available Inverters". Link a serial, dismiss, reopen — the same serial is still linked. No committed Maestro flow; drive as a follow-up.
 - **Empty inverters.** If every inverter is already linked, the sheet shows "No Available Inverters" and "Add Inverter" → Config.
@@ -34,8 +34,10 @@ Preconditions:
 
 ## Gotchas
 
-- Shared `custom.tsx` is a stub. Product UI is `custom.ios.tsx` / `custom.android.tsx`.
-- Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches.
-- Finish is hidden when `panels.length === 0` or not in wizard mode. Adding then deleting the last panel hides it again.
+- Shared `custom.tsx` is a stub. Product UI is `custom.ios.tsx` / `custom.android.tsx`, both mounting the same `CustomHeaderToolbar` / `CustomBottomToolbar` tree (`src/components/CustomChrome.tsx`). Icons are SF Symbol vs Material (`Platform` only).
+- Android `Stack.Toolbar.Button` puts `accessibilityLabel` on a Compose `Icon` (`android.view.View`, `clickable=false`). Maestro then taps a dead node. Android tappable chrome (Add, compass, snap, selected actions, Finish) uses `Stack.Toolbar.View` + RN `Pressable` (`accessibilityRole="button"`, `collapsable={false}`, `cancelable={false}`). Keep Compose `Icon` **without** an a11y label; draw the Pressable **above** the Host (`pointerEvents="none"`) so a clickable Add still fires `onPress`. Do not put the Host inside the Pressable — clickable=true then no-ops. `handleAddPanel` must not return early when canvas measure is 0×0.
+- Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches. Do not skip the Finish assert if Add misses (#54).
+- Finish is hidden when `panels.length === 0` or not in wizard mode (`shouldShowWizardFinish`). Adding then deleting the last panel hides it again.
+- `Stack.Toolbar.Badge` is only on the header-right link `Stack.Toolbar.Button` when `unlinkedCount > 0`. Do not add Badge on Production / Config / bottom toolbar. Android omits `accessibilityLabel` on that Badge button so Maestro does not hit a second dead node.
 - Compass toggle is a different feature ([compass-help.md](compass-help.md)).
 - Collision uses an 8px gap. Overlap on drag-release is app behavior; Maestro cannot see it.
