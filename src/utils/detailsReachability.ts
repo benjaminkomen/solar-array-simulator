@@ -1,6 +1,6 @@
 /**
  * Stable handles so inverter-details / panel-details can be driven without
- * Custom Add or a Skia canvas tap (Android Add is still dead on #62; Skia
+ * Custom Add or a Skia canvas tap (Custom Add works after #62; Skia
  * nodes are not Maestro-accessible).
  *
  * - Config row `inverter-row-1` opens the seeded inverter edit sheet.

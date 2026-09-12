@@ -1,7 +1,7 @@
 appId: com.bkomen.solararraysimulator
 ---
 # Inverter-details + panel-details FieldGroup bodies without Custom Add
-# or a Skia canvas tap (Android Add is dead on #62; canvas nodes are not
+# or a Skia canvas tap (Custom Add works after #62; canvas nodes are not
 # Maestro-accessible). Config row + seed-panel deeplink.
 #
 # Drive: run-flow details-sheets --platform=ios|android
