@@ -32,8 +32,9 @@ appId: com.bkomen.solararraysimulator
 - assertVisible: "Edit Micro-inverter"
 - assertVisible: "Efficiency"
 - tapOn: "Save"
+# centerElement scrolls Panel Settings off-screen; Continue stays on the toolbar.
 - extendedWaitUntil:
-    visible: "Panel Settings"
+    visible: "Continue"
     timeout: 10000
 - scrollUntilVisible:
     element:
@@ -50,7 +51,7 @@ appId: com.bkomen.solararraysimulator
 - assertVisible: "Efficiency"
 - tapOn: "Save"
 - extendedWaitUntil:
-    visible: "Panel Settings"
+    visible: "Continue"
     timeout: 10000
 
 # Seeded panel — no Add, no canvas select
