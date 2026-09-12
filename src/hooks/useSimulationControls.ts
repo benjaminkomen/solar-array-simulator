@@ -2,7 +2,7 @@
  * Business logic for the Simulation screen.
  * Manages season/time state, panel wattage calculations, and time formatting.
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { usePanelsContext } from "@/contexts/PanelsContext";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import {
@@ -13,6 +13,14 @@ import {
   type Season,
 } from "@/utils/solarCalculations";
 import { formatWattage } from "@/utils/formatters";
+import { clearDebouncedHour, scheduleDebouncedHour } from "@/utils/debounceHour";
+import { panelsForSimulationScene } from "@/utils/simulationPanels";
+
+export {
+  HOUR_SLIDER_DEBOUNCE_MS,
+  clearDebouncedHour,
+  scheduleDebouncedHour,
+} from "@/utils/debounceHour";
 
 export const SEASONS: { value: Season; label: string }[] = [
   { value: "spring", label: "Spring" },
@@ -41,6 +49,22 @@ export function useSimulationControls() {
     // Start at solar noon
     return (sunriseHour + sunsetHour) / 2;
   });
+
+  // Immediate slider feedback. setCurrentHour is debounced so wattage useMemo
+  // only runs after dragging settles (shared on iOS and Android).
+  const [displayHour, setDisplayHour] = useState(currentHour);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      clearDebouncedHour(debounceRef);
+    };
+  }, []);
+
+  const onHourChange = useCallback((val: number) => {
+    setDisplayHour(val);
+    scheduleDebouncedHour(debounceRef, val, setCurrentHour);
+  }, [setCurrentHour]);
 
   // Snapshot panel positions from shared values
   const panelInfos = useMemo(
@@ -98,13 +122,15 @@ export function useSimulationControls() {
 
   const panels3D = useMemo(
     () =>
-      panelInfos.map((p) => ({
-        id: p.id,
-        x: p.x,
-        y: p.y,
-        rotation: p.rotation,
-        wattage: wattages.get(p.id) ?? 0,
-      })),
+      panelsForSimulationScene(
+        panelInfos.map((p) => ({
+          id: p.id,
+          x: p.x,
+          y: p.y,
+          rotation: p.rotation,
+          wattage: wattages.get(p.id) ?? 0,
+        })),
+      ),
     [panelInfos, wattages]
   );
 
@@ -127,7 +153,9 @@ export function useSimulationControls() {
     sunriseHour,
     sunsetHour,
     currentHour,
+    displayHour,
     setCurrentHour,
+    onHourChange,
     totalWattage,
     panels3D,
     formatTime,

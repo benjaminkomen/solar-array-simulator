@@ -54,11 +54,12 @@ describe("compass-help collapse", () => {
     expect(options).toContain("sheetAllowedDetents: Platform.OS === 'ios' ? [0.3]");
   });
 
-  it("does not collapse Custom or Config", () => {
+  it("does not collapse Custom (Config is already one file)", () => {
     expect(existsSync(resolve(repoRoot, "src/app/custom.ios.tsx"))).toBe(true);
     expect(existsSync(resolve(repoRoot, "src/app/custom.android.tsx"))).toBe(true);
-    expect(existsSync(resolve(repoRoot, "src/app/config.ios.tsx"))).toBe(true);
-    expect(existsSync(resolve(repoRoot, "src/app/config.android.tsx"))).toBe(true);
+    expect(existsSync(resolve(repoRoot, "src/app/config.tsx"))).toBe(true);
+    expect(existsSync(resolve(repoRoot, "src/app/config.ios.tsx"))).toBe(false);
+    expect(existsSync(resolve(repoRoot, "src/app/config.android.tsx"))).toBe(false);
   });
 
   it("does not flip Hermes V1", () => {
