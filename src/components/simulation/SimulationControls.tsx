@@ -141,5 +141,5 @@ const styles = StyleSheet.create({
     width: 60,
     textAlign: "center",
   },
-  seasonRow: { height: seasonRowHeight },
+  seasonRow: { height: seasonRowHeight, width: "100%", alignSelf: "stretch" },
 });

@@ -39,6 +39,7 @@ describe("Simulation controls collapse", () => {
     expect(controls).toMatch(/from ["']@expo\/ui["']/);
     expect(controls).toContain("Slider");
     expect(controls).toContain("SeasonPicker");
+    expect(controls).toContain('width: "100%"');
     expect(controls).not.toMatch(/<Picker[\s>]/);
     expect(controls).not.toMatch(/from ["']@expo\/ui\/swift-ui["']/);
     expect(controls).not.toMatch(/from ["']@expo\/ui\/jetpack-compose["']/);

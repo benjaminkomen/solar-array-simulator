@@ -54,22 +54,35 @@ describe("config FieldGroup collapse", () => {
     expect(configSrc).not.toContain("<Stack.Screen");
   });
 
-  it("collapses roof type onto community segmented-control, not a menu Picker", () => {
+  it("keeps iOS roof chips on community segmented-control, not a menu Picker", () => {
     expect(pickerTypesSrc).toContain("'wheel' | 'menu'");
     expect(pickerTypesSrc).not.toMatch(/segmented/);
     expect(existsSync(src("components/config/RoofTypePicker.ios.tsx"))).toBe(false);
-    expect(existsSync(src("components/config/RoofTypePicker.android.tsx"))).toBe(false);
     expect(roofSrc).toContain("SegmentedChips");
     expect(roofSrc).not.toMatch(/<Picker[\s>]/);
     expect(roofSrc).not.toContain("@expo/ui/swift-ui");
     expect(roofSrc).not.toContain("@expo/ui/jetpack-compose");
     expect(chipsSrc).toContain('@expo/ui/community/segmented-control');
+    expect(chipsSrc).toContain('width: "100%"');
     expect(chipsSrc).not.toContain("from '@expo/ui'");
     expect(chipsSrc).not.toContain('from "@expo/ui"');
     expect(communitySegmentedIos).toContain("pickerStyle('segmented')");
     expect(communitySegmentedAndroid).toContain("SingleChoiceSegmentedButtonRow");
     expect(communitySegmentedAndroid).toContain("SegmentedButton");
+    expect(communitySegmentedAndroid).toContain("<Host");
     expect(configSrc).toContain("<RoofTypePicker");
+  });
+
+  it("keeps Android Config roof chips on Compose so FieldGroup is not collapsed by a nested Host", () => {
+    const androidRoofSrc = readFileSync(src("components/config/RoofTypePicker.android.tsx"), "utf8");
+    expect(existsSync(src("components/config/RoofTypePicker.android.tsx"))).toBe(true);
+    expect(androidRoofSrc).toContain("SingleChoiceSegmentedButtonRow");
+    expect(androidRoofSrc).toContain("SegmentedButton");
+    expect(androidRoofSrc).toContain("fillMaxWidth");
+    expect(androidRoofSrc).not.toContain("community/segmented-control");
+    expect(androidRoofSrc).not.toMatch(/<Host[\s>]/);
+    expect(androidRoofSrc).not.toMatch(/<Picker[\s>]/);
+    expect(chipsSrc).toContain("Do not mount it inside an");
   });
 
   it("keeps a real platform delete gesture for inverter rows", () => {

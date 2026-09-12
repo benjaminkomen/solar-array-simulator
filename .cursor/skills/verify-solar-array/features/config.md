@@ -2,7 +2,7 @@
 
 Wizard step 1 (`/config?wizard=true`) and later "Edit Configuration". Sets default panel wattage, optional city, roof type/tilt, and the micro-inverter list (add/edit/delete sheets).
 
-Product UI is one `FieldGroup` in `src/app/config.tsx` (#63; web stub is `config.web.tsx`). Roof type is one `RoofTypePicker.tsx` over `@expo/ui/community/segmented-control` (#75) because universal `Picker` has no `segmented` appearance. Inverter delete stays on platform swipe because universal `List` has no swipe-delete. Do not paper Config as still-split.
+Product UI is one `FieldGroup` in `src/app/config.tsx` (#63; web stub is `config.web.tsx`). iOS/web roof chips are `RoofTypePicker.tsx` over `@expo/ui/community/segmented-control` (#75) because universal `Picker` has no `segmented` appearance. Android roof chips stay on `RoofTypePicker.android.tsx` Compose `SingleChoiceSegmentedButtonRow` inside the existing Host — community `SegmentedControl` wraps a nested Host and collapses FieldGroup width (smashed chips, one-character-wide section titles). Inverter delete stays on platform swipe because universal `List` has no swipe-delete. Do not paper Config as still-split. Do not put community `SegmentedControl` inside Config FieldGroup on Android.
 
 ## Sub-features
 
@@ -43,5 +43,5 @@ Preconditions:
 - Location search hits the network. An empty result list is not a product bug if the query is garbage or the geocoder is down; say so.
 - Seeded config ships **14** inverters. Do not assume an empty list on first launch.
 - Continue is **wizard-only**. Edit-from-Production still uses `wizard=true`, so Continue is present; that is how `wizard-resume-to-production.yaml` works.
-- Roof chips are `@expo/ui/community/segmented-control` (SwiftUI segmented / Material `SingleChoiceSegmentedButtonRow`), not universal `Picker appearance="segmented"`.
+- iOS/web roof chips are `@expo/ui/community/segmented-control` (SwiftUI segmented). Android Config uses `RoofTypePicker.android.tsx` Compose `SingleChoiceSegmentedButtonRow` so FieldGroup is not collapsed by a nested Host. Not universal `Picker appearance="segmented"`. Pixel proof is Gable / Hip / Flat / Shed on one row and horizontal FieldGroup titles — a11y strings alone are not enough.
 - Inverter swipe-delete is platform-only (`InverterSection.ios.tsx` / `.android.tsx`).
