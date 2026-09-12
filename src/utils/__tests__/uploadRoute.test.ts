@@ -54,4 +54,10 @@ describe("upload route collapse", () => {
     expect(uploadSrc).toContain('testID="take-photo-button"');
     expect(uploadSrc).toContain('testID="choose-gallery-button"');
   });
+
+  it("exposes wizard-only Continue without photo for empty galleries", () => {
+    expect(uploadSrc).toContain("ANALYZE_CONTINUE_WITHOUT_PHOTO_TEST_ID");
+    expect(uploadSrc).toContain("handleContinueWithoutPhoto");
+    expect(uploadSrc).toContain("{isWizardMode && (");
+  });
 });

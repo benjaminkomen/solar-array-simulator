@@ -8,6 +8,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { resizeForAnalysis } from "@/utils/imageResize";
 import { setAnalysisResult } from "@/utils/analysisStore";
+import { hasAnalyzeImage } from "@/utils/analyzeChrome";
 
 export interface PanelResult {
   x: number;
@@ -104,6 +105,7 @@ export function useAnalyzeFlow() {
   const abortRef = useRef<AbortController | null>(null);
 
   const decodedUri = decodeURIComponent(imageUri ?? "");
+  const hasImage = hasAnalyzeImage(decodedUri);
 
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -214,6 +216,7 @@ export function useAnalyzeFlow() {
     resized,
     reasoningExpanded,
     decodedUri,
+    hasImage,
     modelName,
     handleSkip,
     handleModelChange,

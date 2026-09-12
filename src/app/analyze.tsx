@@ -15,6 +15,7 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { Button } from "@/components/Button";
 import { useColors } from "@/utils/theme";
 import {
+  ANALYZE_EMPTY_PREVIEW_LABEL,
   ANALYZE_MODEL_SECTION_TITLE,
   modelPickerLabel,
   shouldShowAnalyzeAction,
@@ -37,6 +38,7 @@ export default function Analyze() {
     resized,
     reasoningExpanded,
     decodedUri,
+    hasImage,
     modelName,
     handleSkip,
     handleModelChange,
@@ -59,11 +61,22 @@ export default function Analyze() {
       {phase === "select_model" && (
         <View style={styles.container}>
           <View style={[styles.imageContainer, { backgroundColor: colors.background.primary }]}>
-            <Image
-              source={{ uri: decodedUri }}
-              style={styles.imagePreview}
-              contentFit="contain"
-            />
+            {hasImage ? (
+              <Image
+                source={{ uri: decodedUri }}
+                style={styles.imagePreview}
+                contentFit="contain"
+              />
+            ) : (
+              <View
+                testID="analyze-empty-preview"
+                style={[styles.emptyPreview, { backgroundColor: colors.background.secondary }]}
+              >
+                <Text style={[styles.emptyPreviewText, { color: colors.text.secondary }]}>
+                  {ANALYZE_EMPTY_PREVIEW_LABEL}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.pickerBlock}>
@@ -219,6 +232,16 @@ const styles = StyleSheet.create({
   imagePreview: {
     width: "100%",
     height: 250,
+  },
+  emptyPreview: {
+    width: "100%",
+    height: 250,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyPreviewText: {
+    fontSize: 15,
+    fontWeight: "500",
   },
   badgeRow: {
     flexDirection: "row",

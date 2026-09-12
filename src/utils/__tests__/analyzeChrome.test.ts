@@ -2,7 +2,11 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it, expect } from "bun:test";
 import {
+  ANALYZE_CONTINUE_WITHOUT_PHOTO_LABEL,
+  ANALYZE_CONTINUE_WITHOUT_PHOTO_TEST_ID,
+  ANALYZE_EMPTY_PREVIEW_LABEL,
   ANALYZE_MODEL_SECTION_TITLE,
+  hasAnalyzeImage,
   modelPickerLabel,
   shouldShowAnalyzeAction,
   shouldShowAnalyzeSkip,
@@ -25,8 +29,19 @@ describe("analyze chrome collapse", () => {
     expect(analyzeSrc).toContain("<Picker.Item");
     expect(analyzeSrc.match(/<Stack\.Toolbar placement="bottom">/g)?.length).toBe(1);
     expect(analyzeSrc).toContain("ANALYZE_MODEL_SECTION_TITLE");
+    expect(analyzeSrc).toContain("ANALYZE_EMPTY_PREVIEW_LABEL");
+    expect(analyzeSrc).toContain("analyze-empty-preview");
     expect(analyzeSrc).toContain("shouldShowAnalyzeSkip");
     expect(analyzeSrc).toContain("shouldShowAnalyzeAction");
+  });
+
+  it("names the empty-state fixture used when the gallery is empty", () => {
+    expect(ANALYZE_EMPTY_PREVIEW_LABEL).toBe("No photo selected");
+    expect(ANALYZE_CONTINUE_WITHOUT_PHOTO_LABEL).toBe("Continue without photo");
+    expect(ANALYZE_CONTINUE_WITHOUT_PHOTO_TEST_ID).toBe("analyze-empty-state-button");
+    expect(hasAnalyzeImage(undefined)).toBe(false);
+    expect(hasAnalyzeImage("")).toBe(false);
+    expect(hasAnalyzeImage("file:///tmp/roof.jpg")).toBe(true);
   });
 
   it("keeps a single Select AI Model title", () => {

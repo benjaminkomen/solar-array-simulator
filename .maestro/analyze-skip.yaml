@@ -1,7 +1,8 @@
 appId: com.bkomen.solararraysimulator
 ---
 # Analyze Screen: Verify model picker UI and Skip action
-# Tests: Upload → pick photo from gallery → Analyze (universal Picker) → change model → Skip → Custom
+# iOS: Upload → gallery pick → Analyze (universal Picker) → change model → Skip → Custom
+# Android: empty AVD gallery — Upload "Continue without photo" empty-state → same picker/toolbar
 
 - runFlow: shared/launch-fresh.yaml
 
@@ -16,23 +17,35 @@ appId: com.bkomen.solararraysimulator
     visible: "Take or Select Photo"
     timeout: 10000
 
-# Open gallery picker
-- tapOn:
-    id: "choose-gallery-button"
-
-# iOS Photos library chrome (Android system picker is a different sheet)
+# iOS: real Photos library pick
 - runFlow:
     when:
       platform: iOS
     commands:
+      - tapOn:
+          id: "choose-gallery-button"
       - extendedWaitUntil:
           visible: "Photos"
           timeout: 10000
       - tapOn:
           point: "17%,25%"
 
+# Android: do not open the system picker (empty emulator gallery blocks Analyze)
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn:
+          id: "analyze-empty-state-button"
+
 # Verify we land on the Analyze screen with model picker
 - runFlow: shared/wait-analyze-header.yaml
+
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - assertVisible: "No photo selected"
 
 # Selected value is visible before the menu opens
 - assertVisible: "Claude Sonnet 4.6 (Default)"

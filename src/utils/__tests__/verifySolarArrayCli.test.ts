@@ -113,6 +113,25 @@ describe("verify-solar-array CLI", () => {
     expect(android.indexOf("Go home")).toBeLessThan(android.lastIndexOf("Continue"));
   });
 
+  it("analyze-skip does not open the Android system gallery", () => {
+    const flow = readFileSync(join(repoRoot, ".maestro/analyze-skip.yaml"), "utf8");
+    const uploadSrc = readFileSync(join(repoRoot, "src/app/upload.tsx"), "utf8");
+    const analyze = readFileSync(join(repoRoot, "src/app/analyze.tsx"), "utf8");
+    expect(existsSync(join(repoRoot, "src/app/upload.android.tsx"))).toBe(false);
+    expect(existsSync(join(repoRoot, "src/app/upload.ios.tsx"))).toBe(false);
+    expect(uploadSrc).toContain("ANALYZE_CONTINUE_WITHOUT_PHOTO_TEST_ID");
+    expect(uploadSrc).toContain("ANALYZE_CONTINUE_WITHOUT_PHOTO_LABEL");
+    expect(uploadSrc).toContain("handleContinueWithoutPhoto");
+    expect(uploadSrc).toContain("isWizardMode &&");
+    expect(analyze).toContain("ANALYZE_EMPTY_PREVIEW_LABEL");
+    expect(analyze).toContain("analyze-empty-preview");
+    const androidBlock = flow.slice(flow.indexOf("platform: Android"));
+    expect(androidBlock).toContain("analyze-empty-state-button");
+    expect(androidBlock).not.toContain("choose-gallery-button");
+    expect(flow).toContain("No photo selected");
+    expect(flow.indexOf("platform: iOS")).toBeLessThan(flow.indexOf("choose-gallery-button"));
+  });
+
   it("simulation-nav takes 3D proof while Simulation chrome is visible", () => {
     const flow = readFileSync(join(repoRoot, ".maestro/simulation-nav.yaml"), "utf8");
     const winter = flow.indexOf('assertVisible: "Winter"');
