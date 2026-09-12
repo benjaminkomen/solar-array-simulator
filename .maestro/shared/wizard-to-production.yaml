@@ -18,8 +18,10 @@ appId: com.bkomen.solararraysimulator
         id: "canvas-container"
     timeout: 10000
 - assertNotVisible: "Finish"
+- runFlow: assert-custom-header.yaml
 - runFlow: tap-add-panel.yaml
 - waitForAnimationToEnd
+- runFlow: assert-custom-header.yaml
 - tapOn: "Finish"
 - extendedWaitUntil:
     visible: "Total Array Output"

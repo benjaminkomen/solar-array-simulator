@@ -43,10 +43,22 @@ appId: com.bkomen.solararraysimulator
 
 # Empty canvas: Finish is hidden until a panel exists (iOS and Android)
 - assertNotVisible: "Finish"
+- runFlow: shared/assert-custom-header.yaml
 
 # Add a panel (iOS "add", Android "Add panel")
 - runFlow: shared/tap-add-panel.yaml
 - waitForAnimationToEnd
+
+# Header-right stays complete after the unlinked Badge appears
+- runFlow: shared/assert-custom-header.yaml
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - assertVisible: "Unlinked panels"
+- tapOn: "Snap to origin"
+- assertVisible:
+    id: "canvas-container"
 
 # Verify "Finish" appears (only when panels > 0 in wizard mode)
 - assertVisible: "Finish"

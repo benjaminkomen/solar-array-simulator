@@ -104,6 +104,14 @@ function ToolbarIconButton({
   );
 }
 
+/**
+ * iOS header-right items must be *direct* `Stack.Toolbar.Button` children.
+ * `processHeaderItemsForPlatform.ios` keeps only `isChildOfType(StackToolbarButton)`
+ * (and Menu / Spacer / View). A wrapper like `ToolbarIconButton` is dropped, so
+ * only the inlined Badge link survived and compass/snap vanished. Bottom toolbar
+ * still wraps — iOS `placement="bottom"` renders React children, not header items.
+ * Android header-right renders children inside a Compose Row, so wrappers stay.
+ */
 export function CustomHeaderToolbar({
   unlinkedCount,
   onCompassToggle,
@@ -114,12 +122,20 @@ export function CustomHeaderToolbar({
 
   return (
     <Stack.Toolbar placement="right">
-      <ToolbarIconButton
-        name="compass"
-        onPress={onCompassToggle}
-        accessibilityLabel="Toggle compass"
-        tint={headerTint}
-      />
+      {Platform.OS === "android" ? (
+        <ToolbarIconButton
+          name="compass"
+          onPress={onCompassToggle}
+          accessibilityLabel="Toggle compass"
+          tint={headerTint}
+        />
+      ) : (
+        <Stack.Toolbar.Button
+          icon={CUSTOM_TOOLBAR_ICONS.compass}
+          onPress={onCompassToggle}
+          accessibilityLabel="Toggle compass"
+        />
+      )}
       {Platform.OS === "android" ? (
         <AndroidToolbarIconButton
           source={CUSTOM_TOOLBAR_ICONS.link as ImageSourcePropType}
@@ -138,12 +154,20 @@ export function CustomHeaderToolbar({
           )}
         </Stack.Toolbar.Button>
       )}
-      <ToolbarIconButton
-        name="snap"
-        onPress={onSnapToOrigin}
-        accessibilityLabel="Snap to origin"
-        tint={headerTint}
-      />
+      {Platform.OS === "android" ? (
+        <ToolbarIconButton
+          name="snap"
+          onPress={onSnapToOrigin}
+          accessibilityLabel="Snap to origin"
+          tint={headerTint}
+        />
+      ) : (
+        <Stack.Toolbar.Button
+          icon={CUSTOM_TOOLBAR_ICONS.snap}
+          onPress={onSnapToOrigin}
+          accessibilityLabel="Snap to origin"
+        />
+      )}
     </Stack.Toolbar>
   );
 }

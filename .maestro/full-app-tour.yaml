@@ -51,6 +51,7 @@ appId: com.bkomen.solararraysimulator
 
 # Custom: empty canvas hides Finish
 - assertNotVisible: "Finish"
+- runFlow: shared/assert-custom-header.yaml
 
 # Compass help sheet (first Toggle compass).
 # iOS formSheet; Android Compose ModalBottomSheet — not a full-screen page.
@@ -65,9 +66,18 @@ appId: com.bkomen.solararraysimulator
         id: "canvas-container"
     timeout: 10000
 
-# Add a panel, then Finish is allowed
+# Add a panel, then Finish is allowed. Badge must not hide compass/snap.
 - runFlow: shared/tap-add-panel.yaml
 - waitForAnimationToEnd
+- runFlow: shared/assert-custom-header.yaml
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - assertVisible: "Unlinked panels"
+- tapOn: "Snap to origin"
+- assertVisible:
+    id: "canvas-container"
 - assertVisible: "Finish"
 - tapOn: "Finish"
 - extendedWaitUntil:

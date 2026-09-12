@@ -82,6 +82,44 @@ describe("Custom chrome tree", () => {
     expect(configSrc).not.toContain("Stack.Toolbar.Badge");
   });
 
+  it("keeps iOS header-right compass, link+Badge, and snap as direct Toolbar.Button children", () => {
+    const rightToolbar =
+      chromeSrc.match(/<Stack\.Toolbar placement="right">[\s\S]*?<\/Stack\.Toolbar>/)?.[0] ?? "";
+    const expoIosProcess = readFileSync(
+      resolve(
+        import.meta.dir,
+        "../../../node_modules/expo-router/build/layouts/stack-utils/toolbar/processHeaderItemsForPlatform.ios.js",
+      ),
+      "utf8",
+    );
+
+    expect(expoIosProcess).toContain("isChildOfType");
+    expect(expoIosProcess).toContain("StackToolbarButton");
+    expect(expoIosProcess).toContain("unstable_headerRightItems");
+    expect(chromeSrc).toContain("isChildOfType(StackToolbarButton)");
+    expect(chromeSrc).toContain("direct");
+
+    expect(rightToolbar.split("<Stack.Toolbar.Button").length - 1).toBe(3);
+    expect(rightToolbar.split("<ToolbarIconButton").length - 1).toBe(2);
+    expect(rightToolbar.split("<AndroidToolbarIconButton").length - 1).toBe(1);
+    expect(rightToolbar).toContain("CUSTOM_TOOLBAR_ICONS.compass");
+    expect(rightToolbar).toContain("CUSTOM_TOOLBAR_ICONS.snap");
+    expect(rightToolbar).toContain("CUSTOM_TOOLBAR_ICONS.link");
+    expect(rightToolbar).toContain('accessibilityLabel="Toggle compass"');
+    expect(rightToolbar).toContain('accessibilityLabel="Snap to origin"');
+    expect(rightToolbar).toContain("Stack.Toolbar.Badge");
+
+    expect(rightToolbar).toMatch(
+      /Platform\.OS === "android" \? \([\s\S]*name="compass"[\s\S]*\) : \([\s\S]*<Stack\.Toolbar\.Button[\s\S]*Toggle compass/,
+    );
+    expect(rightToolbar).toMatch(
+      /Platform\.OS === "android" \? \([\s\S]*AndroidToolbarIconButton[\s\S]*\) : \([\s\S]*Stack\.Toolbar\.Button/,
+    );
+    expect(rightToolbar).toMatch(
+      /Platform\.OS === "android" \? \([\s\S]*name="snap"[\s\S]*\) : \([\s\S]*<Stack\.Toolbar\.Button[\s\S]*Snap to origin/,
+    );
+  });
+
   it("keeps Add panel on a clickable RN Pressable because Android Toolbar.Button a11y is dead", () => {
     expect(expoToolbarButtonAndroid).toContain("IconButton");
     expect(expoToolbarButtonAndroid).toMatch(/Icon[\s\S]*contentDescription/);
