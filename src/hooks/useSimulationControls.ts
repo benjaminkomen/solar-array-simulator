@@ -14,6 +14,7 @@ import {
 } from "@/utils/solarCalculations";
 import { formatWattage } from "@/utils/formatters";
 import { clearDebouncedHour, scheduleDebouncedHour } from "@/utils/debounceHour";
+import { panelsForSimulationScene } from "@/utils/simulationPanels";
 
 export {
   HOUR_SLIDER_DEBOUNCE_MS,
@@ -121,13 +122,15 @@ export function useSimulationControls() {
 
   const panels3D = useMemo(
     () =>
-      panelInfos.map((p) => ({
-        id: p.id,
-        x: p.x,
-        y: p.y,
-        rotation: p.rotation,
-        wattage: wattages.get(p.id) ?? 0,
-      })),
+      panelsForSimulationScene(
+        panelInfos.map((p) => ({
+          id: p.id,
+          x: p.x,
+          y: p.y,
+          rotation: p.rotation,
+          wattage: wattages.get(p.id) ?? 0,
+        })),
+      ),
     [panelInfos, wattages]
   );
 

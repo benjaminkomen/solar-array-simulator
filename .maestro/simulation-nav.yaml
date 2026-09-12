@@ -21,8 +21,9 @@ appId: com.bkomen.solararraysimulator
 
 # Short settle only. Do not wait for a testID that is not in the tree —
 # a 90s optional wait lets the app leave Simulation (AVD launcher).
-# Proof must be taken while Simulation chrome is still in the foreground
-# (panel/sun or black canvas with chrome — never the launcher).
+# Proof must be taken while Simulation chrome is still in the foreground.
+# Required visual: panel + sun (empty arrays are seeded in JS).
+# Black first frame = GPU settle. Never the launcher.
 - waitForAnimationToEnd:
     timeout: 5000
 - assertVisible: "Simulation"

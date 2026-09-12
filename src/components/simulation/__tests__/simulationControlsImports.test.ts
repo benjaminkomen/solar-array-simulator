@@ -37,4 +37,15 @@ describe("Simulation controls collapse", () => {
     expect(hook).toContain("scheduleDebouncedHour");
     expect(hook).toContain("displayHour");
   });
+
+  it("seeds an empty array in the hook, not inside SimulationView", () => {
+    const hook = readFileSync(hookPath, "utf8");
+    const view = readFileSync(
+      resolve(import.meta.dir, "../SimulationView.tsx"),
+      "utf8",
+    );
+    expect(hook).toContain("panelsForSimulationScene");
+    expect(view).not.toContain("panelsForSimulationScene");
+    expect(view).not.toContain("simulation-seed-panel");
+  });
 });

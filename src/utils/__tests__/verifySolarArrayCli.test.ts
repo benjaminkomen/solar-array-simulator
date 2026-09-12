@@ -125,6 +125,7 @@ describe("verify-solar-array CLI", () => {
     expect(flow).not.toContain("webgpu-scene-painted");
     expect(flow).not.toMatch(/timeout: 90000/);
     expect(flow).not.toContain('assertVisible: "Winter"');
+    expect(flow).toContain("panel + sun");
   });
 
   it("Android Production menu and empty-canvas Finish match iOS product rules", () => {
