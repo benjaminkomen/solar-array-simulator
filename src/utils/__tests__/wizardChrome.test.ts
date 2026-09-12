@@ -176,8 +176,13 @@ describe("requestWizardFinish", () => {
     );
     expect(chromeSrc).toContain("androidWizardFinishPressProofLabel");
     expect(chromeSrc).toContain("pressAndroidWizardFinish");
-    expect(chromeSrc).toContain('importantForAccessibility="no"');
+    expect(chromeSrc).toContain("AndroidWizardFinishGlyph");
     expect(chromeSrc.split('accessibilityLabel="Finish"').length - 1).toBe(0);
+    const finishButton = chromeSrc.match(
+      /export function AndroidWizardFinishButton[\s\S]*?export function CustomBottomToolbar/,
+    )?.[0] ?? "";
+    expect(finishButton).toContain("AndroidWizardFinishGlyph");
+    expect(finishButton).not.toContain("<Text");
     expect(productionHookSrc).toContain("persistWizardCompletedOnProduction");
   });
 
@@ -247,6 +252,19 @@ describe("listAndroidFinishA11yNodes", () => {
     expect(hits).toEqual([]);
     expect(chromeSrc).toContain("androidWizardFinishPressProofLabel");
     expect(chromeSrc).toContain('Platform.OS !== "android"');
+  });
+
+  it("does not mount an RN TextView that uiautomator can match as FINISH", () => {
+    const glyphSrc = readFileSync(
+      resolve(import.meta.dir, "../../components/AndroidWizardFinishGlyph.android.tsx"),
+      "utf8",
+    );
+    expect(glyphSrc).toContain("@shopify/react-native-skia");
+    expect(glyphSrc).toContain("SkiaText");
+    expect(glyphSrc).not.toMatch(/import \{[^}]*\bText\b[^}]*\} from "react-native"/);
+    expect(glyphSrc).not.toContain("<Text");
+    expect(happyYaml).toContain('tapOn: "Finish"');
+    expect(happyYaml).not.toContain("android-wizard-finish");
   });
 });
 

@@ -113,8 +113,9 @@ export type AndroidFinishA11yNode = {
 };
 
 /**
- * Every Android a11y node that matches Finish / FINISH before press.
- * Inner visual text is not an a11y node (`accessible={false}`).
+ * Every Android Finish / FINISH node Maestro can tap before press.
+ * Must stay one: the Pressable. RN Text "FINISH" is a second
+ * uiautomator node even when `accessible={false}` — paint with Skia.
  * iOS `WizardFinishButton` is not mounted on Android.
  */
 export function listAndroidFinishA11yNodes(): readonly AndroidFinishA11yNode[] {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
+import { Platform, Pressable, StyleSheet, View, type ImageSourcePropType } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import type { SFSymbol } from "sf-symbols-typescript";
@@ -9,6 +9,7 @@ import LinkIcon from "@expo/material-symbols/link.xml";
 import MyLocation from "@expo/material-symbols/my_location.xml";
 import Navigation from "@expo/material-symbols/navigation.xml";
 import RotateRight from "@expo/material-symbols/rotate_right.xml";
+import { AndroidWizardFinishGlyph } from "@/components/AndroidWizardFinishGlyph";
 import { CustomToolbarAndroidIcon } from "@/components/CustomToolbarAndroidIcon";
 import {
   CUSTOM_ADD_PANEL_A11Y,
@@ -208,9 +209,10 @@ function pressAndroidWizardFinish(
 }
 
 /**
- * Android-only Finish. Position is locked (left of zoom, above Host).
- * onPress first flips this same Pressable to `Tapped` so a drive can
- * see the press without Redirect. Then it records `/production`.
+ * Android-only Finish. Position is locked. Visual is Skia, not RN Text —
+ * a TextView "FINISH" is a second uiautomator node that Maestro taps
+ * instead of this Pressable (#80). onPress flips the same control to
+ * `Tapped`, then records `/production`.
  */
 export function AndroidWizardFinishButton({
   visible,
@@ -247,14 +249,10 @@ export function AndroidWizardFinishButton({
         },
       ]}
     >
-      <Text
-        pointerEvents="none"
-        accessible={false}
-        importantForAccessibility="no"
-        style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}
-      >
-        {label}
-      </Text>
+      <AndroidWizardFinishGlyph
+        label={label}
+        color={colors.primary as string}
+      />
     </Pressable>
   );
 }
@@ -351,19 +349,6 @@ const styles = StyleSheet.create({
   toolbarIconHit: {
     ...StyleSheet.absoluteFill,
   },
-  toolbarTextButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: 36,
-    justifyContent: "center",
-  },
-  toolbarFinishHit: {
-    minWidth: 48,
-    minHeight: 48,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   androidFinishHit: {
     position: "absolute",
     zIndex: 30,
@@ -373,11 +358,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     justifyContent: "center",
     alignItems: "center",
-  },
-  toolbarTextButtonLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
 });
