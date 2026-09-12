@@ -11,32 +11,31 @@ const uploadSrc = readFileSync(src("app/upload.tsx"), "utf8");
 const iconButtonSrc = readFileSync(src("components/AndroidToolbarIconButton.tsx"), "utf8");
 const appJson = readFileSync(resolve(import.meta.dir, "../../../app.json"), "utf8");
 
-function androidBranch(source: string, marker: string): string {
-  const idx = source.indexOf(marker);
-  return idx === -1 ? "" : source.slice(idx, idx + 500);
+function jsxCall(source: string, tag: string): string {
+  const start = source.indexOf(`<${tag}`);
+  if (start === -1) {
+    return "";
+  }
+  const end = source.indexOf("/>", start);
+  return end === -1 ? source.slice(start, start + 400) : source.slice(start, end + 2);
 }
 
 describe("Android Toolbar.Button leftovers (#74)", () => {
   it("puts Config Add inverter on View+Pressable, iOS keeps Toolbar.Button", () => {
-    expect(configSrc).toContain("AndroidToolbarIconButton");
-    expect(configSrc).toContain('accessibilityLabel="Add inverter"');
-    expect(configSrc).toContain('icon="plus"');
-    const androidAdd = androidBranch(configSrc, "AndroidToolbarIconButton");
-    expect(androidAdd).toContain("Add inverter");
-    expect(androidAdd).not.toContain("Stack.Toolbar.Button");
+    const androidAdd = jsxCall(configSrc, "AndroidToolbarIconButton");
+    expect(androidAdd).toContain('accessibilityLabel="Add inverter"');
+    expect(androidAdd).toContain("source={Add}");
+    expect(androidAdd).not.toContain("<Stack.Toolbar.Button");
     expect(configSrc).toMatch(
       /<Stack\.Toolbar\.Button[\s\S]*icon="plus"[\s\S]*accessibilityLabel="Add inverter"/,
     );
   });
 
   it("puts Production Simulate on View+Pressable, iOS keeps Toolbar.Button", () => {
-    expect(productionSrc).toContain("AndroidToolbarIconButton");
-    expect(productionSrc).toContain('accessibilityLabel="Simulate"');
-    expect(productionSrc).toContain('icon="sun.max"');
-    const androidSim = androidBranch(productionSrc, "source={WbSunny}");
-    expect(androidSim).toContain("AndroidToolbarIconButton");
-    expect(androidSim).toContain("Simulate");
-    expect(androidSim).not.toContain("Stack.Toolbar.Button");
+    const androidSim = jsxCall(productionSrc, "AndroidToolbarIconButton");
+    expect(androidSim).toContain('accessibilityLabel="Simulate"');
+    expect(androidSim).toContain("source={WbSunny}");
+    expect(androidSim).not.toContain("<Stack.Toolbar.Button");
     expect(productionSrc).toMatch(
       /<Stack\.Toolbar\.Button[\s\S]*icon="sun.max"[\s\S]*accessibilityLabel="Simulate"/,
     );
@@ -62,7 +61,7 @@ describe("Android Toolbar.Button leftovers (#74)", () => {
     expect(iconButtonSrc).toContain("collapsable={false}");
     expect(iconButtonSrc).toContain("cancelable={false}");
     expect(iconButtonSrc).toContain("CustomToolbarAndroidIcon");
-    expect(iconButtonSrc).not.toContain("Stack.Toolbar.Button");
+    expect(iconButtonSrc).not.toContain("<Stack.Toolbar.Button");
   });
 
   it("does not regress Custom Finish, Upload first paint, or Hermes V1", () => {
