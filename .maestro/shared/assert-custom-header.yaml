@@ -1,0 +1,6 @@
+appId: com.bkomen.solararraysimulator
+---
+# Custom header-right: compass + snap must stay visible next to the
+# unlinked-count control. iOS Badge must not collapse sibling buttons.
+- assertVisible: "Toggle compass"
+- assertVisible: "Snap to origin"

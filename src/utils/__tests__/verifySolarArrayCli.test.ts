@@ -227,8 +227,18 @@ describe("verify-solar-array CLI", () => {
     expect(more).toContain("header-right");
     expect(wizard).toContain('assertNotVisible: "Finish"');
     expect(wizard.indexOf('assertNotVisible: "Finish"')).toBeLessThan(wizard.indexOf("tap-add-panel"));
+    expect(wizard).toContain("assert-custom-header.yaml");
+    const customHeader = readFileSync(
+      join(repoRoot, ".maestro/shared/assert-custom-header.yaml"),
+      "utf8",
+    );
+    expect(customHeader).toContain("Toggle compass");
+    expect(customHeader).toContain("Snap to origin");
     expect(happy).toContain('assertNotVisible: "Finish"');
     expect(happy.indexOf('assertNotVisible: "Finish"')).toBeLessThan(happy.indexOf("tap-add-panel"));
+    expect(happy).toContain("assert-custom-header.yaml");
+    expect(happy).toContain("Snap to origin");
+    expect(happy).toContain("Unlinked panels");
     expect(happy).toContain('tapOn: "Finish"');
     expect(happy).toContain("Total Array Output");
     expect(happy).not.toMatch(/openLink:[\s\S]*production/);
@@ -316,6 +326,7 @@ describe("verify-solar-array CLI", () => {
     expect(compass).toContain("old `compass-help.ios.tsx`");
     expect(compass).toContain("CompassHelpScreen.android.tsx");
     expect(compass).toContain("ModalBottomSheet");
+    expect(compass).toContain("direct `Stack.Toolbar.Button`");
     expect(compass).not.toContain("Do not put `ModalBottomSheet`");
     expect(upload).toContain("src/app/upload.tsx");
     expect(upload).toContain("Do not paper this as still-split");
@@ -324,6 +335,9 @@ describe("verify-solar-array CLI", () => {
     expect(custom).toContain('Assert "Finish" is **not** visible');
     expect(custom).toContain("CustomChrome");
     expect(custom).toContain("CustomScreen.ios.tsx");
+    expect(custom).toContain("isChildOfType");
+    expect(custom).toContain("Toggle compass");
+    expect(custom).toContain("Snap to origin");
     expect(custom).not.toContain("hold #56");
     expect(analyze).toContain("Select AI Model");
     expect(analyze).toContain("Do not wait for `SELECT AI MODEL`");
@@ -351,6 +365,7 @@ describe("verify-solar-array CLI", () => {
     expect(skill).toContain("details-sheets");
     expect(skill).toContain("Select AI Model");
     expect(skill).toContain("ModalBottomSheet");
+    expect(skill).toContain("direct `Stack.Toolbar.Button`");
     expect(skill).not.toContain("Compass help is iOS-only as a sheet");
   });
 
@@ -360,6 +375,9 @@ describe("verify-solar-array CLI", () => {
     expect(tour).toContain('assertNotVisible: "Finish"');
     expect(tour.indexOf('assertNotVisible: "Finish"')).toBeLessThan(tour.indexOf("tap-add-panel"));
     expect(tour).toContain("Toggle compass");
+    expect(tour).toContain("assert-custom-header.yaml");
+    expect(tour).toContain("Snap to origin");
+    expect(tour).toContain("Unlinked panels");
     expect(tour).toContain("Array Orientation");
     expect(tour).toContain("tap-more-options.yaml");
     expect(tour).toContain('assertNotVisible: "Reload"');
