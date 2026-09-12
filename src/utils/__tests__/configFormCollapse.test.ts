@@ -17,7 +17,7 @@ const inverterAndroidSrc = readFileSync(
   src("components/config/InverterSection.android.tsx"),
   "utf8",
 );
-const productionAndroidSrc = readFileSync(src("app/production.android.tsx"), "utf8");
+const productionSrc = readFileSync(src("app/production.tsx"), "utf8");
 const appJson = readFileSync(resolve(repoRoot, "app.json"), "utf8");
 const pickerTypesSrc = readFileSync(
   resolve(repoRoot, "node_modules/@expo/ui/src/universal/Picker/types.ts"),
@@ -82,9 +82,9 @@ describe("config FieldGroup collapse", () => {
 
   it("does not flip Hermes V1 or move the Production overflow", () => {
     expect(appJson).toContain('"useHermesV1": true');
-    expect(productionAndroidSrc).toContain('placement="right"');
-    expect(productionAndroidSrc).toContain("Toolbar.Menu");
-    expect(productionAndroidSrc).toContain("Simulate");
-    expect(productionAndroidSrc).not.toContain("cardMenu");
+    expect(productionSrc).toContain('placement="right"');
+    expect(productionSrc).toContain("Toolbar.Menu");
+    expect(productionSrc).toContain("Simulate");
+    expect(productionSrc).not.toContain("cardMenu");
   });
 });
