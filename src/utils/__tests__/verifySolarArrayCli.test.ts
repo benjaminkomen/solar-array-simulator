@@ -37,7 +37,10 @@ describe("verify-solar-array CLI", () => {
     const config = readAppRouteSource(repoRoot, "config", "ios");
     expect(config.file.endsWith("config.tsx")).toBe(true);
     const compass = readAppRouteSource(repoRoot, "compass-help", "ios");
-    expect(compass.file.endsWith("compass-help.tsx")).toBe(true);
+    expect(compass.file.endsWith("CompassHelpScreen.ios.tsx")).toBe(true);
+    const compassAndroid = readAppRouteSource(repoRoot, "compass-help", "android");
+    expect(compassAndroid.file.endsWith("CompassHelpScreen.android.tsx")).toBe(true);
+    expect(compassAndroid.src).toContain("ModalBottomSheet");
   });
 
   it("lists full-app-tour as a top-level flow", () => {
@@ -290,6 +293,7 @@ describe("verify-solar-array CLI", () => {
     expect(readme).toContain("Leftover platform chrome");
     expect(readme).not.toContain("Remaining platform stubs");
     expect(readme).toContain("#56");
+    expect(readme).toContain("CompassHelpScreen");
     expect(readme).not.toContain("hold #56");
     expect(readme).toContain("src/app/upload.tsx");
     expect(readme).toContain("src/app/analyze.tsx");
@@ -310,6 +314,9 @@ describe("verify-solar-array CLI", () => {
     expect(config).not.toContain("product UI is `src/app/config.ios.tsx`");
     expect(compass).toContain("src/app/compass-help.tsx");
     expect(compass).toContain("old `compass-help.ios.tsx`");
+    expect(compass).toContain("CompassHelpScreen.android.tsx");
+    expect(compass).toContain("ModalBottomSheet");
+    expect(compass).not.toContain("Do not put `ModalBottomSheet`");
     expect(upload).toContain("src/app/upload.tsx");
     expect(upload).toContain("Do not paper this as still-split");
     expect(upload).toContain("analyze-empty-state-button");
@@ -343,6 +350,8 @@ describe("verify-solar-array CLI", () => {
     expect(skill).toContain("Do not invent a full-app video");
     expect(skill).toContain("details-sheets");
     expect(skill).toContain("Select AI Model");
+    expect(skill).toContain("ModalBottomSheet");
+    expect(skill).not.toContain("Compass help is iOS-only as a sheet");
   });
 
   it("full-app-tour encodes the honesty facts and is a top-level flow", () => {

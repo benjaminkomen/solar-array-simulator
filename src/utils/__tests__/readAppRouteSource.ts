@@ -5,13 +5,14 @@ const SCREEN_FILES: Record<string, string> = {
   custom: "CustomScreen",
   "inverter-details": "InverterDetailsScreen",
   "panel-details": "PanelDetailsScreen",
+  "compass-help": "CompassHelpScreen",
 };
 
 /**
  * Prefer leftover platform chrome in `src/components/screens/` after #56,
  * then `src/app/<name>.<platform>.tsx` if a pair still exists, then the
- * collapsed `src/app/<name>.tsx` (Production, compass-help, Config, Upload,
- * Analyze, Simulation).
+ * collapsed `src/app/<name>.tsx` (Production, Config, Upload, Analyze,
+ * Simulation).
  */
 export function readAppRouteSource(
   repoRoot: string,
