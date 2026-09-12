@@ -13,11 +13,11 @@ const chromeSrc = readFileSync(
   "utf8",
 );
 const iosSrc = readFileSync(
-  resolve(import.meta.dir, "../../app/custom.ios.tsx"),
+  resolve(import.meta.dir, "../../components/screens/CustomScreen.ios.tsx"),
   "utf8",
 );
 const androidSrc = readFileSync(
-  resolve(import.meta.dir, "../../app/custom.android.tsx"),
+  resolve(import.meta.dir, "../../components/screens/CustomScreen.android.tsx"),
   "utf8",
 );
 const productionSrc = readFileSync(

@@ -59,7 +59,7 @@ Match the change to a feature file, then run the matching Maestro flow. One scre
 | --- | --- | --- |
 | Welcome / Get Started | `smoke` + `wizard-happy-path` | Welcome is real. |
 | Config (SwiftUI Form / inverters) | `wizard-happy-path` + `details-sheets` | One `src/app/config.tsx` (#63). `config.web.tsx` is the web stub. Android inverter row is `id: inverter-row-1`. |
-| inverter-details / panel-details | `details-sheets` | Shared `FieldGroup` bodies (#64). Drive via Config `id: inverter-row-1` + Custom `openLink` `/panel-details?panelId=seed-panel`. Do not use Custom Add. Hold leftover presentation chrome until #56. |
+| inverter-details / panel-details | `details-sheets` | Shared `FieldGroup` bodies (#64). Drive via Config `id: inverter-row-1` + Custom `openLink` `/panel-details?panelId=seed-panel`. Do not use Custom Add. Presentation chrome is `InverterDetailsScreen.*` / `PanelDetailsScreen.*` (#56). |
 | Upload | `wizard-happy-path` + `analyze-skip` | One `src/app/upload.tsx` (#59). No Host/entering first paint. Android Skip is Pressable. |
 | Analyze (model picker / Skip / Continue) | `analyze-skip` | One `src/app/analyze.tsx` (#61). Header is `Select AI Model` on **both** platforms. Android Continue-without-photo is `id: analyze-empty-state-button`. Android Skip is Pressable. iOS Skip/Continue stay SwiftUI. |
 | Custom canvas / toolbar / compass | `wizard-happy-path` | Shared `CustomChrome` (#62). Android Add works. `Badge` is only on the header-right unlinked count. Skia is not Maestro-visible — prove via toolbar side effects. Wizard Finish stays hidden until the first panel exists. |
@@ -79,7 +79,7 @@ Match the change to a feature file, then run the matching Maestro flow. One scre
 7. **Android launch.** Wait for Dev Client Home, deep-link `http://10.0.2.2:8081`, dismiss Dev Menu, tap **Tools button** once. Expo Go / `exp://` / `launchApp` alone is not enough. Comments in `launch-android.yaml` say SDK 57.
 8. **Compass help is iOS-only as a sheet.** Android compass opens a modal that Maestro cannot assert the same way.
 9. **Do not "fix" the map to hide a product bug.** If Android ≠ iOS, leave it as a product issue and document it.
-10. **Hold leftover files until #56.** Do not move `custom.ios.tsx` / `custom.android.tsx`, details presentation chrome, or `config.web.tsx` in this PR.
+10. **Leftover platform chrome is in `src/components/screens/` (#56).** `config.web.tsx` stays in `src/app/`. Do not recreate `src/app/*.ios.tsx` / `*.android.tsx` for already-universal screens.
 11. **No invented device video.** Linux CI / this VM cannot drive a simulator. Proof is the feature map + Maestro YAML + unit tests that lock the map. Attach a recording only when a real Maestro / Simulator run produced it.
 
 ## Personal Mac drive (required before claiming UI done)

@@ -15,7 +15,7 @@ Surface: iOS Simulator and Android emulator development builds (SDK 57). Maestro
 - `src/app/analyze.tsx` (#61; universal Picker; header **Select AI Model** on both; Android Continue without photo + Skip Pressable)
 - inverter-details / panel-details FieldGroup bodies (#64; `InverterDetailsForm` / `PanelDetailsForm`; drive via Config `inverter-row-1` + `seed-panel`)
 
-**Leftovers that still exist (hold #56 — do not touch that PR):** `src/app/custom.ios.tsx` / `custom.android.tsx` (mount the shared chrome; `custom.tsx` is the web stub), `src/app/inverter-details.ios.tsx` / `.android.tsx` and `panel-details.*` (presentation chrome only), `src/app/config.web.tsx`. Do not invent extra stubs. Do not treat web-stub copy as success.
+**Leftover platform chrome (#56) lives in `src/components/screens/`:** `CustomScreen.ios.tsx` / `CustomScreen.android.tsx` mount the shared chrome (`CustomScreen.tsx` is the web stub); `InverterDetailsScreen.*` / `PanelDetailsScreen.*` are presentation chrome only. `src/app/custom.tsx`, `inverter-details.tsx`, and `panel-details.tsx` are thin re-exports. `src/app/config.web.tsx` stays. Do not invent extra stubs. Do not treat web-stub copy as success.
 
 ## Baseline preconditions
 
@@ -71,20 +71,20 @@ Every feature file uses the same four H2s:
 3. `Driving it with the harness`
 4. `Gotchas`
 
-## Collapse hooks (remaining)
+## Collapse hooks
 
-All listed collapses have landed except **hold #56** (move leftover platform files out of `src/app/`). Do not touch that PR. Rewrite only leftover-path bullets when #56 lands.
+All listed collapses have landed, including leftover-file move **#56**.
 
 | After | Status | Feature file |
 | --- | --- | --- |
-| landed #62 | Custom chrome is one toolbar tree; leftover `custom.ios.tsx` / `.android.tsx` mount it | [custom.md](custom.md) |
+| landed #62 | Custom chrome is one toolbar tree; `#56` mounts it from `CustomScreen.ios.tsx` / `.android.tsx` | [custom.md](custom.md) |
 | landed #55 | `production.tsx` universal | [production.md](production.md) |
 | landed #59 | `upload.tsx` universal | [upload.md](upload.md) |
 | landed #61 | `analyze.tsx` universal Picker | [analyze.md](analyze.md) |
 | landed #60 | `compass-help.tsx` universal | [compass-help.md](compass-help.md) |
 | landed #65 / #67 | `simulation.tsx` + segmented `SeasonPicker` | [simulation.md](simulation.md) |
-| landed #64 | details FieldGroup bodies; leftover presentation files | [config.md](config.md), [custom.md](custom.md) |
+| landed #64 | details FieldGroup bodies; `#56` moved presentation chrome | [config.md](config.md), [custom.md](custom.md) |
 | landed #63 | `config.tsx` FieldGroup (`config.web.tsx` stub) | [config.md](config.md) |
-| hold #56 | leftover `src/app/` platform files stay until that PR | this README |
+| landed #56 | leftover Custom/details platform chrome is in `src/components/screens/` | this README |
 
 `theme.android.ts` stays in `utils/`. `_layout.tsx` and `index.tsx` are already one file. Do not invent a second Android EAS profile. Do not move Production ⋮ onto the output card.

@@ -54,9 +54,11 @@ describe("compass-help collapse", () => {
     expect(options).toContain("sheetAllowedDetents: Platform.OS === 'ios' ? [0.3]");
   });
 
-  it("does not collapse leftover Custom mounts; Config is already universal", () => {
-    expect(existsSync(resolve(repoRoot, "src/app/custom.ios.tsx"))).toBe(true);
-    expect(existsSync(resolve(repoRoot, "src/app/custom.android.tsx"))).toBe(true);
+  it("keeps leftover Custom mounts in components/screens; Config stays universal", () => {
+    expect(existsSync(resolve(repoRoot, "src/app/custom.ios.tsx"))).toBe(false);
+    expect(existsSync(resolve(repoRoot, "src/app/custom.android.tsx"))).toBe(false);
+    expect(existsSync(resolve(repoRoot, "src/components/screens/CustomScreen.ios.tsx"))).toBe(true);
+    expect(existsSync(resolve(repoRoot, "src/components/screens/CustomScreen.android.tsx"))).toBe(true);
     expect(existsSync(resolve(repoRoot, "src/app/config.tsx"))).toBe(true);
     expect(existsSync(resolve(repoRoot, "src/app/config.ios.tsx"))).toBe(false);
     expect(existsSync(resolve(repoRoot, "src/app/config.android.tsx"))).toBe(false);

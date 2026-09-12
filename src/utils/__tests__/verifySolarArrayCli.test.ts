@@ -24,7 +24,7 @@ function run(args: string[]) {
 describe("verify-solar-array CLI", () => {
   it("route-source hook prefers leftover Custom mounts and falls back after collapse", () => {
     const custom = readAppRouteSource(repoRoot, "custom", "android");
-    expect(custom.file.endsWith("custom.android.tsx")).toBe(true);
+    expect(custom.file.endsWith("CustomScreen.android.tsx")).toBe(true);
     const upload = readAppRouteSource(repoRoot, "upload", "android");
     expect(upload.file.endsWith("upload.tsx")).toBe(true);
     const analyze = readAppRouteSource(repoRoot, "analyze", "ios");
@@ -274,9 +274,10 @@ describe("verify-solar-array CLI", () => {
     expect(readme).toContain("MAESTRO_DRIVER_STARTUP_TIMEOUT=180000");
     expect(readme).toContain("full-app-tour");
     expect(readme).toContain("Already universal");
-    expect(readme).toContain("Leftovers that still exist");
+    expect(readme).toContain("Leftover platform chrome");
     expect(readme).not.toContain("Remaining platform stubs");
-    expect(readme).toContain("hold #56");
+    expect(readme).toContain("#56");
+    expect(readme).not.toContain("hold #56");
     expect(readme).toContain("src/app/upload.tsx");
     expect(readme).toContain("src/app/analyze.tsx");
     expect(readme).toContain("src/app/simulation.tsx");
@@ -302,8 +303,8 @@ describe("verify-solar-array CLI", () => {
     expect(custom).toContain("shouldShowWizardFinish");
     expect(custom).toContain('Assert "Finish" is **not** visible');
     expect(custom).toContain("CustomChrome");
-    expect(custom).toContain("custom.ios.tsx");
-    expect(custom).toContain("hold #56");
+    expect(custom).toContain("CustomScreen.ios.tsx");
+    expect(custom).not.toContain("hold #56");
     expect(analyze).toContain("Select AI Model");
     expect(analyze).toContain("Do not wait for `SELECT AI MODEL`");
     expect(analyze).toContain("analyze-empty-state-button");

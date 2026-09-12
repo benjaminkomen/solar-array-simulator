@@ -2,14 +2,14 @@
 
 Wizard step 3 (`/custom?wizard=true`): Skia canvas for laying out panels. Selected panels can be rotated, deleted, or linked to a micro-inverter via the Panel Details sheet. Finish (wizard, panels > 0) writes `wizardCompleted` and opens Production.
 
-Custom chrome is one toolbar tree (#62): `CustomHeaderToolbar` / `CustomBottomToolbar`. Android Add works. Badge is only on the header-right unlinked count. Leftover `custom.ios.tsx` / `custom.android.tsx` mount that shared chrome — hold #56 to move them. `custom.tsx` is the web stub.
+Custom chrome is one toolbar tree (#62): `CustomHeaderToolbar` / `CustomBottomToolbar`. Android Add works. Badge is only on the header-right unlinked count. `#56` moved the leftover mounts to `src/components/screens/CustomScreen.ios.tsx` / `CustomScreen.android.tsx`. `src/app/custom.tsx` is a thin re-export; `CustomScreen.tsx` is the web stub.
 
 ## Sub-features
 
 - `custom-canvas` mounts `id: canvas-container` with zoom controls.
 - `custom-add` toolbar plus adds a panel. Wizard "Finish" appears only after `shouldShowWizardFinish` (`wizard` and `panels.length > 0`).
 - `custom-select-actions` after a selection: Link inverter, Rotate, Delete.
-- `custom-panel-details` form sheet `/panel-details?panelId=…`. Body is shared `PanelDetailsForm` (`FieldGroup`, #64). iOS formSheet / Android `ModalBottomSheet` chrome stay in the leftover route files and `_layout`.
+- `custom-panel-details` form sheet `/panel-details?panelId=…`. Body is shared `PanelDetailsForm` (`FieldGroup`, #64). iOS formSheet / Android `ModalBottomSheet` chrome live in `PanelDetailsScreen.*` and `_layout`.
 - `custom-panel-view` from Production tap (read-only, `mode=view`) — covered here because it is the same sheet.
 - `custom-finish` Finish → Production ("Total Array Output").
 
@@ -36,9 +36,9 @@ Preconditions:
 
 ## Gotchas
 
-- Product chrome is `src/components/CustomChrome.tsx`. Leftover `src/app/custom.ios.tsx` / `custom.android.tsx` only mount it (icons SF vs Material). Hold #56 — do not move those files in this PR. Web stub `custom.tsx` is not success.
+- Product chrome is `src/components/CustomChrome.tsx`. Leftover mounts are `src/components/screens/CustomScreen.ios.tsx` / `CustomScreen.android.tsx` (icons SF vs Material). Web stub `CustomScreen.tsx` is not success.
 - Android `Stack.Toolbar.Button` puts `accessibilityLabel` on a Compose `Icon` (`clickable=false`). Android tappable chrome uses `Stack.Toolbar.View` + RN `Pressable` (`accessibilityRole="button"`, `collapsable={false}`). Keep Compose `Icon` **without** an a11y label; draw the Pressable **above** the Host. Do not put the Host inside the Pressable.
-- Panel Details body is `src/components/PanelDetailsForm.tsx`. Sheet presentation stays split until #56. Do not add a Host on the shared form.
+- Panel Details body is `src/components/PanelDetailsForm.tsx`. Sheet presentation lives in `PanelDetailsScreen.*` and `_layout`. Do not add a Host on the shared form.
 - Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches.
 - Finish is hidden when `panels.length === 0` or not in wizard mode (`shouldShowWizardFinish`).
 - `Stack.Toolbar.Badge` is only on the header-right link button when `unlinkedCount > 0`. Android omits `accessibilityLabel` on that Badge button.
