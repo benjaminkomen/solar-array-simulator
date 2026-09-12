@@ -37,6 +37,9 @@ describe("production menu a11y", () => {
     const rightToolbar =
       productionSrc.match(/<Stack\.Toolbar placement="right">[\s\S]*?<\/Stack\.Toolbar>/)?.[0] ?? "";
     expect(rightToolbar).toContain("Simulate");
+    expect(rightToolbar).toContain("AndroidToolbarIconButton");
+    expect(rightToolbar).toContain('accessibilityLabel="Simulate"');
+    expect(rightToolbar).toContain('icon="sun.max"');
     expect(rightToolbar).toContain("Toolbar.Menu");
     expect(rightToolbar).toContain("productionMenuA11y");
     expect(rightToolbar).toContain("Edit Configuration");

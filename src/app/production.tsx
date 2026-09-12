@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, useColorScheme, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
+import { AndroidToolbarIconButton } from "@/components/AndroidToolbarIconButton";
 import { ProductionCanvas } from "@/components/ProductionCanvas";
 import { ZoomControls } from "@/components/ZoomControls";
 import { Compass } from "@/components/Compass";
@@ -49,11 +50,20 @@ export default function ProductionScreen() {
   return (
     <>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          icon={isAndroid ? WbSunny : "sun.max"}
-          onPress={handleSimulate}
-          accessibilityLabel="Simulate"
-        />
+        {isAndroid ? (
+          <AndroidToolbarIconButton
+            source={WbSunny}
+            tint={colors.text.primary as string}
+            onPress={handleSimulate}
+            accessibilityLabel="Simulate"
+          />
+        ) : (
+          <Stack.Toolbar.Button
+            icon="sun.max"
+            onPress={handleSimulate}
+            accessibilityLabel="Simulate"
+          />
+        )}
         <Stack.Toolbar.Menu
           icon={isAndroid ? MoreVert : "ellipsis.circle"}
           accessibilityLabel={productionMenuA11y(Platform.OS)}

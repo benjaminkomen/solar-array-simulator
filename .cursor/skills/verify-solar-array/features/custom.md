@@ -2,7 +2,7 @@
 
 Wizard step 3 (`/custom?wizard=true`): Skia canvas for laying out panels. Selected panels can be rotated, deleted, or linked to a micro-inverter via the Panel Details sheet. Finish (wizard, panels > 0) opens Production on the first tap; Production persists `wizardCompleted`.
 
-Custom chrome is one toolbar tree (#62): `CustomHeaderToolbar` / `CustomBottomToolbar`. Android Add works. Badge is only on the header-right unlinked count. `#56` moved the leftover mounts to `src/components/screens/CustomScreen.ios.tsx` / `CustomScreen.android.tsx`. `src/app/custom.tsx` is a thin re-export; `CustomScreen.tsx` is the web stub.
+Custom chrome is one toolbar tree (#62): `CustomHeaderToolbar` / `CustomBottomToolbar`. Android Add works. iOS `Badge` is only on the header-right unlinked count; Android header-right is `AndroidToolbarIconButton`. `#56` moved the leftover mounts to `src/components/screens/CustomScreen.ios.tsx` / `CustomScreen.android.tsx`. `src/app/custom.tsx` is a thin re-export; `CustomScreen.tsx` is the web stub.
 
 ## Sub-features
 
@@ -37,7 +37,7 @@ Preconditions:
 ## Gotchas
 
 - Product chrome is `src/components/CustomChrome.tsx`. Leftover mounts are `src/components/screens/CustomScreen.ios.tsx` / `CustomScreen.android.tsx` (icons SF vs Material). Web stub `CustomScreen.tsx` is not success.
-- Android `Stack.Toolbar.Button` puts `accessibilityLabel` on a Compose `Icon` (`clickable=false`). Android tappable chrome uses `Stack.Toolbar.View` + RN `Pressable` (`accessibilityRole="button"`, `collapsable={false}`). Keep Compose `Icon` **without** an a11y label; draw the Pressable **above** the Host. Do not put the Host inside the Pressable.
+- Android `Stack.Toolbar.Button` puts `accessibilityLabel` on a Compose `Icon` (`clickable=false`). Android tappable chrome uses `AndroidToolbarIconButton` (`Stack.Toolbar.View` + RN `Pressable`, `accessibilityRole="button"`, `collapsable={false}`). Keep Compose `Icon` **without** an a11y label; draw the Pressable **above** the Host. Do not put the Host inside the Pressable.
 - Panel Details body is `src/components/PanelDetailsForm.tsx`. Sheet presentation lives in `PanelDetailsScreen.*` and `_layout`. Do not add a Host on the shared form.
 - Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches.
 - Finish is hidden when `panels.length === 0` or not in wizard mode (`shouldShowWizardFinish`).
@@ -45,6 +45,6 @@ Preconditions:
 - Android Finish / FINISH nodes before press (`listAndroidFinishA11yNodes`): **exactly one** — `AndroidWizardFinishButton` `accessibilityLabel="Finish"`. No RN TextView with Finish. iOS `WizardFinishButton` is not mounted on Android. Do **not** add a second Finish tap, `navigate`, `reset`, or retry.
 - Finish records `/production` and Custom renders `<Redirect>` (same Expo-owned path as Welcome). Do **not** `router.push` / `navigation.navigate` / `navigation.reset` / same-tap retry — those leave the file route at `/custom?wizard=true` so one tap still shows Layout + FINISH. Persist `wizardCompleted` in `useProductionMonitor`.
 - Welcome Redirect is launch-time only (`useState(getWizardCompleted)`). A live `useConfigStore` subscription must not mount Redirect when the flag flips.
-- `Stack.Toolbar.Badge` is only on the header-right link button when `unlinkedCount > 0`. Android omits `accessibilityLabel` on that Badge button.
+- `Stack.Toolbar.Badge` is only on the iOS header-right link button when `unlinkedCount > 0`. Android header-right is `AndroidToolbarIconButton` (View + Pressable + RN count badge) and omits `accessibilityLabel` on that control. Linking stays on the bottom toolbar.
 - Compass toggle is a different feature ([compass-help.md](compass-help.md)).
 - Collision uses an 8px gap. Overlap on drag-release is app behavior; Maestro cannot see it.

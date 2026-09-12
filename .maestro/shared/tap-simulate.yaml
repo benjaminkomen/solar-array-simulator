@@ -1,6 +1,6 @@
 appId: com.bkomen.solararraysimulator
 ---
-# Production → Simulation (iOS accessibilityLabel, Android Icon contentDescription)
+# Production → Simulation (iOS Toolbar.Button + Android Pressable, both labeled Simulate)
 
 - runFlow:
     when:

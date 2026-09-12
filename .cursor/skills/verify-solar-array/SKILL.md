@@ -62,8 +62,8 @@ Match the change to a feature file, then run the matching Maestro flow. One scre
 | inverter-details / panel-details | `details-sheets` | Shared `FieldGroup` bodies (#64). Drive via Config `id: inverter-row-1` + Custom `openLink` `/panel-details?panelId=seed-panel`. Do not use Custom Add. Presentation chrome is `InverterDetailsScreen.*` / `PanelDetailsScreen.*` (#56). |
 | Upload | `wizard-happy-path` + `analyze-skip` | One `src/app/upload.tsx` (#59). No Host/entering first paint. Android Skip is Pressable. |
 | Analyze (model picker / Skip / Continue) | `analyze-skip` | One `src/app/analyze.tsx` (#61). Header is `Select AI Model` on **both** platforms. Android Continue-without-photo is `id: analyze-empty-state-button`. Android Skip is Pressable. iOS Skip/Continue stay SwiftUI. |
-| Custom canvas / toolbar / compass | `wizard-happy-path` | Shared `CustomChrome` (#62). Android Add works. `Badge` is only on the header-right unlinked count. Skia is not Maestro-visible — prove via toolbar side effects. Wizard Finish stays hidden until the first panel exists. |
-| Production chrome / overflow | `production-menu` | One `src/app/production.tsx` (#55). Overflow a11y is still split: iOS `More options`, Android `Configuration options`. |
+| Custom canvas / toolbar / compass | `wizard-happy-path` | Shared `CustomChrome` (#62). Android Add works. iOS `Badge` is only on the header-right unlinked count; Android header-right is Pressable + RN count badge. Skia is not Maestro-visible — prove via toolbar side effects. Wizard Finish stays hidden until the first panel exists. |
+| Production chrome / overflow | `production-menu` | One `src/app/production.tsx` (#55). Overflow a11y is still split: iOS `More options`, Android `Configuration options`. Android Simulate is Pressable (`Simulate`), not a Compose Icon. |
 | Simulation 3D / sliders | `simulation-nav` | One `src/app/simulation.tsx` (#65). Season chips are one `SeasonPicker.tsx` over `@expo/ui/community/segmented-control` (#75). Empty-array 3D seed is `panelsForSimulationScene`. `sim-3d-proof` is panel+sun, not GPU-painted. |
 | Compass help sheet | `full-app-tour` | One `src/app/compass-help.tsx` (#60). Chrome lives in `_layout`. Assert "Array Orientation". |
 | Full Welcome → Simulation path | `full-app-tour` | Chains Welcome → Config → Upload Skip → Custom compass + first panel → Production menu → Simulation + `sim-3d-proof`. |
@@ -75,7 +75,7 @@ Match the change to a feature file, then run the matching Maestro flow. One scre
 3. **Production overflow labels differ.** iOS `More options`, Android `Configuration options`. `production-menu` must not show Reload / Go home.
 4. **Analyze header is `Select AI Model` on both platforms.** `wait-analyze-header.yaml` no longer branches. Do not wait for `SELECT AI MODEL`.
 5. **Android Analyze empty-state Continue.** `analyze-skip` on Android taps `id: analyze-empty-state-button` instead of the system Photos picker.
-6. **Android Skip / Analyze Pressable.** Upload and Analyze Skip on Android are RN `Pressable`, not SwiftUI Button.
+6. **Android Skip / Analyze / Add inverter / Simulate Pressable.** Upload and Analyze Skip, Config Add inverter, Production Simulate, and Custom header-right on Android are RN `Pressable`, not `Stack.Toolbar.Button`.
 7. **Android launch.** Wait for Dev Client Home, deep-link `http://10.0.2.2:8081`, dismiss Dev Menu, open the Tools FAB if needed, swipe the sheet up, tap **Tools button** once. Expo Go / `exp://` / `launchApp` alone is not enough. Comments in `launch-android.yaml` say SDK 57.
 8. **Compass help is iOS-only as a sheet.** Android compass opens a modal that Maestro cannot assert the same way.
 9. **Do not "fix" the map to hide a product bug.** If Android ≠ iOS, leave it as a product issue and document it.

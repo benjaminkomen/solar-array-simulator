@@ -32,7 +32,7 @@ Preconditions:
 ## Gotchas
 
 - One universal route: `src/app/production.tsx` (no `production.ios.tsx` / `production.android.tsx` — #55 landed). Icons, a11y, and the output-card inset fork via `Platform` / `productionChrome` helpers. Do not wrap this screen in `@expo/ui` `Host`. Shared a11y constants live in `src/utils/productionChrome.ts`.
-- Simulate = iOS `accessibilityLabel="Simulate"` / Android Icon `contentDescription="Simulate"` (same string).
+- Simulate = `accessibilityLabel="Simulate"` on both platforms. iOS is `Stack.Toolbar.Button`. Android is `Stack.Toolbar.View` + RN `Pressable` (`AndroidToolbarIconButton`) — do not tap a Compose Icon `contentDescription`.
 - Menu a11y is a **product** split: iOS `More options` (`PRODUCTION_MENU_A11Y_IOS`) / Android `Configuration options` (`PRODUCTION_MENU_A11Y_ANDROID`) on `Stack.Toolbar.Menu` in the right header (sibling of Simulate). Do not flatten these strings. Dev Client AppBar overflow is also "More options" — that is why Android uses a different label. If the header ⋮ opens Reload / Go home / Tools, the Dev Client **Tools button** toggle is still on — turn it off (Dev Menu row or `hideDevClientToolsButton`), do not move the menu onto the card. Same action titles: "Edit Configuration", "Delete Configuration".
 - `production-menu` must assert `Reload` and `Go home` are **not** visible after the overflow tap. Seeing them is a launch/Tools failure, not a missing Production feature.
 - Delete calls `resetAllData` + `clearPanels` + `replace("/")`. Subsequent launches show Welcome.
