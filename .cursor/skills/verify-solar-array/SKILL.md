@@ -1,166 +1,115 @@
 ---
 name: verify-solar-array
-description: "Drive the Expo/React Native Solar Array Simulator the way a user does (Maestro today; EAS Simulator and Mac/serve-sim later). Use before claiming UI, navigation, or screen work is done — not for unit-test-only or status-200 checks."
+description: Drive the Expo/React Native Solar Array Simulator the way a user does (Maestro today; EAS Simulator and Mac/serve-sim later). Use before claiming UI, navigation, or screen work is done — not for unit-test-only or status-200 checks.
 ---
 
 # Verify Solar Array Simulator
 
-Drive `com.bkomen.solararraysimulator` through real screens on **iOS Simulator and Android emulator**. A green TypeScript compile, a unit test, or an HTTP 200 is not proof.
+This skill is a **driver contract**, not a unit-test substitute.
 
-`node .cursor/skills/verify-solar-array/control.mjs --help` is the lever. Read the matching file under [`features/`](features/) before you drive.
+- Use it after changing screens, navigation, or interactive UI.
+- Do not treat `bun test`, `bun run lint`, or HTTP 200 as proof the user path works.
+- Read `features/` for what Maestro can actually see today. Do not invent a happy path that the product does not expose.
 
-Device backends are **pluggable**. This revision implements **`maestro` only** (local iOS Simulator / Android emulator, or Maestro Cloud if you already have it). **`eas`** (EAS Simulator + `agent-device`) and **`mac`** (`serve-sim` on a Mac worker) are reserved stubs — they print a "not wired yet" message. Do not invent those drivers here.
+## Current backends
 
-## Launch
+| Backend | Status | How to invoke |
+| --- | --- | --- |
+| **maestro** | Wired. Default. | `node .cursor/skills/verify-solar-array/control.mjs <cmd> [--platform=ios\|android] [--device=<id>]` |
+| **eas** | Not wired. | `--backend=eas` exits 2 and prints the missing pieces. EAS Simulator on this repo is **Generac-only** (see `eas.json`). Personal verify stays Mac local Simulator + `emulator-5554`. |
+| **mac / serve-sim** | Not wired. | `--backend=mac` exits 2. `serve-sim` is not a backend that exists in this repo. |
 
-This is a **development-build** Expo app. Maestro flows assume an installed Dev Client and a running Metro server. Do **not** run `npx expo run:ios`, `npx expo run:android`, or `eas build --local` just to verify.
-
-On a MacBook (Benjamin's, or a later Mac/`eas` backend):
+## Commands (Maestro)
 
 ```bash
-bun install
-bun start
-# iOS: open the development-simulator build on a booted Simulator.
-# Android: install the `development` APK on an AVD (api35_test / bare-expo).
-# Then, from another terminal:
+# List feature files
+node .cursor/skills/verify-solar-array/control.mjs features
+
+# Check Maestro + simulators
 node .cursor/skills/verify-solar-array/control.mjs doctor
+
+# Launch-only smoke (Welcome visible)
 node .cursor/skills/verify-solar-array/control.mjs smoke --platform=ios
-node .cursor/skills/verify-solar-array/control.mjs smoke --platform=android
-```
+node .cursor/skills/verify-solar-array/control.mjs smoke --platform=android --device=emulator-5554
 
-Ready means the Dev Client shows the app (Welcome: "Solar Array Simulator", or Production if the wizard already completed).
-
-Bonjour ("DEVELOPMENT SERVERS") is flaky. `.maestro/shared/launch-fresh.yaml` branches by platform:
-
-- **iOS** (`launch-fresh.ios.yaml`): deep-link `http://127.0.0.1:8081` (sim shares the Mac loopback). Optional **Open**, required **Continue**, optional Reload, wait for Welcome.
-- **Android** (`launch-fresh.android.yaml`): wait for Dev Client Home (`DEVELOPMENT SERVERS`) before `openLink` (too-early ACTION_VIEW is dropped and Home stays on empty `exp://`). Then `openLink` to `solararraysimulator://expo-development-client/?url=http%3A%2F%2F10.0.2.2%3A8081` (`10.0.2.2` = AVD host loopback — `127.0.0.1` inside the emulator is the guest). If still on Home: tap Recently Opened / packager `http://10.0.2.2:8081`, or type that URL and tap **Connect** (Connect is disabled while the field is empty). After Metro attaches, SDK 56 may show the first-run **Continue** sheet **or** the full Dev Menu (`Reload` / `Go home` / `Close`) over Welcome — treat the menu as attached, tap **Tools button** to turn off the Tools overlay, dismiss Close/`50%,15%` (do not tap Go home), or tap Continue if that sheet is up, then wait for Welcome. If the floating **Tools** FAB is still up after Welcome, tap it, tap **Tools button**, dismiss. Override with `-e METRO_URL=…` and `-e METRO_URL_PLAIN=…` (physical device or `adb reverse tcp:8081 tcp:8081`).
-
-On this Cloud VM there is usually **no Xcode, no emulator, and no Maestro**. That is expected. `doctor` must still run and say so honestly. Do not start an EAS Simulator session or require Expo login from this skill.
-
-Teardown: stop only Metro or Maestro processes **this run started**. Never kill a simulator/emulator by process name, and never delete evidence.
-
-## Doctor
-
-Read-only. Run first, and again after any failed drive.
-
-```bash
-node .cursor/skills/verify-solar-array/control.mjs doctor
-node .cursor/skills/verify-solar-array/control.mjs doctor --json
-node .cursor/skills/verify-solar-array/control.mjs doctor --backend=maestro
-```
-
-`doctor` reports: selected backend, Maestro binary, Feature Map file count, top-level `.maestro/*.yaml` flows, EAS profiles, **booted iOS Simulator** (`xcrun simctl`), and **Android emulator/device** (`adb devices`).
-
-- **No device is OK.** Exit `0` with `device.available: false`. iOS and Android are listed separately (`device.ios` / `device.android`).
-- Missing Feature Map or unknown `--backend` is **not** OK (exit `1`).
-- `--backend=eas` or `--backend=mac` is honest: implemented `false`, plus the plug-in hint. Exit `0` for `doctor`; drive commands (`smoke`, `run-flow`, `screenshot`) exit `2`.
-
-Do not drive an instance `doctor` has not checked since the last surprise.
-
-## Drive
-
-Prefer existing Maestro YAML over rewriting flows. Stable handles already used by Maestro:
-
-| Handle | Kind | iOS | Android |
-| --- | --- | --- | --- |
-| `get-started-button` | testID | Welcome | Welcome |
-| `take-photo-button` | testID | Upload | Upload |
-| `choose-gallery-button` | testID | Upload | Upload |
-| `canvas-container` | testID | Custom | Custom |
-| `text-input-unit` | testID | Config wattage "W" | — |
-| `Panel Settings` | text | Config | Config |
-| `Take or Select Photo` | text | Upload | Upload |
-| Analyze header | text | `Select AI Model` | `Select AI Model` |
-| `analyze-empty-state-button` | testID | Upload fixture | Upload fixture (empty gallery) |
-| Add panel | toolbar | `add` (SF Symbol `plus`) | `Add panel` |
-| `Finish` / `Continue` / `Skip` | toolbar text | wizard | wizard |
-| `Simulate` | a11y | Production sun | Production sun (`contentDescription`) |
-| `More options` / `Configuration options` | a11y | Production menu (`More options`) | Production header menu (`Configuration options` — Tools overlay off first) |
-
-```bash
-# Welcome launch + Get Started → Config
-node .cursor/skills/verify-solar-array/control.mjs smoke --platform=ios
-node .cursor/skills/verify-solar-array/control.mjs smoke --platform=android
-
-# Named top-level flow (basename, with or without .yaml)
+# Named flow
 node .cursor/skills/verify-solar-array/control.mjs run-flow wizard-happy-path --platform=ios
-node .cursor/skills/verify-solar-array/control.mjs run-flow simulation-nav --platform=android
-node .cursor/skills/verify-solar-array/control.mjs list-flows
-
-# Planned backends — must fail clearly, not pretend
-node .cursor/skills/verify-solar-array/control.mjs smoke --backend=eas
-node .cursor/skills/verify-solar-array/control.mjs smoke --backend=mac
+node .cursor/skills/verify-solar-array/control.mjs run-flow wizard-happy-path --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow production-menu --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow production-menu --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow simulation-nav --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow simulation-nav --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow analyze-skip --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow analyze-skip --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow details-sheets --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow details-sheets --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow full-app-tour --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow full-app-tour --platform=android --device=emulator-5554
 ```
 
-`--platform` passes Maestro `--device` when a matching sim/emulator is attached (needed if both are up). Omit it only when a single device is connected.
+`control.mjs` defaults `MAESTRO_DRIVER_STARTUP_TIMEOUT` to `180000` when unset so Maestro has time to attach after Expo cold start. Override that env if a machine needs more.
 
-Maestro notes (from the repo, not folklore):
+`--backend=eas|mac` always fails today. Do not pretend those backends exist.
 
-- `tapOn: "text"` for visible copy; `tapOn: { id: "…" }` for testIDs.
-- iOS toolbar SF Symbols: `icon="plus"` → `tapOn: "add"`. Android Custom add is `Add panel`.
-- Skia canvas nodes are **not** Maestro-accessible — assert toolbar side effects (`Finish` after add).
-- SwiftUI section headers may be invisible to Maestro; assert body copy (`Default Production`, `Panel Settings`).
-- `extendedWaitUntil` with an id must nest: `visible: { id: "canvas-container" }`.
-- iOS `launch-fresh`: deep-link `127.0.0.1:8081`, tap **Open** (not Cancel), wait for **Continue**. Android: wait for Home, `openLink` to `10.0.2.2:8081` (`disableOnboarding=1`), Recently Opened / typed **Connect** fallback. Then poll: if Dev Menu is up, tap **Tools button** (turns off the header Tools overlay), dismiss (`Close` or `50%,15%` when `Go home`/`Reload` is up — that is attached, not a failed launch) or tap **Continue** if the first-run sheet appears. Do not wait 90s for Continue while the Dev Menu is covering Welcome. Do not move Production Edit/Delete off the header to dodge the overlay.
-- Android Simulation 3D: chrome can be up while the canvas is still black. That is a GPU settle, not "WebGPU unavailable". `simulation-nav` takes `sim-3d-proof` immediately after season asserts (short settle only) while "Simulation" / "Total Output" / Spring–Winter are still visible. Do not wait 90s for `webgpu-scene-painted` — that id is not in the tree and the app can leave to the AVD launcher. Proof is **panel + sun** (the hook seeds one 3D panel if the array is empty). Chrome-only / empty-array deeplink is not enough. A black first frame is settle — wait for GPU. The launcher home screen is not proof. Season labels are segmented chrome (`SeasonPicker.ios.tsx` / `.android.tsx`), not a menu Picker.
-- `analyze-skip` iOS still uses Photos chrome (`Photos` + `17%,25%`). Android must **not** open the system picker on an empty AVD — tap `id: analyze-empty-state-button` ("Continue without photo") and prove **Select AI Model** + **No photo selected**. Android Analyze Skip/Analyze are `Stack.Toolbar.View` + Pressable (not `Toolbar.Button` text children).
+## What you must actually drive
 
-Android development build: `eas.json` `development` (`developmentClient: true`, `arm64-v8a`) — `eas build --profile development --platform android`, install the APK on the AVD. `development-simulator` / `preview-simulator` are **iOS-only** (`ios.simulator: true`). Do not invent a second Android profile unless EAS requires it.
+Match the change to a feature file, then run the matching Maestro flow. One screenshot of a static screen is not enough.
 
-## Evidence
+| If you changed | Drive | Notes |
+| --- | --- | --- |
+| Welcome / Get Started | `smoke` + `wizard-happy-path` | Welcome is real. |
+| Config (SwiftUI Form / inverters) | `wizard-happy-path` + `details-sheets` | One `src/app/config.tsx` (#63). `config.web.tsx` is the web stub. Android inverter row is `id: inverter-row-1`. |
+| inverter-details / panel-details | `details-sheets` | Shared `FieldGroup` bodies (#64). Drive via Config `id: inverter-row-1` + Custom `openLink` `/panel-details?panelId=seed-panel`. Do not use Custom Add. Hold leftover presentation chrome until #56. |
+| Upload | `wizard-happy-path` + `analyze-skip` | One `src/app/upload.tsx` (#59). No Host/entering first paint. Android Skip is Pressable. |
+| Analyze (model picker / Skip / Continue) | `analyze-skip` | One `src/app/analyze.tsx` (#61). Header is `Select AI Model` on **both** platforms. Android Continue-without-photo is `id: analyze-empty-state-button`. Android Skip is Pressable. iOS Skip/Continue stay SwiftUI. |
+| Custom canvas / toolbar / compass | `wizard-happy-path` | Shared `CustomChrome` (#62). Android Add works. `Badge` is only on the header-right unlinked count. Skia is not Maestro-visible — prove via toolbar side effects. Wizard Finish stays hidden until the first panel exists. |
+| Production chrome / overflow | `production-menu` | One `src/app/production.tsx` (#55). Overflow a11y is still split: iOS `More options`, Android `Configuration options`. |
+| Simulation 3D / sliders | `simulation-nav` | One `src/app/simulation.tsx` (#65). Season chips are `SeasonPicker.ios.tsx` / `.android.tsx` (#67). Empty-array 3D seed is `panelsForSimulationScene`. `sim-3d-proof` is panel+sun, not GPU-painted. |
+| Compass help sheet | `full-app-tour` | One `src/app/compass-help.tsx` (#60). Chrome lives in `_layout`. Assert "Array Orientation". |
+| Full Welcome → Simulation path | `full-app-tour` | Chains Welcome → Config → Upload Skip → Custom compass + first panel → Production menu → Simulation + `sim-3d-proof`. |
 
-Proof lives under **`.agents/evidence/verify-solar-array/`** (gitignored except `README.md`). The CLI writes a JSON receipt there for every drive. Screenshots go there too when a backend can take one.
+## Honesty rules (do not paper over)
+
+1. **Skia / WebGPU / R3F are not Maestro-visible.** Canvas proof is toolbar side effects only. `sim-3d-proof` is Simulation chrome (panel + sun). GPU scene load is late — do not wait for `webgpu-scene-painted`.
+2. **Wizard Finish is gated.** `shouldShowWizardFinish` is false until at least one panel exists. `wizard-happy-path` must assert Finish is **not** visible after compass, then add a panel, then Finish.
+3. **Production overflow labels differ.** iOS `More options`, Android `Configuration options`. `production-menu` must not show Reload / Go home.
+4. **Analyze header is `Select AI Model` on both platforms.** `wait-analyze-header.yaml` no longer branches. Do not wait for `SELECT AI MODEL`.
+5. **Android Analyze empty-state Continue.** `analyze-skip` on Android taps `id: analyze-empty-state-button` instead of the system Photos picker.
+6. **Android Skip / Analyze Pressable.** Upload and Analyze Skip on Android are RN `Pressable`, not SwiftUI Button.
+7. **Android launch.** Wait for Dev Client Home, deep-link `http://10.0.2.2:8081`, dismiss Dev Menu, tap **Tools button** once. Expo Go / `exp://` / `launchApp` alone is not enough. Comments in `launch-android.yaml` say SDK 57.
+8. **Compass help is iOS-only as a sheet.** Android compass opens a modal that Maestro cannot assert the same way.
+9. **Do not "fix" the map to hide a product bug.** If Android ≠ iOS, leave it as a product issue and document it.
+10. **Hold leftover files until #56.** Do not move `custom.ios.tsx` / `custom.android.tsx`, details presentation chrome, or `config.web.tsx` in this PR.
+11. **No invented device video.** Linux CI / this VM cannot drive a simulator. Proof is the feature map + Maestro YAML + unit tests that lock the map. Attach a recording only when a real Maestro / Simulator run produced it.
+
+## Personal Mac drive (required before claiming UI done)
 
 ```bash
-node .cursor/skills/verify-solar-array/control.mjs screenshot
-node .cursor/skills/verify-solar-array/control.mjs screenshot .agents/evidence/verify-solar-array/welcome.png
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=180000
+node .cursor/skills/verify-solar-array/control.mjs doctor
+node .cursor/skills/verify-solar-array/control.mjs smoke --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs smoke --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow wizard-happy-path --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow wizard-happy-path --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow production-menu --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow production-menu --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow simulation-nav --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow simulation-nav --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow analyze-skip --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow analyze-skip --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow details-sheets --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow details-sheets --platform=android --device=emulator-5554
+node .cursor/skills/verify-solar-array/control.mjs run-flow full-app-tour --platform=ios
+node .cursor/skills/verify-solar-array/control.mjs run-flow full-app-tour --platform=android --device=emulator-5554
 ```
 
-Without Maestro + a device, `screenshot` exits `2` and does **not** invent a PNG.
+## When you cannot drive a device
 
-Proof standards:
+Say so. Update the feature files and Maestro YAML so the next Mac run has a true map. Do not invent a full-app video.
 
-- Exercise a real user path from the Feature Map. Do not set `wizardCompleted` in the KV store or deep-link past the change under test as the primary proof.
-- Capture the action **and** the resulting visible state (screenshot or Maestro `assertVisible`). "Looks right in code" is not evidence.
-- A status-200 from `/api/analyze` is not Analyze proof. Drive Upload → gallery/camera → Analyze header, or Android **Continue without photo** → Analyze empty-state. Upload Skip goes to Custom and does not prove Analyze.
-- Skia/WebGPU pixels are not queryable. Prove Custom via `canvas-container` + toolbar (`Finish` after add). Prove Simulation via chrome (`Simulation`, `Total Output`, season labels) and `sim-3d-proof` of **panel + sun** while that chrome is still in the foreground. A black first frame is GPU settle, not "WebGPU unavailable". Chrome-only is not enough. The AVD launcher is not Simulation proof.
-- Record the feature id, platform, and the flow/command on every artifact.
-- If a path is unreachable (no sim, no emulator, no photo library, no AWS keys), name the path and the unmet precondition. Do not mark it verified via a different entry point.
+## See also
 
-## Cleanup
-
-```bash
-node .cursor/skills/verify-solar-array/control.mjs cleanup
-```
-
-Removes scratch the CLI created (temp Maestro output dirs). **Never deletes** `.agents/evidence/verify-solar-array/`. Does not kill a simulator, emulator, Metro, or Maestro Cloud session this run did not start.
-
-After cleanup, confirm evidence files still exist at the named path.
-
-## Helpers
-
-All invocations are from the repo root.
-
-| Command | What it does |
-| --- | --- |
-| `control.mjs --help` | Command surface, backends, examples |
-| `control.mjs doctor` | Backend + toolchain + map + iOS sim + Android adb (no device = OK) |
-| `control.mjs features` | Feature Map index (same files as `features/`) |
-| `control.mjs list-flows` | Top-level `.maestro/*.yaml` names |
-| `control.mjs smoke` | `maestro test .maestro/smoke-test.yaml` |
-| `control.mjs run-flow <name>` | `maestro test` a named top-level flow |
-| `control.mjs screenshot [path]` | `maestro screenshot` when a device exists |
-| `control.mjs cleanup` | Drop scratch; keep evidence |
-
-`--json` on `doctor`, `features`, `list-flows`, and drive commands. `--backend=maestro\|eas\|mac` (default `maestro`). `--platform=ios\|android` on drive commands.
-
-Package script: `bun run verify-solar-array -- <cmd>` (same CLI).
-
-When you change a screen, navigation, or a visible string, update the matching Feature Map file in the same PR and re-run the mapped flow. `/maintain-verification-skill` is the periodic honesty pass.
-
-## Planned backends (do not implement here)
-
-- **`eas`:** `eas.json` already has `development-simulator` and `preview-simulator` (`ios.simulator: true`). Next PR: `eas simulator:start` / `eas simulator:exec` plus `agent-device`. This skill must keep `--backend=eas`.
-- **`mac`:** a Mac worker running `serve-sim` (Xcode Simulator + Android emulator + Metro). Next PR plugs a driver behind `--backend=mac`.
-
-`.eas/workflows/deploy.yml` and `pr-preview.yml` are production deploy/preview. Do not change them to require a simulator.
+- Feature files: `.cursor/skills/verify-solar-array/features/`
+- Maestro flows: `.maestro/`
+- CLI: `.cursor/skills/verify-solar-array/control.mjs`
+- Evidence receipts: `.agents/evidence/verify-solar-array/` (gitignored except `README.md`)
