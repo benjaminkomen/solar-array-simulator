@@ -12,7 +12,7 @@ Post-wizard home: live-ish total wattage, a read-only canvas, compass, Edit/Dele
 
 ## How to get to it (user POV)
 
-- Custom (wizard) → one Finish tap (`router.push('/production')`). Production persists `wizardCompleted` on mount. Do not deeplink this as the primary proof.
+- Custom (wizard) → one Finish tap (`navigation.reset` to Production). Production persists `wizardCompleted` on mount. Do not deeplink this as the primary proof.
 - Cold launch after the wizard has been completed (Welcome redirects here).
 - Returning from Simulation via back.
 

@@ -1,3 +1,4 @@
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
 import { Stack } from "expo-router";
 import type { SFSymbol } from "sf-symbols-typescript";
@@ -12,7 +13,11 @@ import {
   CUSTOM_ADD_PANEL_A11Y,
   CUSTOM_HEADER_LINK_A11Y,
 } from "@/utils/customChrome";
-import { shouldShowWizardFinish } from "@/utils/wizardChrome";
+import {
+  pressWizardFinish,
+  shouldShowWizardFinish,
+  syncWizardFinishPressRefs,
+} from "@/utils/wizardChrome";
 import { useColors } from "@/utils/theme";
 
 type ToolbarIcon = SFSymbol | ImageSourcePropType;
@@ -61,6 +66,7 @@ type ToolbarIconButtonProps = {
   onPress: () => void;
   accessibilityLabel: string;
   tint: string;
+  hidden?: boolean;
 };
 
 /**
@@ -96,10 +102,11 @@ function ToolbarIconButton({
   onPress,
   accessibilityLabel,
   tint,
+  hidden,
 }: ToolbarIconButtonProps) {
   if (Platform.OS === "android") {
     return (
-      <Stack.Toolbar.View>
+      <Stack.Toolbar.View hidden={hidden}>
         <View style={styles.toolbarIconButton} collapsable={false}>
           <View
             pointerEvents="none"
@@ -123,6 +130,7 @@ function ToolbarIconButton({
 
   return (
     <Stack.Toolbar.Button
+      hidden={hidden}
       icon={CUSTOM_TOOLBAR_ICONS[name]}
       onPress={onPress}
       accessibilityLabel={accessibilityLabel}
@@ -166,13 +174,13 @@ export function CustomHeaderToolbar({
 }
 
 /**
- * Android Finish must match Upload/Analyze Skip: Pressable wraps the label
- * and the Toolbar.View is mounted for the whole Custom visit.
+ * Android Finish matches Analyze Skip: Toolbar.View + Pressable + label,
+ * toggled with `hidden` so the slot index stays put when Add selects the
+ * panel (Link/Rotate/Delete also stay mounted).
  *
- * Keep the slot reserved (no "Finish" text/a11y) so assertNotVisible:
- * Finish still passes on an empty canvas, then reveal the same Pressable
- * after Add. Do not `disabled={!visible}` — Android can swallow the first
- * press after enable. Navigation is `dispatchWizardFinish`, not router.push.
+ * Do not close over `visible` in onPress — Compose can keep the empty-canvas
+ * callback, where `if (visible)` is a no-op. Read refs instead. Do not
+ * `disabled={!visible}`.
  */
 function WizardFinishButton({
   onFinish,
@@ -182,16 +190,24 @@ function WizardFinishButton({
   visible: boolean;
 }) {
   const colors = useColors();
+  const visibleRef = useRef(visible);
+  const onFinishRef = useRef(onFinish);
+  useLayoutEffect(() => {
+    syncWizardFinishPressRefs(
+      { visible: visibleRef, onFinish: onFinishRef },
+      visible,
+      onFinish,
+    );
+  }, [visible, onFinish]);
+  const onPress = useCallback(() => {
+    pressWizardFinish({ visible: visibleRef, onFinish: onFinishRef });
+  }, []);
 
   if (Platform.OS === "android") {
     return (
-      <Stack.Toolbar.View>
+      <Stack.Toolbar.View hidden={!visible}>
         <Pressable
-          onPress={() => {
-            if (visible) {
-              onFinish();
-            }
-          }}
+          onPress={onPress}
           accessibilityLabel={visible ? "Finish" : undefined}
           accessibilityRole={visible ? "button" : undefined}
           accessible={visible}
@@ -200,16 +216,14 @@ function WizardFinishButton({
           cancelable={false}
           style={styles.toolbarFinishHit}
         >
-          {visible ? (
-            <Text
-              pointerEvents="none"
-              accessible={false}
-              importantForAccessibility="no-hide-descendants"
-              style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}
-            >
-              Finish
-            </Text>
-          ) : null}
+          <Text
+            pointerEvents="none"
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}
+          >
+            Finish
+          </Text>
         </Pressable>
       </Stack.Toolbar.View>
     );
@@ -248,27 +262,53 @@ export function CustomBottomToolbar({
         accessibilityLabel={CUSTOM_ADD_PANEL_A11Y}
         tint={actionTint}
       />
-      {selectedId && (
+      {Platform.OS === "android" ? (
         <>
           <ToolbarIconButton
             name="link"
+            hidden={!selectedId}
             onPress={onLinkInverter}
             accessibilityLabel="Link inverter"
             tint={actionTint}
           />
           <ToolbarIconButton
             name="rotate"
+            hidden={!selectedId}
             onPress={onRotatePanel}
             accessibilityLabel="Rotate panel"
             tint={actionTint}
           />
           <ToolbarIconButton
             name="delete"
+            hidden={!selectedId}
             onPress={onDeletePanel}
             accessibilityLabel="Delete panel"
             tint={actionTint}
           />
         </>
+      ) : (
+        selectedId && (
+          <>
+            <ToolbarIconButton
+              name="link"
+              onPress={onLinkInverter}
+              accessibilityLabel="Link inverter"
+              tint={actionTint}
+            />
+            <ToolbarIconButton
+              name="rotate"
+              onPress={onRotatePanel}
+              accessibilityLabel="Rotate panel"
+              tint={actionTint}
+            />
+            <ToolbarIconButton
+              name="delete"
+              onPress={onDeletePanel}
+              accessibilityLabel="Delete panel"
+              tint={actionTint}
+            />
+          </>
+        )
       )}
       <WizardFinishButton onFinish={onFinish} visible={showFinish} />
     </Stack.Toolbar>

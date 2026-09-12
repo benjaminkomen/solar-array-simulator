@@ -3,7 +3,7 @@
  * Manages panel CRUD, viewport animation, compass, and analysis initialization.
  */
 import { useCallback, useRef, useState } from "react";
-import { Platform, useWindowDimensions, type LayoutChangeEvent } from "react-native";
+import { useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
@@ -15,7 +15,7 @@ import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { buildMockPanelGrid, mapAnalysisToCanvasPositions } from "@/utils/canvasLayout";
 import { resolveCanvasSizeForAdd } from "@/utils/customChrome";
-import { dispatchWizardFinish, retryWizardFinishIfNeeded } from "@/utils/wizardChrome";
+import { dispatchWizardFinish } from "@/utils/wizardChrome";
 
 // Module-level worklet functions: required by React Compiler
 function setCanvasSize(w: SharedValue<number>, h: SharedValue<number>, width: number, height: number) {
@@ -144,16 +144,10 @@ export function useCanvasEditor() {
   const unlinkedCount = panels.length - getLinkedCount();
 
   const handleFinish = useCallback(() => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // Dispatch on the focused stack. Imperative router.push is queued and
-    // Android drops that first action after Add (Mac #71 @ 64fe44a:
-    // Pressable fired, Custom stayed, second tap worked).
+    // Reset first so Custom cannot stay focused with Production underneath.
+    // Haptics after — a focus-stealing notification must not precede reset.
     dispatchWizardFinish(navigation);
-    if (Platform.OS === "android") {
-      requestAnimationFrame(() => {
-        retryWizardFinishIfNeeded(navigation);
-      });
-    }
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [navigation]);
 
   const handleCompassTap = useCallback(() => {

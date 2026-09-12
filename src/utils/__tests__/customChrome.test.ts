@@ -96,7 +96,9 @@ describe("Custom chrome tree", () => {
     expect(chromeSrc).toContain("shouldShowWizardFinish");
     expect(chromeSrc).toContain("Finish");
     expect(chromeSrc).toContain("AndroidToolbarHitOverlay");
-    expect(chromeSrc).toContain('accessibilityLabel={visible ? "Finish" : undefined}');
+    expect(chromeSrc).toContain("pressWizardFinish");
+    expect(chromeSrc).toContain("hidden={!visible}");
+    expect(chromeSrc).toContain("hidden={!selectedId}");
     const finishBlock =
       chromeSrc.match(/function WizardFinishButton[\s\S]*?function CustomBottomToolbar/)?.[0] ?? "";
     expect(finishBlock).toContain("pointerEvents=\"none\"");
@@ -104,6 +106,7 @@ describe("Custom chrome tree", () => {
     expect(finishBlock).toContain("<Pressable");
     expect(finishBlock).toMatch(/<Pressable[\s\S]*Finish[\s\S]*<\/Pressable>/);
     expect(finishBlock).not.toContain("disabled={!visible}");
+    expect(finishBlock).not.toContain("if (visible)");
     expect(finishBlock).not.toContain("AndroidToolbarHitOverlay");
     expect(chromeSrc).toContain("visible={showFinish}");
     expect(chromeSrc).not.toContain("shouldShowWizardFinish(isWizardMode, panelCount) &&");
