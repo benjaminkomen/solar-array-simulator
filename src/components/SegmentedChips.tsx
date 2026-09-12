@@ -1,4 +1,4 @@
-import SegmentedControl from "@expo/ui/community/segmented-control";
+import { SegmentedControl } from "@expo/ui/community/segmented-control";
 import type { StyleProp, ViewStyle } from "react-native";
 
 export type SegmentedChipOption<T extends string> = {
