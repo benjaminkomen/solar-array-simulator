@@ -1,15 +1,19 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { describe, it, expect } from "bun:test";
 import {
   ANDROID_BOTTOM_TOOLBAR_HEIGHT,
+  ANDROID_WIZARD_FINISH_A11Y,
+  ANDROID_WIZARD_FINISH_PRESS_PROOF_LABEL,
   ANDROID_WIZARD_FINISH_ZOOM_GAP,
   CONFIG_BOTTOM_TOOLBAR_INSET,
   PRODUCTION_PATH,
   androidFinishClearsZoomColumn,
   androidWizardFinishBottom,
+  androidWizardFinishPressProofLabel,
   androidWizardFinishRight,
   configToolbarListInset,
+  listAndroidFinishA11yNodes,
   persistWizardCompletedOnProduction,
   requestWizardFinish,
   shouldRedirectCustomToProduction,
@@ -170,7 +174,10 @@ describe("requestWizardFinish", () => {
     expect(chromeSrc).toMatch(
       /Platform\.OS !== "android"[\s\S]*<WizardFinishButton/,
     );
-    expect(chromeSrc.split('accessibilityLabel="Finish"').length - 1).toBe(1);
+    expect(chromeSrc).toContain("androidWizardFinishPressProofLabel");
+    expect(chromeSrc).toContain("pressAndroidWizardFinish");
+    expect(chromeSrc).toContain('importantForAccessibility="no"');
+    expect(chromeSrc.split('accessibilityLabel="Finish"').length - 1).toBe(0);
     expect(productionHookSrc).toContain("persistWizardCompletedOnProduction");
   });
 
@@ -182,6 +189,64 @@ describe("requestWizardFinish", () => {
     expect(wizardToProductionYaml).toContain('tapOn: "Finish"');
     expect(wizardToProductionYaml).not.toMatch(/openLink:[\s\S]*production/);
     expect(wizardToProductionYaml).not.toMatch(/tapOn:\s*"Finish"[\s\S]*tapOn:\s*"Finish"/);
+  });
+});
+
+describe("androidWizardFinishPressProofLabel", () => {
+  it("keeps Finish until press, then flips to Tapped without Redirect", () => {
+    expect(ANDROID_WIZARD_FINISH_A11Y).toBe("Finish");
+    expect(ANDROID_WIZARD_FINISH_PRESS_PROOF_LABEL).toBe("Tapped");
+    expect(androidWizardFinishPressProofLabel(false)).toBe("Finish");
+    expect(androidWizardFinishPressProofLabel(true)).toBe("Tapped");
+  });
+});
+
+describe("listAndroidFinishA11yNodes", () => {
+  it("dumps exactly one Android Finish / FINISH a11y node", () => {
+    const nodes = listAndroidFinishA11yNodes();
+    expect(nodes).toEqual([
+      {
+        id: "AndroidWizardFinishButton",
+        accessibilityLabel: "Finish",
+        mountedOnAndroid: true,
+      },
+    ]);
+    expect(nodes.filter((node) => node.mountedOnAndroid)).toHaveLength(1);
+  });
+
+  it("finds no extra Finish a11y props on Android product sources", () => {
+    const roots = [
+      resolve(import.meta.dir, "../../app"),
+      resolve(import.meta.dir, "../../components"),
+    ];
+    const finishA11y = /(?:accessibilityLabel|contentDescription)\s*=\s*(?:\{["']|["'])(Finish|FINISH)["']/;
+    const hits: string[] = [];
+
+    const walk = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const path = join(dir, name);
+        const stat = statSync(path);
+        if (stat.isDirectory()) {
+          if (name === "__tests__") continue;
+          walk(path);
+          continue;
+        }
+        if (!name.endsWith(".tsx") && !name.endsWith(".ts")) continue;
+        if (name.includes(".ios.") || name.includes(".web.")) continue;
+        const src = readFileSync(path, "utf8");
+        if (finishA11y.test(src)) {
+          hits.push(path);
+        }
+      }
+    };
+
+    for (const root of roots) {
+      walk(root);
+    }
+
+    expect(hits).toEqual([]);
+    expect(chromeSrc).toContain("androidWizardFinishPressProofLabel");
+    expect(chromeSrc).toContain('Platform.OS !== "android"');
   });
 });
 

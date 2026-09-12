@@ -94,6 +94,39 @@ export function androidFinishClearsZoomColumn(
   return finishFar <= zoomNear || finishNear >= zoomFar;
 }
 
+/** Maestro `tapOn: Finish` until the Pressable's onPress runs. */
+export const ANDROID_WIZARD_FINISH_A11Y = "Finish";
+
+/** Visible + a11y flip that does not depend on Redirect. */
+export const ANDROID_WIZARD_FINISH_PRESS_PROOF_LABEL = "Tapped";
+
+export function androidWizardFinishPressProofLabel(pressed: boolean): string {
+  return pressed
+    ? ANDROID_WIZARD_FINISH_PRESS_PROOF_LABEL
+    : ANDROID_WIZARD_FINISH_A11Y;
+}
+
+export type AndroidFinishA11yNode = {
+  id: string;
+  accessibilityLabel: string;
+  mountedOnAndroid: boolean;
+};
+
+/**
+ * Every Android a11y node that matches Finish / FINISH before press.
+ * Inner visual text is not an a11y node (`accessible={false}`).
+ * iOS `WizardFinishButton` is not mounted on Android.
+ */
+export function listAndroidFinishA11yNodes(): readonly AndroidFinishA11yNode[] {
+  return [
+    {
+      id: "AndroidWizardFinishButton",
+      accessibilityLabel: ANDROID_WIZARD_FINISH_A11Y,
+      mountedOnAndroid: true,
+    },
+  ];
+}
+
 export function persistWizardCompletedOnProduction(actions: {
   getWizardCompleted: () => boolean;
   setWizardCompleted: (completed: boolean) => void;

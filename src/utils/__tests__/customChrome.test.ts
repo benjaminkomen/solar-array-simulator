@@ -100,6 +100,7 @@ describe("Custom chrome tree", () => {
     expect(chromeSrc).toContain("androidFinishHit");
     expect(chromeSrc).toContain("androidWizardFinishBottom");
     expect(chromeSrc).toContain("androidWizardFinishRight");
+    expect(chromeSrc).toContain("androidWizardFinishPressProofLabel");
     expect(chromeSrc).toContain("hidden={!selectedId}");
     const finishBlock =
       chromeSrc.match(/function WizardFinishButton[\s\S]*?export function AndroidWizardFinishButton/)?.[0] ?? "";

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
@@ -15,6 +16,7 @@ import {
 } from "@/utils/customChrome";
 import {
   androidWizardFinishBottom,
+  androidWizardFinishPressProofLabel,
   androidWizardFinishRight,
   shouldShowWizardFinish,
 } from "@/utils/wizardChrome";
@@ -197,11 +199,18 @@ function WizardFinishButton({
   );
 }
 
+function pressAndroidWizardFinish(
+  setPressed: (pressed: boolean) => void,
+  onFinish: () => void,
+): void {
+  setPressed(true);
+  onFinish();
+}
+
 /**
- * Android-only Finish. If onPress ran, Custom would return `<Redirect>`
- * and stop painting Layout. SHA1-identical Layout+FINISH after a tap
- * therefore means this onPress did not run — move the hit box off the
- * zoom column instead of stacking another navigate/reset/retry.
+ * Android-only Finish. Position is locked (left of zoom, above Host).
+ * onPress first flips this same Pressable to `Tapped` so a drive can
+ * see the press without Redirect. Then it records `/production`.
  */
 export function AndroidWizardFinishButton({
   visible,
@@ -212,6 +221,8 @@ export function AndroidWizardFinishButton({
 }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const [pressed, setPressed] = useState(false);
+  const label = androidWizardFinishPressProofLabel(pressed);
 
   if (!visible) {
     return null;
@@ -219,12 +230,15 @@ export function AndroidWizardFinishButton({
 
   return (
     <Pressable
-      onPress={onFinish}
-      accessibilityLabel="Finish"
+      onPress={() => {
+        pressAndroidWizardFinish(setPressed, onFinish);
+      }}
+      accessibilityLabel={label}
       accessibilityRole="button"
       accessible
       collapsable={false}
       cancelable={false}
+      testID={pressed ? "android-wizard-finish-tapped" : "android-wizard-finish"}
       style={[
         styles.androidFinishHit,
         {
@@ -236,10 +250,10 @@ export function AndroidWizardFinishButton({
       <Text
         pointerEvents="none"
         accessible={false}
-        importantForAccessibility="no-hide-descendants"
+        importantForAccessibility="no"
         style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}
       >
-        Finish
+        {label}
       </Text>
     </Pressable>
   );
