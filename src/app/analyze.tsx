@@ -5,6 +5,7 @@ import {
   StyleSheet,
   View,
   useColorScheme,
+  Platform,
 } from "react-native";
 import { Stack } from "expo-router";
 import { Image } from "expo-image";
@@ -23,6 +24,31 @@ import {
 } from "@/utils/analyzeChrome";
 import { useAnalyzeFlow, MODELS } from "@/hooks/useAnalyzeFlow";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
+
+/** Android Stack.Toolbar.Button text children are not in the a11y tree. */
+function AndroidToolbarTextButton({
+  label,
+  hidden,
+  onPress,
+  color,
+}: {
+  label: string;
+  hidden: boolean;
+  onPress: () => void;
+  color: string;
+}) {
+  return (
+    <Stack.Toolbar.View hidden={hidden}>
+      <Pressable
+        style={styles.toolbarTextButton}
+        onPress={onPress}
+        accessibilityLabel={label}
+      >
+        <Text style={[styles.toolbarTextButtonLabel, { color }]}>{label}</Text>
+      </Pressable>
+    </Stack.Toolbar.View>
+  );
+}
 
 export default function Analyze() {
   useMarkInteractive();
@@ -178,18 +204,37 @@ export default function Analyze() {
       )}
 
       <Stack.Toolbar placement="bottom">
-        <Stack.Toolbar.Button
-          hidden={!shouldShowAnalyzeSkip(isWizardMode, phase)}
-          onPress={handleSkip}
-        >
-          Skip
-        </Stack.Toolbar.Button>
-        <Stack.Toolbar.Button
-          hidden={!shouldShowAnalyzeAction(phase)}
-          onPress={handleAnalyze}
-        >
-          Analyze
-        </Stack.Toolbar.Button>
+        {Platform.OS === "android" ? (
+          <>
+            <AndroidToolbarTextButton
+              label="Skip"
+              hidden={!shouldShowAnalyzeSkip(isWizardMode, phase)}
+              onPress={handleSkip}
+              color={colors.primary as string}
+            />
+            <AndroidToolbarTextButton
+              label="Analyze"
+              hidden={!shouldShowAnalyzeAction(phase)}
+              onPress={handleAnalyze}
+              color={colors.primary as string}
+            />
+          </>
+        ) : (
+          <>
+            <Stack.Toolbar.Button
+              hidden={!shouldShowAnalyzeSkip(isWizardMode, phase)}
+              onPress={handleSkip}
+            >
+              Skip
+            </Stack.Toolbar.Button>
+            <Stack.Toolbar.Button
+              hidden={!shouldShowAnalyzeAction(phase)}
+              onPress={handleAnalyze}
+            >
+              Analyze
+            </Stack.Toolbar.Button>
+          </>
+        )}
       </Stack.Toolbar>
     </>
   );
@@ -272,5 +317,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 8,
+  },
+  toolbarTextButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
+    justifyContent: "center",
+  },
+  toolbarTextButtonLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });

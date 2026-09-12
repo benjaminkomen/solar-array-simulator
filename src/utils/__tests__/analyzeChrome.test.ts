@@ -35,6 +35,18 @@ describe("analyze chrome collapse", () => {
     expect(analyzeSrc).toContain("shouldShowAnalyzeAction");
   });
 
+  it("uses a visible Android Pressable for Skip and Analyze toolbar text", () => {
+    expect(analyzeSrc).toContain('Platform.OS === "android"');
+    expect(analyzeSrc).toContain("Stack.Toolbar.View");
+    expect(analyzeSrc).toContain("toolbarTextButton");
+    expect(analyzeSrc).toContain('accessibilityLabel={label}');
+    expect(analyzeSrc).toContain('label="Skip"');
+    expect(analyzeSrc).toContain('label="Analyze"');
+    expect(analyzeSrc).toContain("Stack.Toolbar.Button");
+    expect(analyzeSrc).toMatch(/<Stack\.Toolbar\.Button[\s\S]*?>\s*Skip\s*<\/Stack\.Toolbar\.Button>/);
+    expect(analyzeSrc).toMatch(/<Stack\.Toolbar\.Button[\s\S]*?>\s*Analyze\s*<\/Stack\.Toolbar\.Button>/);
+  });
+
   it("names the empty-state fixture used when the gallery is empty", () => {
     expect(ANALYZE_EMPTY_PREVIEW_LABEL).toBe("No photo selected");
     expect(ANALYZE_CONTINUE_WITHOUT_PHOTO_LABEL).toBe("Continue without photo");

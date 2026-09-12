@@ -125,6 +125,9 @@ describe("verify-solar-array CLI", () => {
     expect(uploadSrc).toContain("isWizardMode &&");
     expect(analyze).toContain("ANALYZE_EMPTY_PREVIEW_LABEL");
     expect(analyze).toContain("analyze-empty-preview");
+    expect(analyze).toContain("Stack.Toolbar.View");
+    expect(analyze).toContain('accessibilityLabel={label}');
+    expect(analyze).toContain('label="Skip"');
     const androidBlock = flow.slice(flow.indexOf("platform: Android"));
     expect(androidBlock).toContain("analyze-empty-state-button");
     expect(androidBlock).not.toContain("choose-gallery-button");

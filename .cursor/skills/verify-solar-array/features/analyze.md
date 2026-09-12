@@ -33,6 +33,7 @@ Preconditions:
 ## Gotchas
 
 - Do not re-fork `analyze.ios.tsx` / `analyze.android.tsx`. Universal Picker has no `inline` appearance (iOS used to be an inline SwiftUI list; Android used RadioButtons). Menu/dropdown is the cross-platform control. Android `Picker` does not forward `testID` — tap the selected label text.
+- Skip / Analyze: iOS `Stack.Toolbar.Button`; Android `Stack.Toolbar.View` + RN `Pressable` with visible text and `accessibilityLabel` (same class as Upload Skip / Config Continue). `Stack.Toolbar.Button` text children are not in the Android a11y tree and are not Maestro-visible.
 - `wait-analyze-header.yaml` no longer branches on "SELECT AI MODEL".
 - Empty emulator gallery is not an Android Analyze fail. Use **Continue without photo**. iOS gallery chrome stays `Photos` + `17%,25%`.
 - Maestro asserts three models after opening the picker, not the full `MODELS` list in `useAnalyzeFlow.ts`.
