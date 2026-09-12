@@ -13,3 +13,7 @@ export const SEED_PANEL_ID = "seed-panel";
 export function inverterRowTestId(inverterId: string): string {
   return `inverter-row-${inverterId}`;
 }
+
+export function inverterEditPath(inverterId: string): string {
+  return `/inverter-details?mode=edit&inverterId=${inverterId}`;
+}

@@ -86,11 +86,19 @@ describe("config FieldGroup collapse", () => {
   });
 
   it("keeps a real platform delete gesture for inverter rows", () => {
-    expect(inverterIosSrc).toContain("List.ForEach");
-    expect(inverterIosSrc).toContain("onDelete");
+    expect(inverterIosSrc).toContain("SwipeActions");
+    expect(inverterIosSrc).toContain("onDeleteInverter");
+    expect(inverterIosSrc).not.toContain("List.ForEach");
     expect(inverterAndroidSrc).toContain("SwipeToDismissBox");
     expect(inverterAndroidSrc).toContain("onEndToStart");
     expect(configSrc).toContain("<InverterSection");
+  });
+
+  it("makes each iOS inverter a full-row Section tap target", () => {
+    expect(inverterIosSrc).toContain("inverterRowTestId");
+    expect(inverterIosSrc).toContain("onEdit");
+    expect(inverterIosSrc).toContain("contentShape");
+    expect(inverterIosSrc).toContain("maxWidth: Infinity");
   });
 
   it("puts Config and Upload header options in _layout", () => {

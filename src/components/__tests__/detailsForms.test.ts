@@ -85,6 +85,7 @@ describe("details FieldGroup body", () => {
     expect(detailsFlowSrc).toContain("panelId=seed-panel");
     expect(detailsFlowSrc).not.toContain("tap-add-panel");
     expect(detailsFlowSrc).not.toContain("Add panel");
+    expect(detailsFlowSrc).not.toContain("inverter-details?mode=edit");
   });
 
   it("does not flip Hermes V1", () => {

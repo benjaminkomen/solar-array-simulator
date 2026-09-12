@@ -14,14 +14,10 @@ appId: com.bkomen.solararraysimulator
     visible: "Panel Settings"
     timeout: 10000
 
-# Config seeded inverter id=1 (serial text is random)
+# Config seeded inverter id=1 (serial text is random).
+# Product row tap must open the sheet — no openLink paper-over.
 - tapOn:
     id: "inverter-row-1"
-- runFlow:
-    when:
-      notVisible: "Serial Number"
-    commands:
-      - openLink: solararraysimulator://inverter-details?mode=edit&inverterId=1
 - extendedWaitUntil:
     visible: "Serial Number"
     timeout: 10000
