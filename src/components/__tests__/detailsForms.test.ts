@@ -86,6 +86,8 @@ describe("details FieldGroup body", () => {
     expect(detailsFlowSrc).not.toContain("tap-add-panel");
     expect(detailsFlowSrc).not.toContain("Add panel");
     expect(detailsFlowSrc).not.toContain("inverter-details?mode=edit");
+    expect(detailsFlowSrc).toContain("scrollUntilVisible");
+    expect(detailsFlowSrc).toContain("visibilityPercentage: 100");
   });
 
   it("does not flip Hermes V1", () => {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text as RNText, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import {
   Column,
@@ -18,11 +19,14 @@ import { RoofTypePicker } from '@/components/config/RoofTypePicker';
 import { useConfigForm } from '@/hooks/useConfigForm';
 import { useMarkInteractive } from '@/hooks/useMarkInteractive';
 import { useColors } from '@/utils/theme';
+import { configToolbarListInset } from '@/utils/wizardChrome';
 
 export default function ConfigScreen() {
   useMarkInteractive();
   const colors = useColors();
   const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
+  const listBottomInset = configToolbarListInset(insets.bottom);
   const [locationSelectCount, setLocationSelectCount] = useState(0);
   const {
     isWizardMode,
@@ -57,7 +61,7 @@ export default function ConfigScreen() {
   return (
     <>
       {isWizardMode && <WizardProgress currentStep={1} />}
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingBottom: listBottomInset }]}>
         <Host style={styles.host} colorScheme={colorScheme ?? undefined}>
           <FieldGroup>
             <FieldGroup.Section title="Panel Settings">

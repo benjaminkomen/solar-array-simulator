@@ -16,6 +16,14 @@ appId: com.bkomen.solararraysimulator
 
 # Config seeded inverter id=1 (serial text is random).
 # Product row tap must open the sheet — no openLink paper-over.
+# Scroll only after the list inset has cleared the row of the Continue FAB.
+- scrollUntilVisible:
+    element:
+      id: "inverter-row-1"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 100
+    centerElement: true
 - tapOn:
     id: "inverter-row-1"
 - extendedWaitUntil:
@@ -27,6 +35,13 @@ appId: com.bkomen.solararraysimulator
 - extendedWaitUntil:
     visible: "Panel Settings"
     timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: "inverter-row-1"
+    direction: DOWN
+    timeout: 10000
+    visibilityPercentage: 100
+    centerElement: true
 - tapOn:
     id: "inverter-row-1"
 - extendedWaitUntil:

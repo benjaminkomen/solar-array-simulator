@@ -40,6 +40,8 @@ describe("config FieldGroup collapse", () => {
     expect(configSrc).toContain("<FieldGroup.Section");
     expect(configSrc).toContain("Default Production");
     expect(configSrc).toContain("Continue");
+    expect(configSrc).toContain("configToolbarListInset");
+    expect(configSrc).toContain("paddingBottom");
     expect(existsSync(src("app/config.ios.tsx"))).toBe(false);
     expect(existsSync(src("app/config.android.tsx"))).toBe(false);
     expect(existsSync(src("app/config.web.tsx"))).toBe(true);
