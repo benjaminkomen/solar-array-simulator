@@ -13,6 +13,7 @@ import {
   useNativeState,
 } from '@expo/ui';
 import Add from '@expo/material-symbols/add.xml';
+import { AndroidToolbarIconButton } from '@/components/AndroidToolbarIconButton';
 import { WizardProgress } from '@/components/WizardProgress';
 import { InverterSection } from '@/components/config/InverterSection';
 import { RoofTypePicker } from '@/components/config/RoofTypePicker';
@@ -156,11 +157,20 @@ export default function ConfigScreen() {
             <Stack.Toolbar.Button onPress={handleContinue}>Continue</Stack.Toolbar.Button>
           )
         )}
-        <Stack.Toolbar.Button
-          icon={Platform.OS === 'ios' ? 'plus' : Add}
-          onPress={handleOpenAddSheet}
-          accessibilityLabel="Add inverter"
-        />
+        {Platform.OS === 'android' ? (
+          <AndroidToolbarIconButton
+            source={Add}
+            tint={colors.primary as string}
+            onPress={handleOpenAddSheet}
+            accessibilityLabel="Add inverter"
+          />
+        ) : (
+          <Stack.Toolbar.Button
+            icon="plus"
+            onPress={handleOpenAddSheet}
+            accessibilityLabel="Add inverter"
+          />
+        )}
       </Stack.Toolbar>
     </>
   );

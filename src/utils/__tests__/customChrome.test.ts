@@ -32,6 +32,10 @@ const androidIconSrc = readFileSync(
   resolve(import.meta.dir, "../../components/CustomToolbarAndroidIcon.android.tsx"),
   "utf8",
 );
+const androidToolbarIconSrc = readFileSync(
+  resolve(import.meta.dir, "../../components/AndroidToolbarIconButton.tsx"),
+  "utf8",
+);
 const expoToolbarButtonAndroid = readFileSync(
   resolve(
     import.meta.dir,
@@ -66,6 +70,9 @@ describe("Custom chrome tree", () => {
     const bottomToolbar =
       chromeSrc.match(/<Stack\.Toolbar placement="bottom">[\s\S]*?<\/Stack\.Toolbar>/)?.[0] ?? "";
     expect(rightToolbar).toContain("Stack.Toolbar.Badge");
+    expect(rightToolbar).toContain("AndroidToolbarIconButton");
+    expect(rightToolbar).toContain("unlinkedCount > 0 ? String(unlinkedCount)");
+    expect(rightToolbar).toContain("ignoreHeaderLinkPress");
     expect(bottomToolbar).not.toContain("Stack.Toolbar.Badge");
     expect(chromeSrc.split("<Stack.Toolbar.Badge").length - 1).toBe(1);
 
@@ -80,11 +87,13 @@ describe("Custom chrome tree", () => {
     expect(expoToolbarButtonAndroid).toMatch(/Icon[\s\S]*contentDescription/);
     expect(CUSTOM_ADD_PANEL_A11Y).toBe("Add panel");
     expect(chromeSrc).toContain("CUSTOM_ADD_PANEL_A11Y");
-    expect(chromeSrc).toContain('accessibilityRole="button"');
-    expect(chromeSrc).toContain("collapsable={false}");
-    expect(chromeSrc).toContain("CustomToolbarAndroidIcon");
-    expect(chromeSrc).toContain("toolbarIconHit");
-    expect(chromeSrc).toContain("cancelable={false}");
+    expect(chromeSrc).toContain("AndroidToolbarIconButton");
+    expect(androidToolbarIconSrc).toContain('accessibilityRole={labeled ? "button" : undefined}');
+    expect(androidToolbarIconSrc).toContain("collapsable={false}");
+    expect(androidToolbarIconSrc).toContain("CustomToolbarAndroidIcon");
+    expect(androidToolbarIconSrc).toContain("toolbarIconHit");
+    expect(androidToolbarIconSrc).toContain("cancelable={false}");
+    expect(androidToolbarIconSrc).toContain("AndroidToolbarHitOverlay");
     expect(androidIconSrc).toContain("@expo/ui/jetpack-compose");
     expect(androidIconSrc).toContain("<Host");
     expect(androidIconSrc).toContain('pointerEvents="none"');
@@ -95,7 +104,6 @@ describe("Custom chrome tree", () => {
     expect(iconJsx).not.toContain("contentDescription");
     expect(chromeSrc).toContain("shouldShowWizardFinish");
     expect(chromeSrc).toContain("Finish");
-    expect(chromeSrc).toContain("AndroidToolbarHitOverlay");
     expect(chromeSrc).toContain("AndroidWizardFinishButton");
     expect(chromeSrc).toContain("androidFinishHit");
     expect(chromeSrc).toContain("androidWizardFinishBottom");

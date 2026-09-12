@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Platform, Pressable, StyleSheet, View, type ImageSourcePropType } from "react-native";
+import { Platform, StyleSheet, View, type ImageSourcePropType } from "react-native";
 import { Pressable as GesturePressable } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
@@ -10,8 +10,8 @@ import LinkIcon from "@expo/material-symbols/link.xml";
 import MyLocation from "@expo/material-symbols/my_location.xml";
 import Navigation from "@expo/material-symbols/navigation.xml";
 import RotateRight from "@expo/material-symbols/rotate_right.xml";
+import { AndroidToolbarIconButton } from "@/components/AndroidToolbarIconButton";
 import { AndroidWizardFinishGlyph } from "@/components/AndroidWizardFinishGlyph";
-import { CustomToolbarAndroidIcon } from "@/components/CustomToolbarAndroidIcon";
 import {
   CUSTOM_ADD_PANEL_A11Y,
   CUSTOM_HEADER_LINK_A11Y,
@@ -75,34 +75,6 @@ type ToolbarIconButtonProps = {
   hidden?: boolean;
 };
 
-/**
- * Android Stack.Toolbar.Button puts accessibilityLabel on a Compose Icon
- * (android.view.View, clickable=false). Maestro then taps a dead node.
- * Keep the label on a RN Pressable drawn *above* the Compose Host/Icon
- * so Add panel receives the tap (nested Host as a Pressable child swallows it).
- */
-function AndroidToolbarHitOverlay({
-  onPress,
-  accessibilityLabel,
-}: {
-  onPress: () => void;
-  accessibilityLabel: string;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      accessible
-      collapsable={false}
-      cancelable={false}
-      style={styles.toolbarIconHit}
-    >
-      <View style={styles.toolbarIconHit} collapsable={false} />
-    </Pressable>
-  );
-}
-
 function ToolbarIconButton({
   name,
   onPress,
@@ -112,25 +84,13 @@ function ToolbarIconButton({
 }: ToolbarIconButtonProps) {
   if (Platform.OS === "android") {
     return (
-      <Stack.Toolbar.View hidden={hidden}>
-        <View style={styles.toolbarIconButton} collapsable={false}>
-          <View
-            pointerEvents="none"
-            accessible={false}
-            importantForAccessibility="no-hide-descendants"
-            style={styles.toolbarIconGlyph}
-          >
-            <CustomToolbarAndroidIcon
-              source={CUSTOM_TOOLBAR_ICONS[name] as ImageSourcePropType}
-              tint={tint}
-            />
-          </View>
-          <AndroidToolbarHitOverlay
-            onPress={onPress}
-            accessibilityLabel={accessibilityLabel}
-          />
-        </View>
-      </Stack.Toolbar.View>
+      <AndroidToolbarIconButton
+        source={CUSTOM_TOOLBAR_ICONS[name] as ImageSourcePropType}
+        tint={tint}
+        onPress={onPress}
+        accessibilityLabel={accessibilityLabel}
+        hidden={hidden}
+      />
     );
   }
 
@@ -160,15 +120,24 @@ export function CustomHeaderToolbar({
         accessibilityLabel="Toggle compass"
         tint={headerTint}
       />
-      <Stack.Toolbar.Button
-        icon={CUSTOM_TOOLBAR_ICONS.link}
-        onPress={ignoreHeaderLinkPress}
-        accessibilityLabel={Platform.OS === "ios" ? CUSTOM_HEADER_LINK_A11Y : undefined}
-      >
-        {unlinkedCount > 0 && (
-          <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
-        )}
-      </Stack.Toolbar.Button>
+      {Platform.OS === "android" ? (
+        <AndroidToolbarIconButton
+          source={CUSTOM_TOOLBAR_ICONS.link as ImageSourcePropType}
+          tint={headerTint}
+          onPress={ignoreHeaderLinkPress}
+          badge={unlinkedCount > 0 ? String(unlinkedCount) : undefined}
+        />
+      ) : (
+        <Stack.Toolbar.Button
+          icon={CUSTOM_TOOLBAR_ICONS.link}
+          onPress={ignoreHeaderLinkPress}
+          accessibilityLabel={CUSTOM_HEADER_LINK_A11Y}
+        >
+          {unlinkedCount > 0 && (
+            <Stack.Toolbar.Badge>{String(unlinkedCount)}</Stack.Toolbar.Badge>
+          )}
+        </Stack.Toolbar.Button>
+      )}
       <ToolbarIconButton
         name="snap"
         onPress={onSnapToOrigin}
@@ -347,20 +316,6 @@ export function CustomBottomToolbar({
 }
 
 const styles = StyleSheet.create({
-  toolbarIconButton: {
-    width: 48,
-    height: 48,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  toolbarIconGlyph: {
-    ...StyleSheet.absoluteFill,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  toolbarIconHit: {
-    ...StyleSheet.absoluteFill,
-  },
   androidFinishOverlay: {
     ...StyleSheet.absoluteFill,
     zIndex: 40,

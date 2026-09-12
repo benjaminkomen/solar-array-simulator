@@ -40,6 +40,9 @@ describe("config FieldGroup collapse", () => {
     expect(configSrc).toContain("<FieldGroup.Section");
     expect(configSrc).toContain("Default Production");
     expect(configSrc).toContain("Continue");
+    expect(configSrc).toContain("AndroidToolbarIconButton");
+    expect(configSrc).toContain('accessibilityLabel="Add inverter"');
+    expect(configSrc).toContain('icon="plus"');
     expect(configSrc).toContain("configToolbarListInset");
     expect(configSrc).toContain("paddingBottom");
     expect(existsSync(src("app/config.ios.tsx"))).toBe(false);

@@ -10,7 +10,7 @@ Surface: iOS Simulator and Android emulator development builds (SDK 57). Maestro
 - `src/app/compass-help.tsx` (#60; chrome stays in `_layout`)
 - `src/app/config.tsx` (#63; `config.web.tsx` is the web stub)
 - `src/app/simulation.tsx` (#65 + #67 chips + #75 community `SeasonPicker`, empty-array 3D seed)
-- Custom chrome (#62; shared `CustomHeaderToolbar` / `CustomBottomToolbar`; Android Add works; Badge on header-right unlinked count)
+- Custom chrome (#62; shared `CustomHeaderToolbar` / `CustomBottomToolbar`; Android Add works; iOS Badge / Android Pressable count on header-right unlinked count)
 - `src/app/upload.tsx` (#59; no Host/entering first paint; Android Skip Pressable)
 - `src/app/analyze.tsx` (#61; universal Picker; header **Select AI Model** on both; Android Continue without photo + Skip Pressable)
 - inverter-details / panel-details FieldGroup bodies (#64; `InverterDetailsForm` / `PanelDetailsForm`; drive via Config `inverter-row-1` + `seed-panel`)
@@ -42,7 +42,7 @@ These are current-main facts.
 - Production overflow a11y: iOS `More options`, Android `Configuration options`. Same header-right slot, sibling of Simulate. `production-menu` must open Edit/Delete and must **not** show Reload / Go home.
 - Analyze header is **Select AI Model** on both platforms. Android empty gallery uses `id: analyze-empty-state-button` — do not open the system picker.
 - Custom add: Maestro iOS `add` (SF `plus`), Android `Add panel` (RN Pressable). Both product a11y labels are `Add panel`. Android Add works after #62.
-- Android Skip / Continue / Analyze / Finish use `Stack.Toolbar.View` + Pressable (Toolbar.Button text children are not in the Android a11y tree). Source strings stay `Skip` / `Continue` / `Finish` / `Analyze`.
+- Android Skip / Continue / Analyze / Finish / Add inverter / Simulate / header-right link use `Stack.Toolbar.View` + Pressable (`Toolbar.Button` is icon-only; text children and `accessibilityLabel` are not on the clickable node). Source strings stay `Skip` / `Continue` / `Finish` / `Analyze` / `Add inverter` / `Simulate`.
 - Finish is hidden until `shouldShowWizardFinish(wizard, panels.length)` — **not** visible on an empty wizard canvas.
 - `sim-3d-proof` is panel + sun (seeded if the array is empty). Chrome-only is not enough. GPU loads late.
 - `analyze-skip` iOS Photos (`Photos` + `17%,25%`). Android must tap Continue without photo.
