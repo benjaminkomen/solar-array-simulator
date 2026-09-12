@@ -8,6 +8,10 @@ import { WizardProgress } from "@/components/WizardProgress";
 import { useColors } from "@/utils/theme";
 import { useUpload } from "@/hooks/useUpload";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
+import {
+  ANALYZE_CONTINUE_WITHOUT_PHOTO_LABEL,
+  ANALYZE_CONTINUE_WITHOUT_PHOTO_TEST_ID,
+} from "@/utils/analyzeChrome";
 
 function PhotoLibraryIcon({ color, size }: { color: string; size: number }) {
   if (Platform.OS === "ios") {
@@ -46,6 +50,7 @@ export default function Upload() {
   const {
     isWizardMode,
     handleSkip,
+    handleContinueWithoutPhoto,
     pickFromCamera,
     pickFromGallery,
     modalState,
@@ -119,6 +124,25 @@ export default function Upload() {
                 Choose from Gallery
               </Text>
             </Pressable>
+
+            {isWizardMode && (
+              <Pressable
+                testID={ANALYZE_CONTINUE_WITHOUT_PHOTO_TEST_ID}
+                onPress={handleContinueWithoutPhoto}
+                style={[
+                  styles.button,
+                  styles.buttonOutline,
+                  {
+                    backgroundColor: colors.background.primary,
+                    borderColor: colors.border.light,
+                  },
+                ]}
+              >
+                <Text style={[styles.buttonText, { color: colors.primary }]}>
+                  {ANALYZE_CONTINUE_WITHOUT_PHOTO_LABEL}
+                </Text>
+              </Pressable>
+            )}
           </View>
         </ScrollView>
       </View>

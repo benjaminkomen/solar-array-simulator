@@ -18,6 +18,13 @@ export function useUpload() {
     router.push(`/custom${wizardParam}`);
   };
 
+  /** Opens Analyze without a gallery pick (empty AVD library / Maestro fixture). */
+  const handleContinueWithoutPhoto = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const wizardParam = isWizardMode ? "?wizard=true" : "";
+    router.push(`/analyze${wizardParam}`);
+  }, [isWizardMode, router]);
+
   const onImageSelected = useCallback((picked: PickedImage) => {
     const wizardParam = isWizardMode ? '&wizard=true' : '';
     router.push(`/analyze?imageUri=${encodeURIComponent(picked.uri)}${wizardParam}`);
@@ -34,6 +41,7 @@ export function useUpload() {
   return {
     isWizardMode,
     handleSkip,
+    handleContinueWithoutPhoto,
     pickFromCamera,
     pickFromGallery,
     modalState,

@@ -70,7 +70,8 @@ Prefer existing Maestro YAML over rewriting flows. Stable handles already used b
 | `text-input-unit` | testID | Config wattage "W" | — |
 | `Panel Settings` | text | Config | Config |
 | `Take or Select Photo` | text | Upload | Upload |
-| Analyze header | text | `Select AI Model` | `SELECT AI MODEL` |
+| Analyze header | text | `Select AI Model` | `Select AI Model` |
+| `analyze-empty-state-button` | testID | Upload fixture | Upload fixture (empty gallery) |
 | Add panel | toolbar | `add` (SF Symbol `plus`) | `Add panel` |
 | `Finish` / `Continue` / `Skip` | toolbar text | wizard | wizard |
 | `Simulate` | a11y | Production sun | Production sun (`contentDescription`) |
@@ -102,7 +103,7 @@ Maestro notes (from the repo, not folklore):
 - `extendedWaitUntil` with an id must nest: `visible: { id: "canvas-container" }`.
 - iOS `launch-fresh`: deep-link `127.0.0.1:8081`, tap **Open** (not Cancel), wait for **Continue**. Android: wait for Home, `openLink` to `10.0.2.2:8081` (`disableOnboarding=1`), Recently Opened / typed **Connect** fallback. Then poll: if Dev Menu is up, tap **Tools button** (turns off the header Tools overlay), dismiss (`Close` or `50%,15%` when `Go home`/`Reload` is up — that is attached, not a failed launch) or tap **Continue** if the first-run sheet appears. Do not wait 90s for Continue while the Dev Menu is covering Welcome. Do not move Production Edit/Delete off the header to dodge the overlay.
 - Android Simulation 3D: chrome can be up while the canvas is still black. That is a GPU settle, not "WebGPU unavailable". `simulation-nav` takes `sim-3d-proof` immediately after season asserts (short settle only) while "Simulation" / "Total Output" / Spring–Winter are still visible. Do not wait 90s for `webgpu-scene-painted` — that id is not in the tree and the app can leave to the AVD launcher. Proof is **panel + sun** (the hook seeds one 3D panel if the array is empty). Chrome-only / empty-array deeplink is not enough. A black first frame is settle — wait for GPU. The launcher home screen is not proof. Season labels are segmented chrome (`SeasonPicker.ios.tsx` / `.android.tsx`), not a menu Picker.
-- `analyze-skip` gallery picker is still iOS Photos chrome (`Photos` + `17%,25%`). Android system picker is a different OS sheet — prove Analyze header after a real pick, or Skip.
+- `analyze-skip` iOS still uses Photos chrome (`Photos` + `17%,25%`). Android must **not** open the system picker on an empty AVD — tap `id: analyze-empty-state-button` ("Continue without photo") and prove **Select AI Model** + **No photo selected**. Android Analyze Skip/Analyze are `Stack.Toolbar.View` + Pressable (not `Toolbar.Button` text children).
 
 Android development build: `eas.json` `development` (`developmentClient: true`, `arm64-v8a`) — `eas build --profile development --platform android`, install the APK on the AVD. `development-simulator` / `preview-simulator` are **iOS-only** (`ios.simulator: true`). Do not invent a second Android profile unless EAS requires it.
 
@@ -121,7 +122,7 @@ Proof standards:
 
 - Exercise a real user path from the Feature Map. Do not set `wizardCompleted` in the KV store or deep-link past the change under test as the primary proof.
 - Capture the action **and** the resulting visible state (screenshot or Maestro `assertVisible`). "Looks right in code" is not evidence.
-- A status-200 from `/api/analyze` is not Analyze proof. Drive Upload → gallery/camera → Analyze header (or Skip).
+- A status-200 from `/api/analyze` is not Analyze proof. Drive Upload → gallery/camera → Analyze header, or Android **Continue without photo** → Analyze empty-state. Upload Skip goes to Custom and does not prove Analyze.
 - Skia/WebGPU pixels are not queryable. Prove Custom via `canvas-container` + toolbar (`Finish` after add). Prove Simulation via chrome (`Simulation`, `Total Output`, season labels) and `sim-3d-proof` of **panel + sun** while that chrome is still in the foreground. A black first frame is GPU settle, not "WebGPU unavailable". Chrome-only is not enough. The AVD launcher is not Simulation proof.
 - Record the feature id, platform, and the flow/command on every artifact.
 - If a path is unreachable (no sim, no emulator, no photo library, no AWS keys), name the path and the unmet precondition. Do not mark it verified via a different entry point.
