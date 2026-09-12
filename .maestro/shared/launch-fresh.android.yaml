@@ -85,30 +85,13 @@ env:
 - extendedWaitUntil:
     visible: "Solar Array Simulator"
     timeout: 120000
-# Menu still up (dismiss missed): toggle once. Continue-sheet path: open the
-# floating Tools FAB, flip the toggle off, dismiss.
+# Menu still up (dismiss missed) or FAB still showing after Welcome: open
+# the Tools FAB if needed, wait for the Tools button row, flip once, dismiss.
+# Retry only while the FAB is still visible and the menu is not already
+# open — a second tap on Tools button would turn the overlay back on.
 - runFlow: hide-android-dev-client-tools.yaml
 - runFlow:
     when:
       visible: "Tools"
       notVisible: "Tools button"
-    commands:
-      - tapOn: "Tools"
-      - runFlow: hide-android-dev-client-tools.yaml
-      - runFlow:
-          when:
-            visible: "Close"
-          commands:
-            - tapOn: "Close"
-      - runFlow:
-          when:
-            visible: "Go home"
-          commands:
-            - tapOn:
-                point: "50%,15%"
-      - runFlow:
-          when:
-            visible: "Reload"
-          commands:
-            - tapOn:
-                point: "50%,15%"
+    file: hide-android-dev-client-tools.yaml

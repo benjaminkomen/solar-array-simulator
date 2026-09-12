@@ -4,7 +4,7 @@
  */
 import { useCallback, useRef, useState } from "react";
 import { useWindowDimensions, type LayoutChangeEvent } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { router as expoRouter, useLocalSearchParams, useRouter } from "expo-router";
 import { useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
@@ -144,10 +144,17 @@ export function useCanvasEditor() {
 
   const handleFinish = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // Push only. Writing wizardCompleted here re-renders Custom/Welcome and
-    // Android drops the first routingQueue action (second Finish then works).
-    runWizardFinish((href) => router.push(href));
-  }, [router]);
+    // Push only, and not in the same turn as the toolbar press. Writing
+    // wizardCompleted here re-renders Custom/Welcome; a sync push during
+    // the Android Host press is also dropped (routingQueue run with a
+    // null ref). A later Finish tap then works. Use the imperative router
+    // after the press returns.
+    runWizardFinish((href) => {
+      setTimeout(() => {
+        expoRouter.push(href);
+      }, 0);
+    });
+  }, []);
 
   const handleCompassTap = useCallback(() => {
     router.push('/compass-help');

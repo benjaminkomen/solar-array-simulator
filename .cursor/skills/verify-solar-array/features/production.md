@@ -21,7 +21,7 @@ Post-wizard home: live-ish total wattage, a read-only canvas, compass, Edit/Dele
 Preconditions:
 
 - At least one panel (Finish is hidden otherwise). Shared flow: `wizard-to-production.yaml`.
-- Android Dev Client Tools overlay must already be off (`launch-fresh.android` taps **Tools button** once).
+- Android Dev Client Tools overlay must already be off (`launch-fresh.android` opens the FAB if needed, waits for **Tools button**, taps it once, dismisses).
 
 - **Arrive via wizard.** `run-flow wizard-happy-path` ends on "Total Array Output". `run-flow full-app-tour` also lands here before Simulation.
 - **Simulate.** `run-flow simulation-nav` taps "Simulate" (`tap-simulate.yaml`), waits for "Simulation".

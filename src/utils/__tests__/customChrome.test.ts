@@ -96,12 +96,16 @@ describe("Custom chrome tree", () => {
     expect(chromeSrc).toContain("shouldShowWizardFinish");
     expect(chromeSrc).toContain("Finish");
     expect(chromeSrc).toContain("AndroidToolbarHitOverlay");
-    expect(chromeSrc).toContain('accessibilityLabel="Finish"');
+    expect(chromeSrc).toContain('accessibilityLabel={visible ? "Finish" : undefined}');
     const finishBlock =
       chromeSrc.match(/function WizardFinishButton[\s\S]*?function CustomBottomToolbar/)?.[0] ?? "";
     expect(finishBlock).toContain("pointerEvents=\"none\"");
-    expect(finishBlock).toContain("AndroidToolbarHitOverlay");
-    expect(finishBlock).not.toMatch(/<Pressable[\s\S]*Finish[\s\S]*<\/Pressable>/);
+    expect(finishBlock).toContain("toolbarFinishHit");
+    expect(finishBlock).toContain("<Pressable");
+    expect(finishBlock).toMatch(/<Pressable[\s\S]*Finish[\s\S]*<\/Pressable>/);
+    expect(finishBlock).not.toContain("AndroidToolbarHitOverlay");
+    expect(chromeSrc).toContain("visible={showFinish}");
+    expect(chromeSrc).not.toContain("shouldShowWizardFinish(isWizardMode, panelCount) &&");
     expect(shouldShowWizardFinish(true, 0)).toBe(false);
     expect(shouldShowWizardFinish(true, 1)).toBe(true);
     expect(iosSrc).toContain("SolarPanelCanvas");

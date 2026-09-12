@@ -86,7 +86,8 @@ describe("runWizardFinish", () => {
 
   it("Finish pushes Production and leaves persist to the Production mount", () => {
     expect(editorSrc).toContain("runWizardFinish");
-    expect(editorSrc).toContain("router.push");
+    expect(editorSrc).toContain("expoRouter.push");
+    expect(editorSrc).toContain("setTimeout");
     expect(editorSrc).not.toContain("setWizardCompleted");
     expect(editorSrc).not.toContain("router.replace");
     expect(productionHookSrc).toContain("persistWizardCompletedOnProduction");

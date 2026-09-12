@@ -165,25 +165,59 @@ export function CustomHeaderToolbar({
   );
 }
 
-function WizardFinishButton({ onFinish }: { onFinish: () => void }) {
+/**
+ * Android Finish must match Upload/Analyze Skip: Pressable wraps the label
+ * and the Toolbar.View is mounted for the whole Custom visit.
+ *
+ * A newly mounted overlay-on-text (Add's pattern) is wrong here. Maestro
+ * tapOn: "Finish" prefers the visible uppercase Text. That Text's parent
+ * was a plain View, so the first tap after Add hit a dead node. Skip works
+ * on the first tap because the Pressable is the clickable parent and has
+ * been laid out since the screen mounted. Keep the slot reserved (no
+ * "Finish" text/a11y) so assertNotVisible: Finish still passes on empty
+ * canvas, then reveal the same Pressable after Add — no enter animation,
+ * no 0×0 Host.
+ */
+function WizardFinishButton({
+  onFinish,
+  visible,
+}: {
+  onFinish: () => void;
+  visible: boolean;
+}) {
   const colors = useColors();
 
   if (Platform.OS === "android") {
     return (
       <Stack.Toolbar.View>
-        <View style={styles.toolbarTextButton} collapsable={false}>
-          <Text
-            pointerEvents="none"
-            accessible={false}
-            importantForAccessibility="no-hide-descendants"
-            style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}
-          >
-            Finish
-          </Text>
-          <AndroidToolbarHitOverlay onPress={onFinish} accessibilityLabel="Finish" />
-        </View>
+        <Pressable
+          onPress={onFinish}
+          disabled={!visible}
+          accessibilityLabel={visible ? "Finish" : undefined}
+          accessibilityRole={visible ? "button" : undefined}
+          accessible={visible}
+          importantForAccessibility={visible ? "yes" : "no-hide-descendants"}
+          collapsable={false}
+          cancelable={false}
+          style={styles.toolbarFinishHit}
+        >
+          {visible ? (
+            <Text
+              pointerEvents="none"
+              accessible={false}
+              importantForAccessibility="no-hide-descendants"
+              style={[styles.toolbarTextButtonLabel, { color: colors.primary as string }]}
+            >
+              Finish
+            </Text>
+          ) : null}
+        </Pressable>
       </Stack.Toolbar.View>
     );
+  }
+
+  if (!visible) {
+    return null;
   }
 
   return (
@@ -205,6 +239,7 @@ export function CustomBottomToolbar({
 }: CustomBottomToolbarProps) {
   const colors = useColors();
   const actionTint = colors.primary as string;
+  const showFinish = shouldShowWizardFinish(isWizardMode, panelCount);
 
   return (
     <Stack.Toolbar placement="bottom">
@@ -236,9 +271,7 @@ export function CustomBottomToolbar({
           />
         </>
       )}
-      {shouldShowWizardFinish(isWizardMode, panelCount) && (
-        <WizardFinishButton onFinish={onFinish} />
-      )}
+      <WizardFinishButton onFinish={onFinish} visible={showFinish} />
     </Stack.Toolbar>
   );
 }
@@ -263,6 +296,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     minHeight: 36,
     justifyContent: "center",
+  },
+  toolbarFinishHit: {
+    minWidth: 48,
+    minHeight: 48,
+    paddingHorizontal: 12,
+    justifyContent: "center",
+    alignItems: "center",
   },
   toolbarTextButtonLabel: {
     fontSize: 14,
