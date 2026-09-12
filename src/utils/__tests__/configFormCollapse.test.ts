@@ -79,6 +79,8 @@ describe("config FieldGroup collapse", () => {
 
   it("does not flip Hermes V1 or move the Production overflow", () => {
     expect(appJson).toContain('"useHermesV1": true');
+    expect(existsSync(src("app/production.ios.tsx"))).toBe(false);
+    expect(existsSync(src("app/production.android.tsx"))).toBe(false);
     expect(productionSrc).toContain('placement="right"');
     expect(productionSrc).toContain("Toolbar.Menu");
     expect(productionSrc).toContain("Simulate");

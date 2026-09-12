@@ -112,3 +112,4 @@ Say so. Update the feature files and Maestro YAML so the next Mac run has a true
 - Feature files: `.cursor/skills/verify-solar-array/features/`
 - Maestro flows: `.maestro/`
 - CLI: `.cursor/skills/verify-solar-array/control.mjs`
+- Evidence receipts: `.agents/evidence/verify-solar-array/` (gitignored except `README.md`)

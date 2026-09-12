@@ -3,7 +3,9 @@ import { resolve } from "node:path";
 
 /**
  * Collapse-rebase hook: prefer `src/app/<name>.<platform>.tsx` while the
- * pair still exists; fall back to `src/app/<name>.tsx` after the pair lands.
+ * pair still exists; fall back to `src/app/<name>.tsx` after the pair lands
+ * (Production, compass-help, Config, Upload, Analyze, and Simulation
+ * already fall back). Leftover Custom / details mounts stay until #56.
  */
 export function readAppRouteSource(
   repoRoot: string,
