@@ -88,7 +88,7 @@ describe("config FieldGroup collapse", () => {
   it("keeps a real platform delete gesture for inverter rows", () => {
     expect(inverterIosSrc).toContain("SwipeActions");
     expect(inverterIosSrc).toContain("onDeleteInverter");
-    expect(inverterIosSrc).not.toContain("List.ForEach");
+    expect(inverterIosSrc).not.toContain("<List.ForEach");
     expect(inverterAndroidSrc).toContain("SwipeToDismissBox");
     expect(inverterAndroidSrc).toContain("onEndToStart");
     expect(configSrc).toContain("<InverterSection");

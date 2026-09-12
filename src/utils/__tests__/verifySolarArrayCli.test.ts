@@ -226,6 +226,7 @@ describe("verify-solar-array CLI", () => {
     expect(details).toContain("inverter-row-1");
     expect(details).toContain("panelId=seed-panel");
     expect(details).not.toContain("tap-add-panel");
+    expect(details).not.toContain("inverter-details?mode=edit");
   });
 
   it("features lists the Feature Map", () => {
