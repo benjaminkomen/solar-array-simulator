@@ -28,7 +28,7 @@ Preconditions:
 
 - **Land on canvas.** `run-flow wizard-happy-path` after Upload Skip: `id: canvas-container` visible. Assert "Finish" is **not** visible on the empty canvas. `full-app-tour` also lands here, opens compass help, then adds a panel.
 - **Add panel.** `shared/tap-add-panel.yaml`: iOS `add` (SF `plus`), Android `Add panel` (`CUSTOM_ADD_PANEL_A11Y` on a RN `Pressable` with `accessibilityRole="button"`). Wait for animation. Assert "Finish". Android Add works after #62 — do not skip that assert.
-- **Finish.** Tap "Finish". Wait for "Total Array Output".
+- **Finish.** Tap "Finish". Wait for "Total Array Output". Finish must write `wizardCompleted` and open Production (`runWizardFinish`: replace `/production` first, then the flag). Do not deeplink Production from the YAML.
 - **Link inverter.** Do **not** require a Skia canvas tap. `run-flow details-sheets`: Config `id: inverter-row-1` for inverter-details (row tap, no `openLink` paper); `openLink` `/panel-details?panelId=seed-panel` for panel-details (`ensureSeedPanel`). After add, the new panel is auto-selected so `link` / "Link inverter" is also a toolbar path — still not the required proof.
 - **Empty inverters.** If every inverter is already linked, the sheet shows "No Available Inverters" and "Add Inverter" → Config.
 - **Production view sheet.** On Production, tap a **linked** panel (Skia — usually unreachable to Maestro). If you cannot tap, say `verified-unreachable` and prove the editor sheet from `details-sheets` instead.
@@ -41,6 +41,7 @@ Preconditions:
 - Panel Details body is `src/components/PanelDetailsForm.tsx`. Sheet presentation lives in `PanelDetailsScreen.*` and `_layout`. Do not add a Host on the shared form.
 - Android add control is labeled "Add panel", not `add`. Shared `tap-add-panel.yaml` branches.
 - Finish is hidden when `panels.length === 0` or not in wizard mode (`shouldShowWizardFinish`).
+- Android Continue/Skip already use `Toolbar.View` + Pressable+text and work. Finish uses that same chrome. The #69 failure was not a dead Finish node: writing `wizardCompleted` while Custom is focused used to remount buried Welcome as `<Redirect href="/production" />`, and Android left Custom on top. Welcome only Redirects when the visible path is Welcome (`shouldRedirectWelcomeToProduction`).
 - `Stack.Toolbar.Badge` is only on the header-right link button when `unlinkedCount > 0`. Android omits `accessibilityLabel` on that Badge button.
 - Compass toggle is a different feature ([compass-help.md](compass-help.md)).
 - Collision uses an 8px gap. Overlap on drag-release is app behavior; Maestro cannot see it.

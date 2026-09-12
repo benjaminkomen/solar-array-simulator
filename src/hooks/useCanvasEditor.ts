@@ -15,6 +15,7 @@ import { PANEL_WIDTH, PANEL_HEIGHT } from "@/utils/panelUtils";
 import { consumeAnalysisResult } from "@/utils/analysisStore";
 import { buildMockPanelGrid, mapAnalysisToCanvasPositions } from "@/utils/canvasLayout";
 import { resolveCanvasSizeForAdd } from "@/utils/customChrome";
+import { runWizardFinish } from "@/utils/wizardChrome";
 
 // Module-level worklet functions: required by React Compiler
 function setCanvasSize(w: SharedValue<number>, h: SharedValue<number>, width: number, height: number) {
@@ -143,8 +144,10 @@ export function useCanvasEditor() {
 
   const handleFinish = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setWizardCompleted(true);
-    router.push('/production');
+    runWizardFinish({
+      openProduction: (href) => router.replace(href),
+      markWizardCompleted: () => setWizardCompleted(true),
+    });
   }, [setWizardCompleted, router]);
 
   const handleCompassTap = useCallback(() => {

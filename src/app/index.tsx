@@ -1,5 +1,5 @@
 import { ScrollView, Text, useColorScheme } from "react-native";
-import { Redirect, useRouter } from "expo-router";
+import { Redirect, usePathname, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -7,10 +7,12 @@ import { Button } from "@/components/Button";
 import { useConfigStore } from "@/hooks/useConfigStore";
 import { useColors } from "@/utils/theme";
 import { useMarkInteractive } from "@/hooks/useMarkInteractive";
+import { shouldRedirectWelcomeToProduction } from "@/utils/wizardChrome";
 
 export default function Index() {
   useMarkInteractive();
   const router = useRouter();
+  const pathname = usePathname();
   const { getWizardCompleted } = useConfigStore();
   const colors = useColors();
   const colorScheme = useColorScheme();
@@ -18,8 +20,8 @@ export default function Index() {
 
   const wizardCompleted = getWizardCompleted();
 
-  // Redirect returning users directly to production
-  if (wizardCompleted) {
+  // Returning users only. Do not Redirect while Welcome is buried under the wizard.
+  if (shouldRedirectWelcomeToProduction(wizardCompleted, pathname)) {
     return <Redirect href="/production" />;
   }
 
