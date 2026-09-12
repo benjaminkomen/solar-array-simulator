@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Platform, Pressable, StyleSheet, View, type ImageSourcePropType } from "react-native";
+import { Pressable as GesturePressable } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import type { SFSymbol } from "sf-symbols-typescript";
@@ -16,6 +17,8 @@ import {
   CUSTOM_HEADER_LINK_A11Y,
 } from "@/utils/customChrome";
 import {
+  ANDROID_WIZARD_FINISH_HIT_HEIGHT,
+  ANDROID_WIZARD_FINISH_HIT_WIDTH,
   androidWizardFinishBottom,
   androidWizardFinishPressProofLabel,
   androidWizardFinishRight,
@@ -209,10 +212,10 @@ function pressAndroidWizardFinish(
 }
 
 /**
- * Android-only Finish. Position is locked. Visual is Skia, not RN Text —
- * a TextView "FINISH" is a second uiautomator node that Maestro taps
- * instead of this Pressable (#80). onPress flips the same control to
- * `Tapped`, then records `/production`.
+ * Android-only Finish. Visual is Skia (no TextView). RNGH Pressable +
+ * box-none overlay sit above the full-screen canvas GestureDetector so
+ * Maestro's a11y-coordinate tap hits this control, not the Skia tap
+ * (which deselects the panel). Hit width/height fill that a11y box (#80).
  */
 export function AndroidWizardFinishButton({
   visible,
@@ -231,29 +234,38 @@ export function AndroidWizardFinishButton({
   }
 
   return (
-    <Pressable
-      onPress={() => {
-        pressAndroidWizardFinish(setPressed, onFinish);
-      }}
-      accessibilityLabel={label}
-      accessibilityRole="button"
-      accessible
-      collapsable={false}
-      cancelable={false}
-      testID={pressed ? "android-wizard-finish-tapped" : "android-wizard-finish"}
-      style={[
-        styles.androidFinishHit,
-        {
-          bottom: androidWizardFinishBottom(insets.bottom),
-          right: androidWizardFinishRight(),
-        },
-      ]}
+    <View
+      pointerEvents="box-none"
+      accessible={false}
+      importantForAccessibility="no"
+      style={styles.androidFinishOverlay}
     >
-      <AndroidWizardFinishGlyph
-        label={label}
-        color={colors.primary as string}
-      />
-    </Pressable>
+      <GesturePressable
+        onPress={() => {
+          pressAndroidWizardFinish(setPressed, onFinish);
+        }}
+        accessibilityLabel={label}
+        accessibilityRole="button"
+        accessible
+        collapsable={false}
+        pointerEvents="box-only"
+        testID={pressed ? "android-wizard-finish-tapped" : "android-wizard-finish"}
+        style={[
+          styles.androidFinishHit,
+          {
+            bottom: androidWizardFinishBottom(insets.bottom),
+            right: androidWizardFinishRight(),
+            width: ANDROID_WIZARD_FINISH_HIT_WIDTH,
+            height: ANDROID_WIZARD_FINISH_HIT_HEIGHT,
+          },
+        ]}
+      >
+        <AndroidWizardFinishGlyph
+          label={label}
+          color={colors.primary as string}
+        />
+      </GesturePressable>
+    </View>
   );
 }
 
@@ -349,13 +361,14 @@ const styles = StyleSheet.create({
   toolbarIconHit: {
     ...StyleSheet.absoluteFill,
   },
+  androidFinishOverlay: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 40,
+  },
   androidFinishHit: {
     position: "absolute",
-    zIndex: 30,
-    elevation: 8,
-    minWidth: 48,
-    minHeight: 48,
-    paddingHorizontal: 12,
+    zIndex: 40,
+    elevation: 16,
     justifyContent: "center",
     alignItems: "center",
   },

@@ -97,6 +97,14 @@ export function androidFinishClearsZoomColumn(
 /** Maestro `tapOn: Finish` until the Pressable's onPress runs. */
 export const ANDROID_WIZARD_FINISH_A11Y = "Finish";
 
+/**
+ * Real hit box must fill the a11y box Maestro taps (#80).
+ * `2b98df6` dump was ~187×126; a smaller minWidth/minHeight let the
+ * canvas GestureDetector receive the coordinate tap (panel deselected).
+ */
+export const ANDROID_WIZARD_FINISH_HIT_WIDTH = 188;
+export const ANDROID_WIZARD_FINISH_HIT_HEIGHT = 128;
+
 /** Visible + a11y flip that does not depend on Redirect. */
 export const ANDROID_WIZARD_FINISH_PRESS_PROOF_LABEL = "Tapped";
 

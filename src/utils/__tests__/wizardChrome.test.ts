@@ -4,6 +4,8 @@ import { describe, it, expect } from "bun:test";
 import {
   ANDROID_BOTTOM_TOOLBAR_HEIGHT,
   ANDROID_WIZARD_FINISH_A11Y,
+  ANDROID_WIZARD_FINISH_HIT_HEIGHT,
+  ANDROID_WIZARD_FINISH_HIT_WIDTH,
   ANDROID_WIZARD_FINISH_PRESS_PROOF_LABEL,
   ANDROID_WIZARD_FINISH_ZOOM_GAP,
   CONFIG_BOTTOM_TOOLBAR_INSET,
@@ -88,6 +90,7 @@ describe("androidWizardFinishRight", () => {
     );
     expect(androidWizardFinishRight()).toBe(76);
     expect(androidFinishClearsZoomColumn(androidWizardFinishRight(), 48)).toBe(true);
+    expect(androidFinishClearsZoomColumn(androidWizardFinishRight(), ANDROID_WIZARD_FINISH_HIT_WIDTH)).toBe(true);
     expect(androidFinishClearsZoomColumn(24, 48)).toBe(false);
   });
 });
@@ -163,7 +166,19 @@ describe("requestWizardFinish", () => {
     expect(zoomSrc).toContain("react-native-gesture-handler");
     expect(zoomSrc).toContain("ZOOM_COLUMN_RIGHT");
     expect(zoomSrc).toContain("elevation: 4");
-    expect(chromeSrc).toContain("elevation: 8");
+    expect(chromeSrc).toContain("elevation: 16");
+    expect(chromeSrc).toContain("androidFinishOverlay");
+    expect(chromeSrc).toContain('pointerEvents="box-none"');
+    expect(chromeSrc).toContain('pointerEvents="box-only"');
+    expect(chromeSrc).toContain('from "react-native-gesture-handler"');
+    expect(chromeSrc).toContain("GesturePressable");
+    expect(chromeSrc).toContain("ANDROID_WIZARD_FINISH_HIT_WIDTH");
+    expect(androidCustomSrc.indexOf("<ZoomControls")).toBeLessThan(
+      androidCustomSrc.indexOf("<AndroidWizardFinishButton"),
+    );
+    expect(androidCustomSrc.indexOf("<AndroidWizardFinishButton")).toBeLessThan(
+      androidCustomSrc.indexOf("<CustomBottomToolbar"),
+    );
     expect(iosCustomSrc).toContain("shouldRedirectCustomToProduction");
     expect(iosCustomSrc).toContain("Redirect");
     expect(chromeSrc).toContain("AndroidWizardFinishButton");
@@ -201,6 +216,8 @@ describe("androidWizardFinishPressProofLabel", () => {
   it("keeps Finish until press, then flips to Tapped without Redirect", () => {
     expect(ANDROID_WIZARD_FINISH_A11Y).toBe("Finish");
     expect(ANDROID_WIZARD_FINISH_PRESS_PROOF_LABEL).toBe("Tapped");
+    expect(ANDROID_WIZARD_FINISH_HIT_WIDTH).toBe(188);
+    expect(ANDROID_WIZARD_FINISH_HIT_HEIGHT).toBe(128);
     expect(androidWizardFinishPressProofLabel(false)).toBe("Finish");
     expect(androidWizardFinishPressProofLabel(true)).toBe("Tapped");
   });

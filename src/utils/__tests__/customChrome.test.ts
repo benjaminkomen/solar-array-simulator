@@ -117,6 +117,9 @@ describe("Custom chrome tree", () => {
       bottomToolbar.indexOf("<WizardFinishButton"),
     );
     expect(androidSrc).toContain("AndroidWizardFinishButton");
+    expect(androidSrc.indexOf("<ZoomControls")).toBeLessThan(
+      androidSrc.indexOf("<AndroidWizardFinishButton"),
+    );
     expect(chromeSrc).toContain("visible={showFinish}");
     expect(chromeSrc).not.toContain("shouldShowWizardFinish(isWizardMode, panelCount) &&");
     expect(shouldShowWizardFinish(true, 0)).toBe(false);

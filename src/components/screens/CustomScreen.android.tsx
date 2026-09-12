@@ -90,6 +90,10 @@ export default function Custom() {
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
           />
+          <AndroidWizardFinishButton
+            visible={shouldShowWizardFinish(isWizardMode, panels.length)}
+            onFinish={handleFinish}
+          />
         </View>
       </View>
       <CustomBottomToolbar
@@ -100,10 +104,6 @@ export default function Custom() {
         onLinkInverter={handleLinkInverter}
         onRotatePanel={handleRotatePanel}
         onDeletePanel={handleDeletePanel}
-        onFinish={handleFinish}
-      />
-      <AndroidWizardFinishButton
-        visible={shouldShowWizardFinish(isWizardMode, panels.length)}
         onFinish={handleFinish}
       />
     </>
