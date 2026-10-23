@@ -37,7 +37,7 @@ Known Android product facts this audit does not paper over:
 
 ## Capability map
 
-### `@expo/ui/jetpack-compose` (57.0.18)
+### `@expo/ui/jetpack-compose`
 
 Present and usable today (from `node_modules/@expo/ui/src/jetpack-compose/index.ts`):
 
