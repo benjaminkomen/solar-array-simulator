@@ -14,6 +14,6 @@ export function inverterRowTestId(inverterId: string): string {
   return `inverter-row-${inverterId}`;
 }
 
-export function inverterEditPath(inverterId: string): string {
+export function inverterEditPath(inverterId: string): `/inverter-details?${string}` {
   return `/inverter-details?mode=edit&inverterId=${inverterId}`;
 }
