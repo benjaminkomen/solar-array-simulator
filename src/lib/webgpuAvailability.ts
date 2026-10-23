@@ -12,7 +12,7 @@
  * rebuild — look for the pod / static archive, not RNWebGPU.framework.
  *
  * react-native-webgpu@0.10+ installs via `self.bridge.runtime`. New
- * Architecture is mandatory on SDK 57 (do not set `newArchEnabled`).
+ * Architecture is mandatory on SDK 58 (do not set `newArchEnabled`).
  *
  * Probe WebGPUModule and run `install()` *before* importing Canvas so
  * existing clients show a fallback instead of a redbox.
@@ -36,7 +36,7 @@ function defaultGetWebGPUModule(): WebGPUNativeModule | null {
     // Lazy require so bun unit tests do not load react-native.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { TurboModuleRegistry } = require("react-native") as typeof import("react-native");
-    return TurboModuleRegistry.get<TurboModuleLike>("WebGPUModule");
+    return TurboModuleRegistry.get<TurboModuleLike>("WebGPUModule") ?? null;
   } catch {
     return null;
   }

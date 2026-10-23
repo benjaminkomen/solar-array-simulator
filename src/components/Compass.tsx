@@ -1,6 +1,6 @@
 import {useCallback, useEffect} from "react";
 import {Platform, StyleSheet, View} from "react-native";
-import {Canvas, Group, matchFont, Path, Skia, Text as SkiaText,} from "@shopify/react-native-skia";
+import {Canvas, FillType, Group, matchFont, Path, Skia, Text as SkiaText,} from "@shopify/react-native-skia";
 import {Gesture, GestureDetector} from "react-native-gesture-handler";
 import {useDerivedValue, useSharedValue, withTiming,} from "react-native-reanimated";
 import {scheduleOnRN} from "react-native-worklets";
@@ -61,24 +61,18 @@ export function Compass({
 
   // Create arrow path: outer triangle with bottom notch and with inner triangle cutout (even-odd fill)
   const arrowPath = useDerivedValue(() => {
-    const path = Skia.Path.Make();
-
-    // Outer triangle (arrow shape)
-    path.moveTo(CENTER, CENTER + -16);                           // Top point of arrow
-    path.lineTo(CENTER - 12, CENTER + 12); // Bottom left of arrow
-    path.lineTo(CENTER, CENTER + 12 - 6);                // Bottom center of arrow notch
-    path.lineTo(CENTER + 12, CENTER + 12); // Bottom right of arrow
+    const path = Skia.PathBuilder.Make();
+    path.moveTo(CENTER, CENTER - 16);
+    path.lineTo(CENTER - 12, CENTER + 12);
+    path.lineTo(CENTER, CENTER + 6);
+    path.lineTo(CENTER + 12, CENTER + 12);
     path.close();
-
-    // Inner cutout triangle
-    path.moveTo(CENTER, CENTER - 9);                            // Top point of triangle
-    path.lineTo(CENTER - 6, CENTER + 6);                        // Bottom left of triangle
-    path.lineTo(CENTER, CENTER + 3);                            // Bottom right of triangle
+    path.moveTo(CENTER, CENTER - 9);
+    path.lineTo(CENTER - 6, CENTER + 6);
+    path.lineTo(CENTER, CENTER + 3);
     path.close();
-
-    // Even-odd fill rule makes the inner region transparent
-    path.setFillType(1); // 1 = EvenOdd in Skia
-    return path;
+    path.setFillType(FillType.EvenOdd);
+    return path.detach();
   });
 
   // Transform for rotating the arrow
@@ -145,7 +139,7 @@ export function Compass({
   // Arcs centered at diagonals: -45° (NE), 45° (SE), 135° (SW), 225° (NW)
   const arcStartAngles = [-45, 45, 135, 225].map(a => a - ARC_SWEEP / 2);
   const arcPaths = arcStartAngles.map((startAngle, i) => ({
-    path: Skia.Path.Make().addArc(oval, startAngle, ARC_SWEEP),
+    path: Skia.PathBuilder.Make().addArc(oval, startAngle, ARC_SWEEP).detach(),
     key: i,
   }));
 

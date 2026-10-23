@@ -33,7 +33,7 @@ npx react-doctor --verbose         # React Compiler health check
 
 ## Architecture
 
-Expo Router (SDK 57) app for creating solar panel array layouts. React Native New Architecture with React Compiler enabled.
+Expo Router (SDK 58) app for creating solar panel array layouts. React Native New Architecture with React Compiler enabled.
 
 **Key technologies:** Expo Router (`Stack.Screen`, `Stack.Toolbar`), `@expo/ui/swift-ui` (native forms), `@shopify/react-native-skia` (2D canvas), React Native Reanimated + Gesture Handler (animations/gestures), `@ai-sdk/amazon-bedrock` (image analysis API route), `react-native-webgpu` + `three` + `@react-three/fiber` (3D simulation), `expo-sqlite/kv-store` (persistent config).
 
