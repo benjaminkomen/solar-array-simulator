@@ -35,5 +35,5 @@ Preconditions:
 - Location defaults to null lat/long in config; Simulation still opens with hook fallbacks.
 - "Loading 3D scene..." is a Suspense fallback. Waiting only for that string is incomplete — wait for "Total Output" / seasons.
 - Product UI is one `src/app/simulation.tsx`. Controls live in `SimulationControls` (universal `@expo/ui` `Host` / `Slider`). Season is one `SeasonPicker.tsx` over `@expo/ui/community/segmented-control` in its own Host (not inside FieldGroup); the season row stretches full width so Android chips do not wrap. `SimulationView` stays the WebGPU surface — do not stub it. Empty arrays are seeded in `useSimulationControls` via `panelsForSimulationScene`, not inside `SimulationView`.
-- `react-native-webgpu@0.10` (not `react-native-wgpu@0.4.x`). SDK 58 New Architecture is always on — do not add `newArchEnabled`. After a native upgrade, rebuild `development-simulator` (iOS) and `development` (Android).
+- `react-native-webgpu@0.10` (not `react-native-wgpu@0.4.x`). The current Expo SDK always enables New Architecture. Do not add `newArchEnabled`. After a native upgrade, rebuild `development-simulator` (iOS) and `development` (Android).
 - "3D view unavailable" is a canvas fallback, not a failed navigation. Maestro should still see "Simulation" / "Total Output" / seasons.

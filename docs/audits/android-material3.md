@@ -1,6 +1,6 @@
-# Android Material 3 audit (SDK 57)
+# Android Material 3 audit
 
-Source-only review of the Android variant on current `main`. This Linux VM cannot drive `emulator-5554`. Findings come from `*.android.tsx`, Jetpack Compose `Host`s, universal routes that fork with `Platform.OS === "android"`, `@expo/ui@57.0.18`, Expo Router `Stack.Toolbar`, and current Material 3 (Material You) guidance.
+Source-only review of the Android variant on current `main`. This Linux VM cannot drive `emulator-5554`. Findings come from `*.android.tsx`, Jetpack Compose `Host`s, universal routes that fork with `Platform.OS === "android"`, the installed `@expo/ui` (`package.json`), Expo Router `Stack.Toolbar`, and current Material 3 (Material You) guidance.
 
 This document does **not** implement a visual redesign.
 
@@ -14,7 +14,7 @@ Each screen uses four columns:
 | --- | --- |
 | **Today** | What the Android build actually renders |
 | **M3 would use** | The Material 3 / Compose primitive, even if Expo UI does not expose it |
-| **Expo UI now?** | What `@expo/ui/jetpack-compose` or `Stack.Toolbar` expose on SDK 57 |
+| **Expo UI now?** | What `@expo/ui/jetpack-compose` or `Stack.Toolbar` expose on the current Expo SDK |
 | **Suggestion** | `keep` / `swap` / `wrap native` / `wait for Expo UI` |
 
 **Suggestion verbs**
@@ -35,7 +35,7 @@ Known Android product facts this audit does not paper over:
 - Config roof is the same platform segmented pattern; inverter swipe-delete is `SwipeToDismissBox`.
 - Finish → Production and first-tap toolbar hits have been flaky. Touch-target and overlay issues are first-class, not footnotes.
 
-## Capability map (SDK 57)
+## Capability map
 
 ### `@expo/ui/jetpack-compose` (57.0.18)
 
@@ -84,7 +84,7 @@ Present and usable today (from `node_modules/@expo/ui/src/jetpack-compose/index.
 
 Universal `@expo/ui` (`FieldGroup`, `Host`, `Picker`, `Slider`, `Button`, `TextInput`, `ListItem`) is the right default for shared forms. Universal `Picker` only supports `appearance: 'menu' | 'wheel'`. Segmented and swipe-delete stay platform files — that is correct, not a fork to undo.
 
-### `Stack.Toolbar` (Expo Router SDK 57)
+### `Stack.Toolbar` (Expo Router)
 
 What Android actually gets:
 
@@ -197,7 +197,7 @@ M3 / Android a11y: 48×48 dp minimum, 8 dp separation. Compose `minimumInteracti
 
 `_layout` paints `GestureHandlerRootView` with `surface` so the area behind Android system bars matches Material You. `headerTransparent: true`. WizardProgress adds `insets.top + 60`. Production card uses `insets.top + 56 + 16` (`ANDROID_APPBAR_HEIGHT`). Simulation / zoom add `insets.bottom`.
 
-There is no `enableEdgeToEdge` / `SystemBarStyle` call in app code. Expo SDK 57 / RN 0.86 typically draw edge-to-edge on Android 15 already. The risk is **overlap**: transparent header + wizard stepper + bottom toolbar + zoom (`bottom: insets.bottom + 80`) + Dev Client Tools. That is the same family as first-tap toolbar misses. **keep** the themed root; **swap** magic offsets for a real app-bar + FAB/toolbar inset once those components own the edges.
+There is no `enableEdgeToEdge` / `SystemBarStyle` call in app code. The current Expo SDK typically draws edge-to-edge on Android 15 already. The risk is **overlap**: transparent header + wizard stepper + bottom toolbar + zoom (`bottom: insets.bottom + 80`) + Dev Client Tools. That is the same family as first-tap toolbar misses. **keep** the themed root; **swap** magic offsets for a real app-bar + FAB/toolbar inset once those components own the edges.
 
 ---
 
@@ -375,4 +375,4 @@ This VM cannot launch the Dev Client or Maestro against `emulator-5554`. The fol
 - `ModalBottomSheet` predictive-back and IME padding if a FAB is added next to `Stack.Toolbar`.
 - Compass help Back vs sheet dismiss (Android is a full-screen modal today).
 
-Proof for this document: the Android sources listed above, `@expo/ui@57.0.18` exports, Expo Router `Stack.Toolbar` Android types (`native.android.d.ts`: "Renders as an IconButton"), `app.json` `predictiveBackGestureEnabled: false`, and [Material 3 components](https://m3.material.io/components) / [toolbars](https://m3.material.io/components/toolbars/guidelines) / [bottom sheets](https://m3.material.io/components/bottom-sheets/guidelines) / [color roles](https://m3.material.io/styles/color/roles) / [48 dp targets](https://support.google.com/accessibility/android/answer/7101858).
+Proof for this document: the Android sources listed above, installed `@expo/ui` exports, Expo Router `Stack.Toolbar` Android types (`native.android.d.ts`: "Renders as an IconButton"), `app.json` `predictiveBackGestureEnabled: false`, and [Material 3 components](https://m3.material.io/components) / [toolbars](https://m3.material.io/components/toolbars/guidelines) / [bottom sheets](https://m3.material.io/components/bottom-sheets/guidelines) / [color roles](https://m3.material.io/styles/color/roles) / [48 dp targets](https://support.google.com/accessibility/android/answer/7101858).

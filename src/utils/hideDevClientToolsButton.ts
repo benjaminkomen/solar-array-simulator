@@ -12,7 +12,7 @@ type DevMenuPreferencesModule = {
  * Hide Expo Dev Client's floating Tools overlay so it does not steal the
  * Production header overflow hit target (Simulate + Configuration options).
  *
- * SDK 56's JS surface has no setToolsButtonVisible. iOS registers
+ * The JS surface may omit setToolsButtonVisible. iOS registers
  * DevMenuPreferences; Android hides via the Dev Menu "Tools button" toggle
  * (see `.maestro/shared/hide-android-dev-client-tools.yaml`).
  */
