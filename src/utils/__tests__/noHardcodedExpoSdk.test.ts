@@ -27,27 +27,20 @@ const PATTERNS = [
   /exposdk:\s*\d+/i,
 ];
 
-function gitTrackedFiles(root: string): string[] | null {
-  const listed = spawnSync("git", ["-c", "safe.directory=*", "ls-files", "-z"], {
-    cwd: root,
-    encoding: "buffer",
-    timeout: 15_000,
-    env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
-  });
-  if (listed.error || listed.status !== 0 || listed.stdout == null || listed.stdout.length === 0) {
-    return null;
-  }
-  const files = listed.stdout.toString("utf8").split("\0").filter(Boolean);
-  return files.length > 0 ? files : null;
-}
-
 function walkFiles(root: string): string[] {
   const files: string[] = [];
   const queue = [root];
   while (queue.length > 0) {
     const dir = queue.pop()!;
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (SKIP_DIRS.has(entry.name)) continue;
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch (error) {
+      if (isEnoent(error)) continue;
+      throw error;
+    }
+    for (const entry of entries) {
+      if (SKIP_DIRS.has(entry.name) || entry.isSymbolicLink()) continue;
       const abs = resolve(dir, entry.name);
       if (entry.isDirectory()) {
         queue.push(abs);
@@ -57,10 +50,6 @@ function walkFiles(root: string): string[] {
     }
   }
   return files;
-}
-
-function listFiles(root: string): string[] {
-  return gitTrackedFiles(root) ?? walkFiles(root);
 }
 
 function isEnoent(error: unknown): boolean {
@@ -78,7 +67,7 @@ function findHits(root: string, files: string[]): string[] {
     try {
       text = readFileSync(resolve(root, file), "utf8");
     } catch (error) {
-      // eas/checkout deletes .easignore paths (/docs, /terraform) and leaves them in the index.
+      // A listed path can be gone (broken symlink, or a checkout that deleted it).
       if (isEnoent(error)) continue;
       throw error;
     }
@@ -104,26 +93,50 @@ function failureMessage(hits: string[]): string {
 
 describe("Expo SDK version literals", () => {
   it("are only in package pins, not comments, docs, skills, or Maestro flows", () => {
-    const hits = findHits(repoRoot, listFiles(repoRoot));
+    const hits = findHits(repoRoot, walkFiles(repoRoot));
     expect(hits, failureMessage(hits)).toEqual([]);
   });
 
-  it("walks the tree when git is unavailable and ignores package pins and dependencies", () => {
+  it("ignores package pins and dependencies even when GIT_DIR points at another tree", () => {
     const root = mkdtempSync(resolve(tmpdir(), "sdk-guard-"));
+    const other = mkdtempSync(resolve(tmpdir(), "sdk-guard-other-"));
     const banned = "SDK " + "57";
+    const previousGitDir = process.env.GIT_DIR;
+    const previousWorkTree = process.env.GIT_WORK_TREE;
     try {
+      writeFileSync(resolve(other, "foreign.md"), `${banned}\n`);
+      const gitEnv = { ...process.env };
+      delete gitEnv.GIT_DIR;
+      delete gitEnv.GIT_WORK_TREE;
+      const init = spawnSync("git", ["init"], { cwd: other, timeout: 5_000, env: gitEnv });
+      expect(init.status, init.stderr?.toString()).toBe(0);
+      const added = spawnSync("git", ["add", "foreign.md"], {
+        cwd: other,
+        timeout: 5_000,
+        env: gitEnv,
+      });
+      expect(added.status, added.stderr?.toString()).toBe(0);
+
       writeFileSync(resolve(root, "notes.md"), `${banned}\n`);
       writeFileSync(resolve(root, "package.json"), `${banned}\n`);
       mkdirSync(resolve(root, "node_modules/dep"), { recursive: true });
       writeFileSync(resolve(root, "node_modules/dep/readme.md"), `${banned}\n`);
-      const hits = findHits(root, listFiles(root));
+
+      process.env.GIT_DIR = resolve(other, ".git");
+      process.env.GIT_WORK_TREE = other;
+      const hits = findHits(root, walkFiles(root));
       expect(hits.map((hit) => hit.split(":")[0])).toEqual(["notes.md"]);
     } finally {
+      if (previousGitDir === undefined) delete process.env.GIT_DIR;
+      else process.env.GIT_DIR = previousGitDir;
+      if (previousWorkTree === undefined) delete process.env.GIT_WORK_TREE;
+      else process.env.GIT_WORK_TREE = previousWorkTree;
       rmSync(root, { recursive: true, force: true });
+      rmSync(other, { recursive: true, force: true });
     }
   });
 
-  it("skips tracked paths that are not in the worktree", () => {
+  it("skips listed paths that are not in the worktree", () => {
     const root = mkdtempSync(resolve(tmpdir(), "sdk-guard-missing-"));
     const banned = "SDK " + "57";
     try {
