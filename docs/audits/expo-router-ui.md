@@ -6,7 +6,7 @@ This PR **does not implement a redesign**. It records what already matches curre
 
 ## Scope and sources
 
-**App:** personal Expo SDK 57 app (`expo@^57.0.22`, `expo-router@~57.0.21`, `@expo/ui@~57.0.18`, RN 0.86.3, `com.bkomen.solararraysimulator`). React Compiler and typed routes are on. Hermes V1 is already the SDK default (`useHermesV1: true` in `app.json`). **Do not flip Hermes V1.** Do not rewrite Skia canvas or WebGPU `SimulationView`.
+**App:** `com.bkomen.solararraysimulator`. The Expo SDK and React Native pins live in `package.json`. React Compiler and typed routes are on. Hermes V1 is already the SDK default (`useHermesV1: true` in `app.json`). **Do not flip Hermes V1.** Do not rewrite Skia canvas or WebGPU `SimulationView`.
 
 **Skills read (expo/skills, current main):**
 
@@ -14,21 +14,21 @@ This PR **does not implement a redesign**. It records what already matches curre
 - `expo-router` + `references/route-structure.md`, `toolbar-and-headers.md`, `form-sheet.md`
 - `expo-ui` + `references/universal.md`, `swift-ui.md`
 - `expo-native-ui` — semantic `Color`, Host-first controls, stack titles
-- `expo-upgrade` — SDK 57 / Hermes V1 / `@react-navigation/*` import rule
+- `expo-upgrade` — Hermes V1 / `@react-navigation/*` import rule
 - `expo-project-structure` — routes-only `src/app/` (guidance for *new* apps; do not restructure this one to match)
 
 **Docs / types (not invented):**
 
 - [Stack](https://docs.expo.dev/router/advanced/stack/)
-- [Stack Toolbar](https://docs.expo.dev/router/advanced/stack-toolbar/) (alpha; Android SDK 56+, iOS SDK 55+)
+- [Stack Toolbar](https://docs.expo.dev/router/advanced/stack-toolbar/) (alpha; Android and iOS)
 - [Redirects](https://docs.expo.dev/router/reference/redirects/)
 - [URL parameters](https://docs.expo.dev/router/reference/url-parameters/)
 - [Linking into your app](https://docs.expo.dev/linking/into-your-app/)
 - [Color](https://docs.expo.dev/router/reference/color/)
-- SDK 57: [Expo UI](https://docs.expo.dev/versions/v57.0.0/sdk/ui/), [Host](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/host/), [FieldGroup](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/fieldgroup/), [Picker](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/picker/)
+- Current Expo SDK docs: [Expo UI](https://docs.expo.dev/versions/latest/sdk/ui/), [Host](https://docs.expo.dev/versions/latest/sdk/ui/universal/host/), [FieldGroup](https://docs.expo.dev/versions/latest/sdk/ui/universal/fieldgroup/), [Picker](https://docs.expo.dev/versions/latest/sdk/ui/universal/picker/)
 - Installed `.d.ts` / `node_modules/@expo/ui/src/universal/Picker/types.ts` (`appearance: 'wheel' | 'menu'` only)
 
-**Skill vs official docs (toolbar):** `expo-router/references/toolbar-and-headers.md` still says `Stack.Toolbar` is “iOS only.” Official [Stack Toolbar](https://docs.expo.dev/router/advanced/stack-toolbar/) documents Android (SDK 56+) and iOS (SDK 55+). This app correctly uses toolbar on both. Trust the official page + installed types, not that skill limitation line.
+**Skill vs official docs (toolbar):** `expo-router/references/toolbar-and-headers.md` still says `Stack.Toolbar` is “iOS only.” Official [Stack Toolbar](https://docs.expo.dev/router/advanced/stack-toolbar/) documents Android and iOS. This app correctly uses toolbar on both. Trust the official page + installed types, not that skill limitation line.
 
 **Honesty:** this Linux VM cannot drive a simulator or Maestro. Proof here is source + unit tests that lock the current map. Device verification stays on a Mac via `.cursor/skills/verify-solar-array/`.
 
@@ -144,15 +144,15 @@ Official rule: every `@expo/ui` tree (universal or platform) is wrapped in `Host
 | Custom | Android icon glyph only | `@expo/ui/jetpack-compose` inside `CustomToolbarAndroidIcon` | `pointerEvents="none"` so the Pressable above gets the tap |
 | Compass help | None | — | RN copy |
 
-Config / Analyze / Simulation Host usage matches SDK 57 Host docs (`style={{ flex: 1 }}`, `matchContents`, `colorScheme`).
+Config / Analyze / Simulation Host usage matches the current Expo SDK Host docs (`style={{ flex: 1 }}`, `matchContents`, `colorScheme`).
 
-iOS details importing `Host` from `@expo/ui/swift-ui` still works (SDK 57 still exports that Host). The skill’s “Host from `@expo/ui` only” rule is the cleanup to do when those screens are next touched — not a reason to rewrite them now.
+iOS details importing `Host` from `@expo/ui/swift-ui` still works (the current Expo SDK still exports that Host). The skill’s “Host from `@expo/ui` only” rule is the cleanup to do when those screens are next touched — not a reason to rewrite them now.
 
 Do **not** put `Host` on Upload first paint. That regression is already unit-tested.
 
 ### FieldGroup
 
-Universal `FieldGroup` + `FieldGroup.Section` + `FieldGroup.SectionFooter` is the right API for settings-style forms (SDK 57 FieldGroup page). Used in:
+Universal `FieldGroup` + `FieldGroup.Section` + `FieldGroup.SectionFooter` is the right API for settings-style forms (current Expo SDK FieldGroup page). Used in:
 
 - [`src/app/config.tsx`](../../src/app/config.tsx) — one FieldGroup for wattage, location, roof, inverters
 - [`src/components/InverterDetailsForm.tsx`](../../src/components/InverterDetailsForm.tsx)

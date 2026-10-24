@@ -2,7 +2,7 @@
 
 Behavior-level inventory for the Expo/React Native app (`com.bkomen.solararraysimulator`). Agents use this map to decide what to drive and what evidence counts. Humans use it as the regression checklist.
 
-Surface: iOS Simulator and Android emulator development builds (SDK 57). Maestro YAML in `.maestro/` branches by platform (`launch-fresh.ios.yaml` / `launch-fresh.android.yaml`, plus shared tap helpers). Every listed screen exists on both platforms. Do **not** write "iOS-only route" or "Android-only route" — a missing platform file is not a missing product screen.
+Surface: iOS Simulator and Android emulator development builds (the current Expo SDK; see `package.json`). Maestro YAML in `.maestro/` branches by platform (`launch-fresh.ios.yaml` / `launch-fresh.android.yaml`, plus shared tap helpers). Every listed screen exists on both platforms. Do **not** write "iOS-only route" or "Android-only route" — a missing platform file is not a missing product screen.
 
 **Already universal on current main — do not paper as still-split:**
 

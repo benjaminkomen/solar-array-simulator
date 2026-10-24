@@ -33,8 +33,7 @@
       [
         "expo-router",
         {
-          "origin": "https://react-native-array-layout-2.expo.app",
-          "unstable_useServerMiddleware": true
+          "origin": "https://react-native-array-layout-2.expo.app"
         }
       ],
       [

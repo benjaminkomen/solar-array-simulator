@@ -4,7 +4,7 @@
  * `Property 'RNWebGPU' doesn't exist` when native `install()` did not
  * populate that global — either because Dawn/`WebGPUModule` was never
  * linked into the development-simulator .app, or because 0.4.x install()
- * fails on Expo SDK 56+ bridgeless (`RCTCxxBridge` / `getCatalystInstance()`).
+ * fails on bridgeless (`RCTCxxBridge` / `getCatalystInstance()`).
  *
  * Dawn is a static `libwebgpu_dawn.a` (device + ios-simulator slices), not a
  * named framework under the app Frameworks folder. A 124KB main binary with
@@ -12,7 +12,7 @@
  * rebuild — look for the pod / static archive, not RNWebGPU.framework.
  *
  * react-native-webgpu@0.10+ installs via `self.bridge.runtime`. New
- * Architecture is mandatory on SDK 57 (do not set `newArchEnabled`).
+ * Architecture is mandatory on the current Expo SDK (do not set `newArchEnabled`).
  *
  * Probe WebGPUModule and run `install()` *before* importing Canvas so
  * existing clients show a fallback instead of a redbox.
@@ -36,7 +36,7 @@ function defaultGetWebGPUModule(): WebGPUNativeModule | null {
     // Lazy require so bun unit tests do not load react-native.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { TurboModuleRegistry } = require("react-native") as typeof import("react-native");
-    return TurboModuleRegistry.get<TurboModuleLike>("WebGPUModule");
+    return TurboModuleRegistry.get<TurboModuleLike>("WebGPUModule") ?? null;
   } catch {
     return null;
   }

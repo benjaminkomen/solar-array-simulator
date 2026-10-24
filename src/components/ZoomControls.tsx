@@ -1,4 +1,4 @@
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, type ColorValue, type OpaqueColorValue } from "react-native";
 import { Pressable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,13 @@ import {
   ZOOM_LEVELS,
 } from "@/utils/zoomConstants";
 import { useColors } from "@/utils/theme";
+
+function ioniconColor(color: ColorValue): string | OpaqueColorValue | undefined {
+  if (color == null || typeof color === "number") {
+    return undefined;
+  }
+  return color;
+}
 
 interface ZoomControlsProps {
   currentIndex: number;
@@ -52,7 +59,7 @@ export function ZoomControls({
         <Ionicons
           name="add"
           size={22}
-          color={canZoomIn ? colors.text.primary : colors.border.medium}
+          color={ioniconColor(canZoomIn ? colors.text.primary : colors.border.medium)}
         />
       </Pressable>
       <View style={styles.indicator}>
@@ -75,7 +82,7 @@ export function ZoomControls({
         <Ionicons
           name="remove"
           size={22}
-          color={canZoomOut ? colors.text.primary : colors.border.medium}
+          color={ioniconColor(canZoomOut ? colors.text.primary : colors.border.medium)}
         />
       </Pressable>
     </View>
