@@ -1,0 +1,20 @@
+schema: spec-driven
+
+# Injected into every OpenSpec artifact, apply, and archive.
+# Keep this short. Do not hardcode Expo SDK version numbers.
+context: |
+  solar-array-simulator is a personal public Expo Router app for laying out a solar panel array and simulating production. Do not add employer, workplace, or product-line material.
+  Stack: the current Expo SDK (the pin is in package.json), React Native with the New Architecture and React Compiler, Expo Router, @expo/ui SwiftUI forms, Skia for the 2D canvas, Reanimated and Gesture Handler, react-native-webgpu with three and React Three Fiber for the 3D view, and expo-sqlite/kv-store for saved config and panels. The @/* import alias maps to src/*.
+  Commands: bun install; bun start (Expo dev client — do not use expo run:ios, expo run:android, or eas build --local for day-to-day work); bun test; bun run lint; ./node_modules/.bin/tsc --noEmit; bun run test:maestro. Screen or navigation claims go through .cursor/skills/verify-solar-array.
+  Forms use @expo/ui/swift-ui (Host, Form, Section, and the other SwiftUI controls). Canvas snap and collision run in Reanimated worklets.
+
+rules:
+  proposal:
+    - State the behavior change and what is out of scope.
+    - Do not hardcode Expo SDK version numbers.
+  specs:
+    - Describe observable behavior. One SHALL or MUST per requirement, with concrete WHEN/THEN scenarios.
+    - A spec under openspec/specs records behavior the app already has, unless it is a delta inside a change.
+  tasks:
+    - Logic changes include a bun test step.
+    - Screen or navigation changes name the verify-solar-array flow to run.
