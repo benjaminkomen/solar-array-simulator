@@ -56,6 +56,15 @@ settings.local.json
 !.agents/evidence/verify-solar-array/README.md
 .agents/scratch/
 
+# OpenSpec workflows. Regenerate locally with `openspec init` or `openspec update`.
+# Only these six; other skills under .agents/skills stay tracked.
+.agents/skills/openspec-apply-change/
+.agents/skills/openspec-archive-change/
+.agents/skills/openspec-explore/
+.agents/skills/openspec-propose/
+.agents/skills/openspec-sync-specs/
+.agents/skills/openspec-update-change/
+
 # Local app builds
 *.apk
 *.aab
